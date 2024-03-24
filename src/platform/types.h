@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace orion
+namespace
 {
 	using s8  = uint8_t;
 	using s16 = uint16_t;
