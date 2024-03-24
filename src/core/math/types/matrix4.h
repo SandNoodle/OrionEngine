@@ -4,7 +4,6 @@
 #include "platform/compiler_macros.h"
 
 #include "core/math/omath.h"
-#include "core/math/limits.h"
 
 namespace orion
 {
@@ -15,9 +14,13 @@ namespace orion
 	template <typename T>
 	struct mat4
 	{
-		using this_type = mat4<T>;
+		typedef mat4<T>  this_type;
+		typedef T        value_type;
+		typedef T&       reference;
+		typedef const T& const_reference;
+		typedef usize    size_type;
 
-		T data[16];
+		value_type data[16];
 
 		/** Returns 4x4 identity matrix. */
 		ORION_CONSTEXPR static this_type identity();
@@ -29,7 +32,10 @@ namespace orion
 		 * @param near_plane Distance to a plane closest to the camera.
 		 * @param far_plane Distance to a plane furthest to the camera.
 		 */
-		ORION_CONSTEXPR static this_type perspective(T fov, T aspect_ratio, T near_plane, T far_plane);
+		ORION_CONSTEXPR static this_type perspective(value_type fov,
+			                                         value_type aspect_ratio,
+			                                         value_type near_plane,
+			                                         value_type far_plane);
 
 		/**
 		 * @brief Returns Orthographic projection matrix.
@@ -40,20 +46,25 @@ namespace orion
 		 * @param near_plane Distance to a plane closest to the camera.
 		 * @param far_plane Distance to a plane furthest to the camera.
 		 */
-		ORION_CONSTEXPR static this_type orthographic(T left, T right, T top, T bottom, T near_plane, T far_plane);
+		ORION_CONSTEXPR static this_type orthographic(value_type left,
+			                                          value_type right,
+			                                          value_type top,
+			                                          value_type bottom,
+			                                          value_type near_plane,
+			                                          value_type far_plane);
 
-		/** Returns transposed copy of this matrix (rows->columns). */
+		/** Returns transposed copy of this matrix (rows -> columns). */
 		ORION_CONSTEXPR const this_type& transpose() const;
 
-		ORION_CONSTEXPR T& operator[](usize index);
-		ORION_CONSTEXPR const T& operator[](usize index) const;
-		ORION_CONSTEXPR this_type operator*(const this_type& other);
-		ORION_CONSTEXPR this_type& operator*=(const this_type& other);
-		ORION_CONSTEXPR b8 operator==(const this_type& other) const;
+		ORION_CONSTEXPR reference       operator[](size_type index);
+		ORION_CONSTEXPR const_reference operator[](size_type index) const;
+		ORION_CONSTEXPR this_type       operator*(const this_type& other);
+		ORION_CONSTEXPR this_type&      operator*=(const this_type& other);
+		ORION_CONSTEXPR b8              operator==(const this_type& other) const;
 	};
 
 	template <typename T>
-	ORION_CONSTEXPR mat4<T> mat4<T>::identity()
+	ORION_CONSTEXPR auto mat4<T>::identity() -> this_type
 	{
 		mat4<T> m = {0};
 		m[0]  = 1;
@@ -64,10 +75,13 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR mat4<T> mat4<T>::perspective(T fov, T aspect_ratio, T near_plane, T far_plane)
+	ORION_CONSTEXPR auto mat4<T>::perspective(value_type fov,
+		                                      value_type aspect_ratio,
+		                                      value_type near_plane,
+		                                      value_type far_plane) -> this_type
 	{
-		mat4<T> m = {0};
-		T scale = 0.5 * math::tan(fov * 0.5);
+		this_type m = {0};
+		value_type scale = 0.5 * math::tan(fov * 0.5);
 		m[0]  = scale;
 		m[5]  = scale;
 		m[10] = -far_plane / (far_plane - near_plane);
@@ -77,9 +91,14 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR mat4<T> mat4<T>::orthographic(T left, T right, T top, T bottom, T near_plane, T far_plane)
+	ORION_CONSTEXPR auto mat4<T>::orthographic(value_type left,
+		                                       value_type right,
+		                                       value_type top,
+		                                       value_type bottom,
+		                                       value_type near_plane,
+		                                       value_type far_plane) -> this_type
 	{
-		mat4<T> m = mat4<T>::identity();
+		this_type m = this_type::identity();
 		m.data[0]  = 0.5f * (right - left);
 		m.data[5]  = 0.5f * (top - bottom);
 		m.data[10] = -0.5f * (far_plane - near_plane);
@@ -90,7 +109,7 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR const mat4<T>& mat4<T>::transpose() const
+	ORION_CONSTEXPR auto mat4<T>::transpose() const -> const this_type&
 	{
 		this[0]  = this[0];
 		this[1]  = this[4];
@@ -112,25 +131,25 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR T& mat4<T>::operator[](usize index)
+	ORION_CONSTEXPR auto mat4<T>::operator[](size_type index) -> reference
 	{
 		return data[index];
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR const T& mat4<T>::operator[](usize index) const
+	ORION_CONSTEXPR auto mat4<T>::operator[](size_type index) const -> const_reference
 	{
 		return data[index];
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR mat4<T> mat4<T>::operator*(const this_type& other)
+	ORION_CONSTEXPR auto mat4<T>::operator*(const this_type& other) -> this_type
 	{
 		return *this *= other;
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR mat4<T>& mat4<T>::operator*=(const this_type& other)
+	ORION_CONSTEXPR auto mat4<T>::operator*=(const this_type& other) -> this_type&
 	{
 		for(size_t column = 0; column < 4; ++column)
 		{
@@ -146,9 +165,9 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR b8 mat4<T>::operator==(const this_type& other) const
+	ORION_CONSTEXPR auto mat4<T>::operator==(const this_type& other) const -> b8
 	{
-		for(usize i = 0; i < 16; ++i)
+		for(size_type i = 0; i < 16; ++i)
 		{
 			if (!math::compare(this[i], other[i]))
 			{

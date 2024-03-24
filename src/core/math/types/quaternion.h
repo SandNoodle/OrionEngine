@@ -2,14 +2,15 @@
 
 #include "platform/types.h"
 #include "platform/compiler_macros.h"
-
 #include "core/math/omath.h"
 #include "core/math/constants.h"
-#include "core/math/limits.h"
-#include "core/math/matrix4.h"
-#include "core/math/vector3.h"
+#include "core/math/types/matrix4.h"
+#include "core/math/types/vector3.h"
 
 // TODO: SIMD
+//       1. Move the current implementation to separate .impl file.
+//       2. In that file ifndef ORION_HAS_SIM
+//       3. Implement SIMD version with ORION_HAS_SIMD_AVX2
 // TODO: Constructors
 namespace orion
 {
@@ -20,9 +21,10 @@ namespace orion
 	template <typename T>
 	struct quat
 	{
-		using this_type = quat<T>;
+		typedef quat<T> this_type;
+		typedef T       value_type;
 
-		T x, y, z, w;
+		value_type x, y, z, w;
 
 		/** Returns an identity quaterion (0, 0, 0, 1). */
 		ORION_CONSTEXPR static this_type identity();
@@ -53,11 +55,11 @@ namespace orion
 		/** Converts given Quaternion into a 4x4 Rotation Matrix. */
 		ORION_CONSTEXPR mat4<T> to_mat4() const;
 
-		ORION_CONSTEXPR this_type operator*(const this_type& other);
-		ORION_CONSTEXPR this_type operator/(T scalar);
+		ORION_CONSTEXPR this_type  operator*(const this_type& other);
+		ORION_CONSTEXPR this_type  operator/(value_type scalar);
 		ORION_CONSTEXPR this_type& operator*=(const this_type& other);
-		ORION_CONSTEXPR this_type& operator/=(T scalar);
-		ORION_CONSTEXPR b8 operator==(const this_type& other) const;
+		ORION_CONSTEXPR this_type& operator/=(value_type scalar);
+		ORION_CONSTEXPR b8         operator==(const this_type& other) const;
 
 		/** Converts vec3 of Euler Angles into a Quaternion. */
 		ORION_CONSTEXPR static this_type from_euler(const vec3<T>& v);
@@ -67,13 +69,13 @@ namespace orion
 	};
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T> quat<T>::identity()
+	ORION_CONSTEXPR auto quat<T>::identity() -> this_type
 	{
-		return quat<T>(0, 0, 0, 1);
+		return this_type(0, 0, 0, 1);
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T>& quat<T>::conjugate()
+	ORION_CONSTEXPR auto quat<T>::conjugate() -> this_type&
 	{
 		x = -x;
 		y = -y;
@@ -82,7 +84,7 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T>& quat<T>::inverse()
+	ORION_CONSTEXPR auto quat<T>::inverse() -> this_type&
 	{
 		conjugate();
 		normalize();
@@ -90,26 +92,26 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR const quat<T>& quat<T>::inverse() const
+	ORION_CONSTEXPR auto quat<T>::inverse() const -> const this_type&
 	{
 		return inverse();
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR const quat<T>& quat<T>::normal() const
+	ORION_CONSTEXPR auto quat<T>::normal() const -> const this_type&
 	{
 		return math::sqrt(x * x + y * y + z * z + w + w);
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T>& quat<T>::normalize()
+	ORION_CONSTEXPR auto quat<T>::normalize() -> this_type&
 	{
-		const T normal = normal();
+		const value_type normal = normal();
 		return *this / normal;
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T> quat<T>::dot_product(const this_type& other)
+	ORION_CONSTEXPR auto quat<T>::dot_product(const this_type& other) -> this_type
 	{
 		return x * other.x
 			 + y * other.y
@@ -118,21 +120,21 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR vec3<T> quat<T>::to_euler() const
+	ORION_CONSTEXPR auto quat<T>::to_euler() const -> vec3<T>
 	{
 		// Roll
-		T sinr_cosp = 2 * (w * x + y * z);
-		T cosr_cosp = 1 - 2 * (x * x + y * y);
+		value_type sinr_cosp = 2 * (w * x + y * z);
+		value_type cosr_cosp = 1 - 2 * (x * x + y * y);
 
 		// Pitch
-		T sinp = o_sqrt(1 + 2 * (w * y - x * z));
-		T cosp = o_sqrt(1 - 2 * (w * y - x * z));
+		value_type sinp = math::sqrt(1 + 2 * (w * y - x * z));
+		value_type cosp = math::sqrt(1 - 2 * (w * y - x * z));
 
 		// Yaw
-		T siny_cosp = 2 * (w * z + x * y);
-		T cosy_cosp = 1 - 2 * (y * y + z * z);
+		value_type siny_cosp = 2 * (w * z + x * y);
+		value_type cosy_cosp = 1 - 2 * (y * y + z * z);
 
-		return quat<T>{
+		return (this_type){ 
 			.roll  = math::atan2(sinr_cosp, cosr_cosp),
 			.pitch = 2 * math::atan2(sinp, cosp) - O_PI / 2,
 			.yaw   = math::atan2(siny_cosp, cosy_cosp),
@@ -140,7 +142,7 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR mat4<T> quat<T>::to_mat4() const
+	ORION_CONSTEXPR auto quat<T>::to_mat4() const -> mat4<T>
 	{
 		mat4<T> m = mat4<T>::identity();
 		m[0]  = 1.0f - 2.0f * y * y - 2.0f * z * z;
@@ -156,9 +158,9 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T> quat<T>::operator*(const this_type& other)
+	ORION_CONSTEXPR auto quat<T>::operator*(const this_type& other) -> this_type
 	{
-		return quat<T> {
+		return (this_type) {
 			.x = w * other.x + x * other.w + y * other.z - z * other.y,
 			.y = w * other.y + y * other.w + z * other.x - z * other.z,
 			.z = w * other.z + z * other.w + x * other.y - y * other.x,
@@ -167,12 +169,13 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T> quat<T>::operator/(T scalar)
+	ORION_CONSTEXPR auto quat<T>::operator/(T scalar) -> this_type
 	{
+		// TODO: Not implemented yet.
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T>& quat<T>::operator*=(const this_type& other)
+	ORION_CONSTEXPR auto quat<T>::operator*=(const this_type& other) -> this_type&
 	{
 		x = w * other.x + x * other.w + y * other.z - z * other.y;
 		y = w * other.y + y * other.w + z * other.x - z * other.z;
@@ -182,12 +185,13 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T>& quat<T>::operator/=(T scalar)
+	ORION_CONSTEXPR auto quat<T>::operator/=(T scalar) -> this_type&
 	{
+		// TODO: Not implemented yet.
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR b8 quat<T>::operator==(const this_type& other) const
+	ORION_CONSTEXPR auto quat<T>::operator==(const this_type& other) const -> b8
 	{
 		return math::compare(x, other.x)
 			&& math::compare(y, other.y)
@@ -196,16 +200,16 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR quat<T> quat<T>::from_euler(const vec3<T>& v)
+	ORION_CONSTEXPR auto quat<T>::from_euler(const vec3<T>& v) -> this_type
 	{
-		T cr = o_cos(v.roll * 0.5f);
-		T sr = o_sin(v.roll * 0.5f);
-		T cp = o_cos(v.pitch * 0.5f);
-		T sp = o_sin(v.pitch * 0.5f);
-		T cy = o_cos(v.yaw * 0.5f);
-		T sy = o_sin(v.yaw * 0.5f);
+		value_type cr = math::cos(v.roll * 0.5f);
+		value_type sr = math::sin(v.roll * 0.5f);
+		value_type cp = math::cos(v.pitch * 0.5f);
+		value_type sp = math::sin(v.pitch * 0.5f);
+		value_type cy = math::cos(v.yaw * 0.5f);
+		value_type sy = math::sin(v.yaw * 0.5f);
 
-		return quat<T> {
+		return (this_type) {
 			.x = sr * cp * cy - cr * sp * sy,
 			.y = cr * sp * cy + sr * cp * sy,
 			.z = cr * cp * sy - sr * sp * cy,
@@ -214,7 +218,7 @@ namespace orion
 	}
 
 	template <typename T>
-	ORION_CONSTEXPR T quat<T>::dot_product(const this_type& l, const this_type& r)
+	ORION_CONSTEXPR auto quat<T>::dot_product(const this_type& l, const this_type& r) -> value_type
 	{
 		return l.dot_product(r);
 	}
