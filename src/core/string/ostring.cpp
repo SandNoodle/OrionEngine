@@ -8,39 +8,46 @@ namespace orion
 {
 	static u64 fnv_hash(const s8* str, size_t length);
 
-	string_t string_t_create(const s8* str)
+	string_t string_t::create(const char* str, allocator_t& allocator)
 	{
 		string_t s;
-		s.length = strlen((char*)str);
-		s.data = (s8*)platform_allocate(sizeof(s8) * s.length + 1);
+		s.length = strlen(str);
+		s.data = (s8*)allocator.allocate(sizeof(s8) * (s.length + 1), allocator.user_context);
 		platform_copy_memory(s.data, str, s.length);
 		s.data[s.length] = '\0';
 		s.hash = fnv_hash(s.data, s.length);
 		return s;
 	}
 
-	string_t string_t_duplicate(const string_t* s)
+	void string_t::destroy(string_t& str, allocator_t& allocator)
+	{
+		allocator.deallocate(str.data, str.length * sizeof(s8) + 1, allocator.user_context);
+		str.data   = nullptr;
+		str.length = 0;
+		str.hash   = 0;
+	}
+
+	string_t string_t::duplicate(const string_t& str, allocator_t& allocator)
 	{
 		string_t copy;
-		copy.length = s->length;
-		copy.hash = s->hash;
-		copy.data = (s8*)platform_allocate(sizeof(s8) * copy.length + 1);
-		platform_copy_memory(copy.data, s->data, copy.length);
+		copy.length = str.length;
+		copy.hash = str.hash;
+		copy.data = (s8*)allocator.allocate(sizeof(s8) * (str.length + 1), allocator.user_context);
 		copy.data[copy.length] = '\0';
+		platform_copy_memory(copy.data, str.data, str.length);
 		return copy;
 	}
 
-	void string_t_destroy(string_t* s)
+	u64 string_t::rehash(string_t& str)
 	{
-		if(!s) return;
-		s->length = 0;
-		platform_free(s->data);
-		platform_free(s);
+		str.hash = fnv_hash(str.data, str.length);
+		return str.hash;
 	}
 
-	void string_hash(string_t* s) { s->hash = fnv_hash(s->data, s->length); }
-
-	b8 string_t_equals(const string_t* l, const string_t* r) { return l->hash == r->hash; }
+	b8 string_t::equals(const string_t& l, const string_t& r)
+	{
+		return l.hash == r.hash;
+	}
 
 	//
 	//
