@@ -2,7 +2,6 @@
 
 #include "platform/types.h"
 #include "platform/compiler_macros.h"
-
 #include "core/math/limits.h"
 
 #include <math.h>
@@ -100,6 +99,13 @@ namespace orion::math
 	template <> ORION_CONSTEXPR b8 is_power_of_two(f32 x) { return false; }
 	template <> ORION_CONSTEXPR b8 is_power_of_two(f64 x) { return false; }
 
-	template <> ORION_CONSTEXPR b8 compare(f32 x, f32 y) { return compare<f32>(x, y); }
-	template <> ORION_CONSTEXPR b8 compare(f64 x, f64 y) { return compare<f64>(x, y); }
+	template <> ORION_CONSTEXPR b8 compare(f32 x, f32 y)
+	{
+		return abs<f32>(x - y) < F32_EPSILON;
+	}
+
+	template <> ORION_CONSTEXPR b8 compare(f64 x, f64 y)
+	{
+		return abs<f64>(x - y) < F64_EPSILON;
+	}
 }
