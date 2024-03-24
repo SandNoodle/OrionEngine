@@ -17,12 +17,28 @@ namespace orion
 		buffer_type_ssbo, // Shader Storage Buffer Object
 	};
 
-	/* Specifies usage of buffer requested. */
+	/**
+	 * @brief Specifies usage of buffer requested.
+	 *
+	 * @important Explanation of the given modifiers:
+	 *  * static  - data is modified once and used many times.
+	 *  * dynamic - data is modified repeatedly and used many times.
+	 *  * stream  - data is modified once and used at most few times.
+	 *  * draw    - data will only be written, not read.
+	 *  * read    - data will only be read, not written.
+	 *  * copy    - data will be neigther written or read, only copied.
+	 */
 	enum buffer_usage : u8
 	{
-		buffer_usage_static_draw,  // Data is modified once and used many times.
-		buffer_usage_dynamic_draw, // Data is modified repeatedly and used many times.
-		buffer_usage_stream_draw,  // Data is modified once and used at most few times.
+		buffer_usage_static_draw,
+		buffer_usage_static_read,
+		buffer_usage_static_copy,
+		buffer_usage_dynamic_draw,
+		buffer_usage_dynamic_read,
+		buffer_usage_dynamic_copy,
+		buffer_usage_stream_draw,
+		buffer_usage_stream_read,
+		buffer_usage_stream_copy,
 	};
 
 	/* Descriptor of a Buffer. */

@@ -69,8 +69,14 @@ namespace orion
 		switch(usage)
 		{
 			case buffer_usage_static_draw:  return GL_STATIC_DRAW;
+			case buffer_usage_static_read:  return GL_STATIC_READ;
+			case buffer_usage_static_copy:  return GL_STATIC_COPY;
 			case buffer_usage_dynamic_draw: return GL_DYNAMIC_DRAW;
+			case buffer_usage_dynamic_read: return GL_DYNAMIC_READ;
+			case buffer_usage_dynamic_copy: return GL_DYNAMIC_COPY;
 			case buffer_usage_stream_draw:  return GL_STREAM_DRAW;
+			case buffer_usage_stream_read:  return GL_STREAM_READ;
+			case buffer_usage_stream_copy:  return GL_STREAM_COPY;
 			default:
 				OE_UNREACHABLE();
 		}
