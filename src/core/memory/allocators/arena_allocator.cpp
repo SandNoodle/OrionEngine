@@ -1,75 +1,125 @@
 #include "arena_allocator.h"
 
-#include "orion_config.h"
-
+#include "platform/compiler_macros.h"
 #include "platform/memory.h"
-
 #include "core/log.h"
 #include "core/assert.h"
+#include "orion_config.h"
 
-// TODO: Maybe create region based arena allocator?
+// TODO(sand_noodles): Maybe this can be rewritten as a region based arena allocator?
 namespace orion
 {
+	static uintptr_t align_forward(uintptr_t ptr, usize alignment);
+
 	struct arena_allocator_t
 	{
 		void* memory;
-		size_t total_size;
-		size_t current_size;
+		usize total_size;
+		usize current_size;
 	};
 
-	arena_allocator_t* arena_allocator_create(size_t size)
+	static void arena_create(usize total_size, void* context)
 	{
-		arena_allocator_t* a = (arena_allocator_t*)platform_allocate(sizeof(arena_allocator_t));
-		a->memory = platform_allocate(size);
-		a->total_size = size;
-		a->current_size = 0;
-		platform_zero_memory(a->memory, size);
-		OE_LOG_TRACE("arena_allocator_create called with size of %zu", size);
-		return a;
+		arena_allocator_t* c = (arena_allocator_t*)context;
+		c->memory            = platform_allocate(total_size);
+		c->total_size        = total_size;
+		c->current_size      = 0;
+		platform_zero_memory(c->memory, total_size);
+		OE_LOG_TRACE("arena_allocator_t: created with size of %zu", total_size);
 	}
 
-	void arena_allocator_destroy(arena_allocator_t* allocator)
+	static void arena_destroy(void* context)
 	{
-		if(!allocator) return;
-		allocator->current_size = 0;
-		allocator->total_size = 0;
-		platform_free(allocator->memory);
-		platform_free(allocator);
-		OE_LOG_TRACE("arena_allocator_destroy called.");
+		if(!context)
+			return;
+
+		arena_allocator_t* c = (arena_allocator_t*)context;
+		OE_LOG_TRACE("arena_allocator_t: destroyed and freed %zu bytes.", c->total_size);
+		c->current_size = 0;
+		c->total_size = 0;
+		platform_free(c->memory);
+		platform_free(c);
 	}
 
-	void* arena_allocator_allocate_aligned(arena_allocator_t* a, size_t size, size_t alignment)
+	static void* arena_allocate_aligned(usize size, usize alignment, void* context)
 	{
-		if(!a) return nullptr;
+		arena_allocator_t* c = (arena_allocator_t*)context;
 
-		OE_ASSERT_TRUE(is_power_of_two(alignment),
-			"arena_allocatort_allocate_aligned's alignment has to be a power of two.");
+		uintptr_t current_ptr = (uintptr_t)c->memory + (uintptr_t)c->current_size;
+		uintptr_t relative_offset = align_forward(current_ptr, alignment) - (uintptr_t)c->memory;
 
-		size_t aligned_size = size & (alignment - 1);
-		if(a->current_size + aligned_size <= a->total_size)
+		if(relative_offset + size <= c->total_size)
 		{
-			void* ptr = ((u8*)a->memory) + aligned_size;
-			a->current_size += aligned_size;
-			OE_LOG_TRACE("arena_allocator allocated %s bytes.", aligned_size);
+			void* ptr = ((u8*)c->memory) + relative_offset;
+			c->current_size = relative_offset + size;
+			OE_LOG_TRACE("arena_allocator_t: allocated %zu bytes (aligned to %zu bytes).", size, alignment);
+			platform_zero_memory(ptr, size); // Zero memory by default.
 			return ptr;
 		}
 
-		OE_LOG_ERROR("arena_allocator has run out of available memory.");
+		OE_LOG_ERROR("arena_allocator_t: allocation of %zu bytes failed - no available memory left (total_size: %zu bytes).", size, c->total_size);
 		return nullptr;
 	}
 
-	void* arena_allocator_allocate(arena_allocator_t* a, size_t size)
+	static void* arena_allocate(usize size, void* context)
 	{
-		if(!a) return nullptr;
-		return arena_allocator_allocate_aligned(a, size, ORION_MEMORY_DEFAULT_ALIGNMENT);
+		return arena_allocate_aligned(size,
+			                          ORION_MEMORY_DEFAULT_ALIGNMENT,
+			                          (arena_allocator_t*)context);
 	}
 
-	void arena_allocator_deallocate(arena_allocator_t* a, size_t size) { /* Does nothing */ }
-
-	void arena_allocator_deallocate_all(arena_allocator_t* a)
+	static void arena_deallocate(void* ptr, usize size, void* context)
 	{
-		if(!a) return;
-		a->current_size = 0;
-		platform_zero_memory(a->memory, a->total_size);
+		ORION_SUPPRESS_UNUSED(ptr);
+		ORION_SUPPRESS_UNUSED(size);
+		ORION_SUPPRESS_UNUSED(context);
+		/* Does nothing */
+	}
+
+	static void arena_deallocate_all(void* context)
+	{
+		arena_allocator_t* c = (arena_allocator_t*)context;
+		c->current_size = 0;
+		platform_zero_memory(c->memory, c->total_size);
+	}
+
+	static void* arena_get_base_pointer(void* context)
+	{
+		arena_allocator_t* c = (arena_allocator_t*)context;
+		return c->memory;
+	}
+
+	allocator_t arena_allocator_create(void)
+	{
+		return (allocator_t) {
+			.user_context = (arena_allocator_t*)platform_allocate(sizeof(arena_allocator_t)),
+			.create = arena_create,
+			.destroy = arena_destroy,
+			.allocate = arena_allocate,
+			.allocate_aligned = arena_allocate_aligned,
+			.deallocate = arena_deallocate,
+			.deallocate_all = arena_deallocate_all,
+			.get_base_pointer = arena_get_base_pointer,
+		};
+	}
+
+	//
+	// Private
+	//
+
+	static uintptr_t align_forward(uintptr_t ptr, usize alignment)
+	{
+		OE_ASSERT_TRUE(is_power_of_two(alignment),
+			"arena_allocator_t: alignment has to be a power of two.");
+
+		uintptr_t p = ptr;
+		uintptr_t a = (uintptr_t)alignment;
+		uintptr_t modulo = p & (a - 1); // Same as modulo, but faster due to the alignment == 2^N.
+		if(modulo != 0)
+		{
+			// Push the address to the next alignment.
+			p += a - modulo;
+		}
+		return p;
 	}
 }
