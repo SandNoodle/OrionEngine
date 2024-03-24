@@ -28,7 +28,7 @@ namespace orion
 		OE_ASSERT_TRUE(index_buffer, "Index Buffer cannot be NULL.");
 		OE_ASSERT_TRUE(pipeline, "Pipeline cannot be NULL.");
 
-		pipeline_execute(pipeline);
+		pipeline->execute();
 
 		glBindVertexArray(vao);
 

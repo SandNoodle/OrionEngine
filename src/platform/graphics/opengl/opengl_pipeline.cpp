@@ -2,8 +2,6 @@
 
 #ifdef ORION_GRAPHICS_API_OPENGL
 
-#include "platform/compiler_macros.h"
-#include "platform/memory.h"
 #include "platform/graphics/opengl/opengl_native_types.h"
 
 #include "core/assert.h"
@@ -13,46 +11,33 @@ namespace orion
 	static GLenum get_depth_function(depth_function_t);
 	static GLenum get_cull_mode(cull_mode_t);
 
-	struct pipeline_t
+	pipeline_t pipeline_t::create(const pipeline_desc_t& desc)
 	{
-		pipeline_desc_t desc;
-	};
-
-	pipeline_t* pipeline_create(pipeline_desc_t desc)
-	{
-		pipeline_t* p = (pipeline_t*)platform_allocate(sizeof(pipeline_t));
-		p->desc = desc;
-		return p;
+		return (pipeline_t) {
+			._desc = desc,
+		};
 	}
 
-	void pipeline_destroy(pipeline_t* p)
+	void pipeline_t::execute() const
 	{
-		if(!p) return;
-		platform_free(p);
-	}
-
-	void pipeline_execute(pipeline_t* p)
-	{
-		OE_ASSERT_TRUE(p, "Pipeline cannot be NULL.");
-
-		depth_function_t depth_function = p->desc.depth_stencil.depth_function;
+		depth_function_t depth_function = _desc.depth_stencil.depth_function;
 		if (depth_function != depth_function_none)
 		{
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(get_depth_function(depth_function));
-			glDepthMask(p->desc.depth_stencil.use_depth_mask ? GL_TRUE : GL_FALSE);
+			glDepthMask(_desc.depth_stencil.use_depth_mask ? GL_TRUE : GL_FALSE);
 		}
 		else
 		{
 			glDisable(GL_DEPTH_TEST);
 		}
 
-		cull_mode_t cull_mode = p->desc.rasterizer.cull_mode;
+		cull_mode_t cull_mode = _desc.rasterizer.cull_mode;
 		if(cull_mode != cull_mode_none)
 		{
 			glEnable(GL_CULL_FACE);
 			glCullFace(get_cull_mode(cull_mode));
-			glFrontFace(p->desc.rasterizer.front_counter_clockwise ? GL_CCW : GL_CW);
+			glFrontFace(_desc.rasterizer.front_counter_clockwise ? GL_CCW : GL_CW);
 		}
 		else
 		{

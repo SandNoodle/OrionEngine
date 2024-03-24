@@ -59,31 +59,30 @@ namespace orion
 		pipeline_type_t type = pipeline_type_graphics;
 		struct pipeline_rasterizer_t
 		{
-			fill_mode_t fill_mode = fill_mode_solid;
-			cull_mode_t cull_mode = cull_mode_none;
+			fill_mode_t fill_mode         = fill_mode_solid;
+			cull_mode_t cull_mode         = cull_mode_none;
 			primitive_topology_t topology = primitive_topology_triangle_list;
-			b8 front_counter_clockwise = true;
-			b8 scissor_enable = true;
+			b8 front_counter_clockwise    = true;
+			b8 scissor_enable             = true;
 		} rasterizer;
 		struct pipeline_depth_stencil_t
 		{
 			depth_function_t depth_function = depth_function_less_equal;
-			b8 use_depth_mask             = true;
+			b8 use_depth_mask               = true;
 		} depth_stencil;
 	};
 
-	/** @brief Creates new pipeline from given descriptor.
-	 * @param desc buffer descriptor.
-	 * @return newly created pipeline.
-	 */
-	pipeline_t* pipeline_create(pipeline_desc_t desc);
+	struct pipeline_t
+	{
+		pipeline_desc_t _desc;
 
-	/**
-	 * @brief Destroys given pipeline.
-	 * @param buffer pipeline to be destroyed.
-	 */
-	void pipeline_destroy(pipeline_t* p);
+		/** @brief Creates new pipeline from given descriptor.
+		 * @param desc buffer descriptor.
+		 * @return newly created pipeline.
+		 */
+		static pipeline_t create(const pipeline_desc_t& desc);
 
-	/* Prepares pipeline to use and sets its attributes. */
-	void pipeline_execute(pipeline_t* p);
+		/* Prepares pipeline to use and sets its attributes. */
+		void execute() const;
+	};
 }
