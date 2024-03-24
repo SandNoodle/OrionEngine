@@ -11,6 +11,9 @@ namespace orion
 	 * memory in a linear fashion, by simply moving
 	 * internal pointer by a allocation of given size.
 	 * However memory can be deallocated only all at once.
+	 *
+	 * @param is_extendable should arena allocator be capable
+	 * of extending its capacity.
 	 */
-	allocator_t arena_allocator_create(void);
+	allocator_t arena_allocator_create(b8 is_extendable);
 }

@@ -28,4 +28,8 @@ namespace orion
 			#define ORION_CONSTEXPR_OR_CONST const
 		#endif // C++ version < C++11
 	#endif // ORION_CONSTEXP
+
+	#ifndef ORION_SUPPRESS_UNUSED
+	#define ORION_SUPPRESS_UNUSED(x) (void)(x)
+	#endif // ORION_SUPPRESS_UNUSED
 }
