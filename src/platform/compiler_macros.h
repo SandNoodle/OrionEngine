@@ -22,8 +22,10 @@ namespace orion
 	#ifndef ORION_CONSTEXPR
 		#if __cplusplus > 201103L
 			#define ORION_CONSTEXPR constexpr
+			#define ORION_CONSTEXPR_OR_CONST constexpr
 		#else
 			#define ORION_CONSTEXPR
+			#define ORION_CONSTEXPR_OR_CONST const
 		#endif // C++ version < C++11
 	#endif // ORION_CONSTEXP
 }
