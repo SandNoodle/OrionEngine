@@ -1,7 +1,7 @@
 #pragma once
 
 #include "platform/compiler_macros.h"
-#include "core/stl/remove_reference.h"
+#include "util/remove_reference.h"
 
 namespace orion
 {
