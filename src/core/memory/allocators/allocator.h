@@ -4,9 +4,7 @@
 
 namespace orion
 {
-	/**
-	 * @brief @TODO descriptions
-	 */
+	/** @brief Base interface for all the memory allocators in the system. */
 	struct allocator_t
 	{
 		typedef usize size_type;
@@ -64,5 +62,19 @@ namespace orion
 		 * @return pointer to the memory 'at an offset equal to 0'.
 		 */
 		void* (*get_base_pointer)(void* context);
+
+		/**
+		 * @brief
+		 * @param context pointer to the allocator's context structure.
+		 * @return
+		 */
+		size_type (*get_current_size)(void* context);
+
+		/**
+		 * @brief
+		 * @param context pointer to the allocator's context structure.
+		 * @return
+		 */
+		size_type (*get_max_size)(void* context);
 	};
 }

@@ -2,32 +2,34 @@
 
 #include "platform/compiler_macros.h"
 #include "platform/memory.h"
-#include "core/log.h"
 #include "core/assert.h"
+#include "core/log.h"
+#include "core/math/omath.h"
+#include "core/memory/allocators/allocator.h"
 #include "orion_config.h"
 
-// TODO(sand_noodles): Maybe this can be rewritten as a region based arena allocator?
 namespace orion
 {
-	static uintptr_t align_forward(uintptr_t ptr, usize alignment);
+	static uintptr_t align_forward(uintptr_t ptr, allocator_t::size_type alignment);
 
 	struct arena_allocator_t
 	{
-		void* memory;
-		usize total_size;
-		usize current_size;
-		b8    is_extendable;
+		void*                  memory;
+		allocator_t::size_type total_size;
+		allocator_t::size_type current_size;
+		b8                     is_extendable;
 	};
 
-	static void arena_create(usize total_size, void* context)
+	static void arena_create(allocator_t::size_type total_size, void* context)
 	{
 		arena_allocator_t* c = (arena_allocator_t*)context;
 
+		const allocator_t::size_type total_size_aligned = math::next_power_of_two(total_size);
+
 		OE_ASSERT_FALSE(c->memory, "arena_allocator_t: create() was already called.");
-		c->memory            = platform_allocate(total_size);
-		c->total_size        = total_size;
+		c->memory            = platform_allocate(total_size_aligned);
+		c->total_size        = total_size_aligned;
 		c->current_size      = 0;
-		platform_zero_memory(c->memory, total_size);
 		OE_LOG_TRACE("arena_allocator_t: create() called, requesting the initial allocation of %zu bytes.", total_size);
 	}
 
@@ -47,16 +49,30 @@ namespace orion
 		platform_free(c);
 	}
 
-	static void* arena_allocate_aligned(usize size, usize alignment, void* context)
+	// TODO(sand_noodles): This function should do this things as follows:
+	//                     1. Given that current_ptr = c->memory + c->current_size;
+	//                     2. Given that aligned_ptr = align_forward(current_ptr, alignment);
+	//                     3. Given that aligned_size = aligned_ptr - c->memory;
+	//                     4. Given that requested_size = aligned_size + size;
+	//                     5. If requested_size > c->total_size
+	//                        0. Check if extendable, if not -> return nullptr;
+	//                        1. new_total_size is equal to either requested_size or total_size * GROWTH_RATE,
+	//                           both of these then rounded to the nearest power of two.
+	//                        2.  Reallocate memory.
+	//                        3. Check if reallocation succeeded, if not -> return nullptr;
+	//                     6. c->current_size = requested_size;
+	//                     7. Given that ptr = c->memory + aligned_size;
+	//                     7. Return ptr;
+	static void* arena_allocate_aligned(allocator_t::size_type size, allocator_t::size_type alignment, void* context)
 	{
 		arena_allocator_t* c = (arena_allocator_t*)context;
 
 		uintptr_t current_ptr = (uintptr_t)c->memory + (uintptr_t)c->current_size;
-		uintptr_t relative_offset = align_forward(current_ptr, alignment) - (uintptr_t)c->memory;
+		allocator_t::size_type aligned_size = align_forward(current_ptr, alignment) - (uintptr_t)c->memory;
+		allocator_t::size_type requested_size = aligned_size + size;
 
 		// Ensure capacity.
-		// TODO(sand_noodles): BUG! Off by one error - spotted in vector.h, manifested here.
-		if(relative_offset + size + 1 > c->total_size)
+		if(requested_size > c->total_size)
 		{
 			if(!c->is_extendable)
 			{
@@ -65,7 +81,12 @@ namespace orion
 				return nullptr;
 			}
 
-			const usize new_total_size = c->total_size * ORION_ALLOCATORS_ARENA_CAPACITY_GROWTH_RATE;
+			const allocator_t::size_type new_total_size =
+				math::next_power_of_two(
+				      math::max(
+				      requested_size,
+				      c->total_size * ORION_ALLOCATORS_ARENA_CAPACITY_GROWTH_RATE
+				));
 			OE_LOG_TRACE("arena_allocator_t: increased the capacity from %zu to %zu bytes.", c->total_size, new_total_size);
 			c->memory = platform_reallocate(c->memory, new_total_size);
 			c->total_size = new_total_size;
@@ -76,21 +97,20 @@ namespace orion
 			}
 		}
 
-		void* ptr = ((u8*)c->memory) + relative_offset;
-		c->current_size = relative_offset + size;
+		c->current_size = requested_size;
+		void* ptr = (u8*)c->memory + aligned_size;
 		OE_LOG_TRACE("arena_allocator_t: allocated %zu bytes (aligned to %zu bytes).", size, alignment);
-		platform_zero_memory(ptr, size); // Zero memory by default.
 		return ptr;
 	}
 
-	static void* arena_allocate(usize size, void* context)
+	static void* arena_allocate(allocator_t::size_type size, void* context)
 	{
 		return arena_allocate_aligned(size,
 			                          ORION_MEMORY_DEFAULT_ALIGNMENT,
 			                          (arena_allocator_t*)context);
 	}
 
-	static void arena_deallocate(void* ptr, usize size, void* context)
+	static void arena_deallocate(void* ptr, allocator_t::size_type size, void* context)
 	{
 		ORION_SUPPRESS_UNUSED(ptr);
 		ORION_SUPPRESS_UNUSED(size);
@@ -108,8 +128,17 @@ namespace orion
 
 	static void* arena_get_base_pointer(void* context)
 	{
-		arena_allocator_t* c = (arena_allocator_t*)context;
-		return c->memory;
+		return ((arena_allocator_t*)context)->memory;
+	}
+
+	static allocator_t::size_type arena_current_size(void* context)
+	{
+		return ((arena_allocator_t*)context)->current_size;
+	}
+
+	static allocator_t::size_type arena_max_size(void* context)
+	{
+		return ((arena_allocator_t*)context)->total_size;
 	}
 
 	allocator_t arena_allocator_create(b8 is_extendable)
@@ -125,6 +154,8 @@ namespace orion
 			.deallocate = arena_deallocate,
 			.deallocate_all = arena_deallocate_all,
 			.get_base_pointer = arena_get_base_pointer,
+			.get_current_size = arena_current_size,
+			.get_max_size = arena_max_size,
 		};
 	}
 
@@ -132,7 +163,7 @@ namespace orion
 	// Private
 	//
 
-	static uintptr_t align_forward(uintptr_t ptr, usize alignment)
+	static uintptr_t align_forward(uintptr_t ptr, allocator_t::size_type alignment)
 	{
 		OE_ASSERT_TRUE(is_power_of_two(alignment),
 			"arena_allocator_t: align_forward() failed - alignment has to be a power of two.");

@@ -2,10 +2,10 @@
 
 #include "platform/types.h"
 
-#include "core/memory/allocators/allocator.h"
-
 namespace orion
 {
+	struct allocator_t;
+
 	/**
 	 * @brief Arena allocator is an allocator that allocates
 	 * memory in a linear fashion, by simply moving
