@@ -18,8 +18,8 @@ namespace orion
 		#error Unknown compiler detected.
 	#endif
 
-	// If at least C++11
 	#ifndef ORION_CONSTEXPR
+		// If at least C++11
 		#if __cplusplus > 201103L
 			#define ORION_CONSTEXPR constexpr
 			#define ORION_CONSTEXPR_OR_CONST constexpr

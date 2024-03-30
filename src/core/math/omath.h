@@ -85,6 +85,22 @@ namespace orion::math
 		return (x > 0) && (x & (x - 1)) == 0;
 	}
 
+	template <typename T>
+	ORION_CONSTEXPR T next_power_of_two(T x)
+	{
+		x--;
+		x |= x >> 1;
+		x |= x >> 2;
+		x |= x >> 4;
+		x |= x >> 8;
+		x |= x >> 16;
+		if ORION_CONSTEXPR (sizeof(T) == sizeof(u64))
+		{
+			x |= x >> 32;
+		}
+		return ++x;
+	}
+
 	/** Compares two values and returns true if they are equal, false otherwise. */
 	template <typename T>
 	ORION_CONSTEXPR b8 compare(T x, T y)
