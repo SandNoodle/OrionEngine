@@ -12,27 +12,35 @@ namespace orion
 		void* user_data;
 
 		/**
-		 * @brief
-		 * @param user_data
+		 * @brief Callback to the function that should be called
+		 * at the start of the application's lifetime.
+		 * @param user_data Pointer to the structure holding all
+		 * the user data.
 		 */
 		void (*start)(void* user_data);
 
 		/**
-		 * @brief
-		 * @param user_data
+		 * @brief Callback to the function that should be called
+		 * at the end of the application's lifetime.
+		 * @param user_data Pointer to the structure holding all
+		 * the user data.
 		 */
 		void (*stop)(void* user_data);
 
 		/**
-		 * @brief
-		 * @param delta_time
-		 * @param user_data
+		 * @brief Callback to the function that should be called
+		 * `updates_per_second` times each frame.
+		 * @param delta_time Time elapsed since the last update call.
+		 * @param user_data Pointer to the structure holding all
+		 * the user data.
 		 */
 		void (*update)(f32 delta_time, void* user_data);
 
 		/**
-		 * @brief
-		 * @param user_data
+		 * @brief Callback to the function that should perform
+		 * the rendering of the frame.
+		 * @param user_data Pointer to the structure holding all
+		 * the user data.
 		 */
 		void (*render)(void* user_data);
 	};
