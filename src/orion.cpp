@@ -71,19 +71,4 @@ namespace orion
 			}
 		}
 	}
-
-
-	void orion_main(application_t* app)
-	{
-		OE_ASSERT_TRUE(app, "orion_main: failed to provide the application_t struct.");
-		OE_ASSERT_TRUE(app->_callbacks.user_data, "orion_main: failed to provide user_data.");
-		OE_ASSERT_TRUE(app->_callbacks.start,     "orion_main: failed to provide the 'start' callback.");
-		OE_ASSERT_TRUE(app->_callbacks.stop,      "orion_main: failed to provide the 'stop' callback.");
-		OE_ASSERT_TRUE(app->_callbacks.update,    "orion_main: failed to provide the 'update' callback.");
-		OE_ASSERT_TRUE(app->_callbacks.render,    "orion_main: failed to provide the 'render' callback.");
-		app->start();
-		app->run();
-		app->stop();
-		app->destroy();
-	}
 }
