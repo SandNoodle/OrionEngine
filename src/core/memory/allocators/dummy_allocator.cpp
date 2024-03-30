@@ -11,7 +11,6 @@ namespace orion
 	static void* dummy_allocate_aligned(allocator_t::size_type, allocator_t::size_type, void*) { return nullptr; }
 	static void  dummy_deallocate(void*, allocator_t::size_type, void*) {}
 	static void  dummy_deallocate_all(void*) {}
-	static void* dummy_get_base_pointer(void*) {return nullptr; }
 	static allocator_t::size_type dummy_size (void*) { return 0; }
 
 	allocator_t dummy_allocator_create(void)
@@ -24,9 +23,8 @@ namespace orion
 			.allocate_aligned = dummy_allocate_aligned,
 			.deallocate = dummy_deallocate,
 			.deallocate_all = dummy_deallocate_all,
-			.get_base_pointer = dummy_get_base_pointer,
-			.get_current_size = dummy_size,
-			.get_max_size = dummy_size,
+			.size = dummy_size,
+			.capacity = dummy_size,
 		};
 	}
 }

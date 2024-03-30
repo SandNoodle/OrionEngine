@@ -57,24 +57,15 @@ namespace orion
 		void (*deallocate_all)(void* context);
 
 		/**
-		 * @brief Returns the pointer to memory at the start of the allocator.
+		 * @brief Returns the current size of the memory used by an allocator.
 		 * @param context pointer to the allocator's context structure.
-		 * @return pointer to the memory 'at an offset equal to 0'.
 		 */
-		void* (*get_base_pointer)(void* context);
+		size_type (*size)(void* context);
 
 		/**
-		 * @brief
+		 * @brief Returns the total capacity of the allocator.
 		 * @param context pointer to the allocator's context structure.
-		 * @return
 		 */
-		size_type (*get_current_size)(void* context);
-
-		/**
-		 * @brief
-		 * @param context pointer to the allocator's context structure.
-		 * @return
-		 */
-		size_type (*get_max_size)(void* context);
+		size_type (*capacity)(void* context);
 	};
 }

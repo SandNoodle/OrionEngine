@@ -15,22 +15,22 @@ namespace orion
 	struct arena_allocator_t
 	{
 		void*                  memory;
-		allocator_t::size_type total_size;
-		allocator_t::size_type current_size;
+		allocator_t::size_type capacity;
+		allocator_t::size_type size;
 		b8                     is_extendable;
 	};
 
-	static void arena_create(allocator_t::size_type total_size, void* context)
+	static void arena_create(allocator_t::size_type capacity, void* context)
 	{
 		arena_allocator_t* c = (arena_allocator_t*)context;
 
-		const allocator_t::size_type total_size_aligned = math::next_power_of_two(total_size);
+		const allocator_t::size_type capacity_aligned = math::next_power_of_two(capacity);
 
 		OE_ASSERT_FALSE(c->memory, "arena_allocator_t: create() was already called.");
-		c->memory            = platform_allocate(total_size_aligned);
-		c->total_size        = total_size_aligned;
-		c->current_size      = 0;
-		OE_LOG_TRACE("arena_allocator_t: create() called, requesting the initial allocation of %zu bytes.", total_size);
+		c->memory    = platform_allocate(capacity_aligned);
+		c->capacity  = capacity_aligned;
+		c->size      = 0;
+		OE_LOG_TRACE("arena_allocator_t: create() called, requesting the initial allocation of %zu bytes.", capacity);
 	}
 
 	static void arena_destroy(void* context)
@@ -42,37 +42,37 @@ namespace orion
 		}
 
 		arena_allocator_t* c = (arena_allocator_t*)context;
-		OE_LOG_TRACE("arena_allocator_t: destroy() called, which freed all %zu bytes.", c->total_size);
-		c->current_size = 0;
-		c->total_size = 0;
+		OE_LOG_TRACE("arena_allocator_t: destroy() called, which freed all %zu bytes.", c->capacity);
+		c->size = 0;
+		c->capacity = 0;
 		platform_free(c->memory);
 		platform_free(c);
 	}
 
 	// TODO(sand_noodles): This function should do this things as follows:
-	//                     1. Given that current_ptr = c->memory + c->current_size;
+	//                     1. Given that current_ptr = c->memory + c->size;
 	//                     2. Given that aligned_ptr = align_forward(current_ptr, alignment);
 	//                     3. Given that aligned_size = aligned_ptr - c->memory;
 	//                     4. Given that requested_size = aligned_size + size;
-	//                     5. If requested_size > c->total_size
+	//                     5. If requested_size > c->capacity
 	//                        0. Check if extendable, if not -> return nullptr;
-	//                        1. new_total_size is equal to either requested_size or total_size * GROWTH_RATE,
+	//                        1. new_capacity is equal to either requested_size or capacity * GROWTH_RATE,
 	//                           both of these then rounded to the nearest power of two.
 	//                        2.  Reallocate memory.
 	//                        3. Check if reallocation succeeded, if not -> return nullptr;
-	//                     6. c->current_size = requested_size;
+	//                     6. c->size = requested_size;
 	//                     7. Given that ptr = c->memory + aligned_size;
 	//                     7. Return ptr;
 	static void* arena_allocate_aligned(allocator_t::size_type size, allocator_t::size_type alignment, void* context)
 	{
 		arena_allocator_t* c = (arena_allocator_t*)context;
 
-		uintptr_t current_ptr = (uintptr_t)c->memory + (uintptr_t)c->current_size;
+		uintptr_t current_ptr = (uintptr_t)c->memory + (uintptr_t)c->size;
 		allocator_t::size_type aligned_size = align_forward(current_ptr, alignment) - (uintptr_t)c->memory;
 		allocator_t::size_type requested_size = aligned_size + size;
 
 		// Ensure capacity.
-		if(requested_size > c->total_size)
+		if(requested_size > c->capacity)
 		{
 			if(!c->is_extendable)
 			{
@@ -81,23 +81,23 @@ namespace orion
 				return nullptr;
 			}
 
-			const allocator_t::size_type new_total_size =
+			const allocator_t::size_type new_capacity =
 				math::next_power_of_two(
 				      math::max(
 				      requested_size,
-				      c->total_size * ORION_ALLOCATORS_ARENA_CAPACITY_GROWTH_RATE
+				      c->capacity * ORION_ALLOCATORS_ARENA_CAPACITY_GROWTH_RATE
 				));
-			OE_LOG_TRACE("arena_allocator_t: increased the capacity from %zu to %zu bytes.", c->total_size, new_total_size);
-			c->memory = platform_reallocate(c->memory, new_total_size);
-			c->total_size = new_total_size;
+			OE_LOG_TRACE("arena_allocator_t: increased the capacity from %zu to %zu bytes.", c->capacity, new_capacity);
+			c->memory = platform_reallocate(c->memory, new_capacity);
+			c->capacity = new_capacity;
 			if(!c->memory)
 			{
-				OE_LOG_ERROR("arena_allocator_t: failed to reallocate the memory.", new_total_size);
+				OE_LOG_ERROR("arena_allocator_t: failed to reallocate the memory.", new_capacity);
 				return nullptr;
 			}
 		}
 
-		c->current_size = requested_size;
+		c->size = requested_size;
 		void* ptr = (u8*)c->memory + aligned_size;
 		OE_LOG_TRACE("arena_allocator_t: allocated %zu bytes (aligned to %zu bytes).", size, alignment);
 		return ptr;
@@ -121,24 +121,19 @@ namespace orion
 	static void arena_deallocate_all(void* context)
 	{
 		arena_allocator_t* c = (arena_allocator_t*)context;
-		c->current_size = 0;
-		platform_zero_memory(c->memory, c->total_size);
+		c->size = 0;
+		platform_zero_memory(c->memory, c->capacity);
 		OE_LOG_TRACE("arena_allocator_t: arena_deallocate_all() called.");
 	}
 
-	static void* arena_get_base_pointer(void* context)
+	static allocator_t::size_type arena_size(void* context)
 	{
-		return ((arena_allocator_t*)context)->memory;
+		return ((arena_allocator_t*)context)->size;
 	}
 
-	static allocator_t::size_type arena_current_size(void* context)
+	static allocator_t::size_type arena_capacity(void* context)
 	{
-		return ((arena_allocator_t*)context)->current_size;
-	}
-
-	static allocator_t::size_type arena_max_size(void* context)
-	{
-		return ((arena_allocator_t*)context)->total_size;
+		return ((arena_allocator_t*)context)->capacity;
 	}
 
 	allocator_t arena_allocator_create(b8 is_extendable)
@@ -153,9 +148,8 @@ namespace orion
 			.allocate_aligned = arena_allocate_aligned,
 			.deallocate = arena_deallocate,
 			.deallocate_all = arena_deallocate_all,
-			.get_base_pointer = arena_get_base_pointer,
-			.get_current_size = arena_current_size,
-			.get_max_size = arena_max_size,
+			.size = arena_size,
+			.capacity = arena_capacity,
 		};
 	}
 
