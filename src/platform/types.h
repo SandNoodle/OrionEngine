@@ -4,8 +4,8 @@
 
 namespace
 {
-	using s8  = uint8_t;
-	using s16 = uint16_t;
+	using c8  = uint8_t;
+	using c16 = uint16_t;
 
 	using b8  = uint8_t;
 	using b32 = uint32_t;
