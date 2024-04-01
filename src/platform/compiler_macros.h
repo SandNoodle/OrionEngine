@@ -18,6 +18,11 @@ namespace orion
 		#error Unknown compiler detected.
 	#endif
 
+	// TODO: force always inline.
+	#ifndef ORION_INLINE
+	#define ORION_INLINE inline
+	#endif // ORION_INLINE
+
 	#ifndef ORION_CONSTEXPR
 		// If at least C++11
 		#if __cplusplus > 201103L
