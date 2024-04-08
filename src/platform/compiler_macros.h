@@ -23,17 +23,6 @@ namespace orion
 	#define ORION_INLINE inline
 	#endif // ORION_INLINE
 
-	#ifndef ORION_CONSTEXPR
-		// If at least C++11
-		#if __cplusplus > 201103L
-			#define ORION_CONSTEXPR constexpr
-			#define ORION_CONSTEXPR_OR_CONST constexpr
-		#else
-			#define ORION_CONSTEXPR
-			#define ORION_CONSTEXPR_OR_CONST const
-		#endif // C++ version < C++11
-	#endif // ORION_CONSTEXP
-
 	#ifndef ORION_SUPPRESS_UNUSED
 	#define ORION_SUPPRESS_UNUSED(x) (void)(x)
 	#endif // ORION_SUPPRESS_UNUSED

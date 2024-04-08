@@ -9,12 +9,12 @@
 namespace orion
 {
 	/* Specifies type of buffer requested. */
-	enum buffer_type : u8
+	enum class buffer_type : u8
 	{
-		buffer_type_vbo,  // Vertex Buffer Object
-		buffer_type_ebo,  // Element Buffer Object
-		buffer_type_ubo,  // Uniform Buffer Object
-		buffer_type_ssbo, // Shader Storage Buffer Object
+		vbo,  // Vertex Buffer Object
+		ebo,  // Element Buffer Object
+		ubo,  // Uniform Buffer Object
+		ssbo, // Shader Storage Buffer Object
 	};
 
 	/**
@@ -28,17 +28,17 @@ namespace orion
 	 *  * read    - data will only be read, not written.
 	 *  * copy    - data will be neigther written or read, only copied.
 	 */
-	enum buffer_usage : u8
+	enum class buffer_usage : u8
 	{
-		buffer_usage_static_draw,
-		buffer_usage_static_read,
-		buffer_usage_static_copy,
-		buffer_usage_dynamic_draw,
-		buffer_usage_dynamic_read,
-		buffer_usage_dynamic_copy,
-		buffer_usage_stream_draw,
-		buffer_usage_stream_read,
-		buffer_usage_stream_copy,
+		static_draw,
+		static_read,
+		static_copy,
+		dynamic_draw,
+		dynamic_read,
+		dynamic_copy,
+		stream_draw,
+		stream_read,
+		stream_copy,
 	};
 
 	/* Descriptor of a Buffer. */

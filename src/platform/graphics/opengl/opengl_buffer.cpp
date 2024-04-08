@@ -55,10 +55,10 @@ namespace orion
 	{
 		switch(type)
 		{
-			case buffer_type_vbo:  return GL_ARRAY_BUFFER;
-			case buffer_type_ebo:  return GL_ELEMENT_ARRAY_BUFFER;
-			case buffer_type_ubo:  return GL_UNIFORM_BUFFER;
-			case buffer_type_ssbo: return GL_SHADER_STORAGE_BUFFER;
+			case buffer_type::vbo:  return GL_ARRAY_BUFFER;
+			case buffer_type::ebo:  return GL_ELEMENT_ARRAY_BUFFER;
+			case buffer_type::ubo:  return GL_UNIFORM_BUFFER;
+			case buffer_type::ssbo: return GL_SHADER_STORAGE_BUFFER;
 			default:
 				OE_UNREACHABLE();
 		}
@@ -68,15 +68,15 @@ namespace orion
 	{
 		switch(usage)
 		{
-			case buffer_usage_static_draw:  return GL_STATIC_DRAW;
-			case buffer_usage_static_read:  return GL_STATIC_READ;
-			case buffer_usage_static_copy:  return GL_STATIC_COPY;
-			case buffer_usage_dynamic_draw: return GL_DYNAMIC_DRAW;
-			case buffer_usage_dynamic_read: return GL_DYNAMIC_READ;
-			case buffer_usage_dynamic_copy: return GL_DYNAMIC_COPY;
-			case buffer_usage_stream_draw:  return GL_STREAM_DRAW;
-			case buffer_usage_stream_read:  return GL_STREAM_READ;
-			case buffer_usage_stream_copy:  return GL_STREAM_COPY;
+			case buffer_usage::static_draw:  return GL_STATIC_DRAW;
+			case buffer_usage::static_read:  return GL_STATIC_READ;
+			case buffer_usage::static_copy:  return GL_STATIC_COPY;
+			case buffer_usage::dynamic_draw: return GL_DYNAMIC_DRAW;
+			case buffer_usage::dynamic_read: return GL_DYNAMIC_READ;
+			case buffer_usage::dynamic_copy: return GL_DYNAMIC_COPY;
+			case buffer_usage::stream_draw:  return GL_STREAM_DRAW;
+			case buffer_usage::stream_read:  return GL_STREAM_READ;
+			case buffer_usage::stream_copy:  return GL_STREAM_COPY;
 			default:
 				OE_UNREACHABLE();
 		}

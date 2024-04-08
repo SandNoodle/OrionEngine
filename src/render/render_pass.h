@@ -1,18 +1,16 @@
 #pragma once
 
 #include "platform/types.h"
+#include "render/resource/frame_graph_resource.h"
+#include "orion_config.h"
 
 namespace orion
 {
-	typedef struct render_pass_t render_pass_t;
-
-	/**
-	 * @brief 
-	 */
 	struct render_pass_t
 	{
-		b8   (*create) (render_pass_t* self);
-		b8   (*execute)(render_pass_t* self);
-		void (*destroy)(render_pass_t* self);
+		frame_graph_resource_id _reads[ORION_RENDER_PASS_MAX_READ_RESOURCES];
+		frame_graph_resource_id _writes[ORION_RENDER_PASS_MAX_WRITE_RESOURCES];
+		usize                   _reads_count;
+		usize                   _writes_count;
 	};
 }

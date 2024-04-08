@@ -8,10 +8,6 @@
 
 namespace orion
 {
-	static GLenum get_format(framebuffer_color_texture_format_t format);
-	static GLenum get_base_format(framebuffer_color_texture_format_t format);
-	static GLenum get_format(framebuffer_depth_texture_format_t format);
-
 	framebuffer_t framebuffer_t::create(const framebuffer_desc_t& desc)
 	{
 		framebuffer_t f;
@@ -106,7 +102,8 @@ namespace orion
 			glNamedFramebufferTexture(id, GL_COLOR_ATTACHMENT0 + i, texture_id, 0);
 		}
 
-		if(depth_texture_format != framebuffer_depth_format_none)
+		// TODO: Check for depth format.
+		if(depth_texture_format != texture_format::none)
 		{
 			glCreateTextures(GL_TEXTURE_2D, 1, &depth_texture_id);
 			glTextureParameteri(depth_texture_id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -133,39 +130,6 @@ namespace orion
 	//
 	//
 	//
-
-	static GLenum get_format(framebuffer_color_texture_format_t format)
-	{
-		switch(format)
-		{
-			case framebuffer_color_format_rgba8:  return GL_RGBA8;
-			case framebuffer_color_format_rgba16: return GL_RGBA16;
-			default:
-				OE_UNREACHABLE();
-		}
-	}
-
-	static GLenum get_base_format(framebuffer_color_texture_format_t format)
-	{
-		switch(format)
-		{
-			case framebuffer_color_format_rgba8:  return GL_RGBA;
-			case framebuffer_color_format_rgba16: return GL_RGBA;
-			default:
-				OE_UNREACHABLE();
-		}
-	}
-
-	static GLenum get_format(framebuffer_depth_texture_format_t format)
-	{
-		switch(format)
-		{
-			case framebuffer_depth_format_depth24stencil8:
-				return GL_DEPTH24_STENCIL8;
-			default:
-				OE_UNREACHABLE();
-		}
-	}
 }
 
 #endif // ORION_GRAPHICS_API_OPENGL

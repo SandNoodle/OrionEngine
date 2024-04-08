@@ -44,5 +44,24 @@ namespace orion
 	#ifndef ORION_GRAPHICS_MAX_TEXTURE_SAMPLERS
 	#define ORION_GRAPHICS_MAX_TEXTURE_SAMPLERS 16
 	#endif // ORION_GRAPHICS_MAX_SHADER_INPUTS
+
+	//
+	// Render
+	//
+
+	// Maximum amount of READ operations in a Render Pass.
+	#ifndef ORION_RENDER_PASS_MAX_READ_RESOURCES
+	#define ORION_RENDER_PASS_MAX_READ_RESOURCES 32
+	#endif // ORION_RENDER_PASS_MAX_READ_RESOURCES
+
+	// Maximum amount of WRITE operations in a Render Pass.
+	#ifndef ORION_RENDER_PASS_MAX_WRITE_RESOURCES
+	#define ORION_RENDER_PASS_MAX_WRITE_RESOURCES 32
+	#endif // ORION_RENDER_PASS_MAX_WRITE_RESOURCES
+
+	// Maximum amount of Render Passes stored in a Frame Graph.
+	#ifndef ORION_RENDER_MAX_PASSES_PER_GRAPH
+	#define ORION_RENDER_MAX_PASSES_PER_GRAPH 32
+	#endif // ORION_RENDER_MAX_PASS_COUNT_PER_GRAPH
 }
 

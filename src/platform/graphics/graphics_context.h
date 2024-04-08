@@ -3,15 +3,18 @@
 #include "platform/types.h"
 
 #include "platform/graphics/buffer.h"
-#include "platform/graphics/shader.h"
-#include "platform/graphics/pipeline.h"
 #include "platform/graphics/framebuffer.h"
+#include "platform/graphics/pipeline.h"
+#include "platform/graphics/shader.h"
+#include "platform/graphics/texture.h"
 
 #ifdef ORION_GRAPHICS_API_OPENGL
 #include "glad/glad.h"
 #else
 #error "Unknown Graphics API!"
 #endif // ORION_GRAPHICS_API_OPENGL
+
+#include <initializer_list>
 
 namespace orion
 {
@@ -46,4 +49,19 @@ namespace orion
 
 		void draw_indexed(draw_attributes_t attrib) const;
 	};
+
+#if 0
+	// @TODO: Rename to graphics_context_t and remove the former after this is done.
+	struct render_context_t
+	{
+		void bind_framebuffer(const framebuffer_t& framebuffer);
+
+		void bind_texture(const texture_t& texture);
+		void bind_textures(std::initializer_list<texture_t> texture);
+
+		void bind_buffer(const buffer_t& buffer);
+		void bind_buffers(std::initializer_list<buffer_t> buffers);
+
+	};
+#endif
 }

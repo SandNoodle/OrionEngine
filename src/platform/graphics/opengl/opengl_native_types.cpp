@@ -10,15 +10,16 @@ namespace orion
 	{
 		switch(type)
 		{
-			case  gpu_atomic_type::bool_type:    return GL_BOOL;
-			case  gpu_atomic_type::int8_type:    return GL_BYTE;
-			case  gpu_atomic_type::int16_type:   return GL_SHORT;
-			case  gpu_atomic_type::int32_type:   return GL_INT;
-			case  gpu_atomic_type::float16_type: return GL_HALF_FLOAT;
-			case  gpu_atomic_type::float32_type: return GL_FLOAT;
-			case  gpu_atomic_type::float64_type: return GL_DOUBLE;
+			case  gpu_atomic_type::type_bool:    return GL_BOOL;
+			case  gpu_atomic_type::type_int8:    return GL_BYTE;
+			case  gpu_atomic_type::type_int16:   return GL_SHORT;
+			case  gpu_atomic_type::type_int32:   return GL_INT;
+			case  gpu_atomic_type::type_float16: return GL_HALF_FLOAT;
+			case  gpu_atomic_type::type_float32: return GL_FLOAT;
+			case  gpu_atomic_type::type_float64: return GL_DOUBLE;
 			default:
 				OE_UNREACHABLE("unhandled gpu_atomic_type case.");
+				return GL_NONE;
 		}
 	}
 
@@ -26,15 +27,16 @@ namespace orion
 	{
 		switch(type)
 		{
-			case  gpu_atomic_type::bool_type:    return GL_BOOL;
-			case  gpu_atomic_type::int8_type:    return GL_BYTE;
-			case  gpu_atomic_type::int16_type:   return GL_SHORT;
-			case  gpu_atomic_type::int32_type:   return GL_INT;
-			case  gpu_atomic_type::float16_type: return GL_HALF_FLOAT;
-			case  gpu_atomic_type::float32_type: return GL_FLOAT;
-			case  gpu_atomic_type::float64_type: return GL_DOUBLE;
+			case  gpu_atomic_type::type_bool:    return GL_BOOL;
+			case  gpu_atomic_type::type_int8:    return GL_BYTE;
+			case  gpu_atomic_type::type_int16:   return GL_SHORT;
+			case  gpu_atomic_type::type_int32:   return GL_INT;
+			case  gpu_atomic_type::type_float16: return GL_HALF_FLOAT;
+			case  gpu_atomic_type::type_float32: return GL_FLOAT;
+			case  gpu_atomic_type::type_float64: return GL_DOUBLE;
 			default:
 				OE_UNREACHABLE("unhandled gpu_atomic_type case.");
+				return GL_NONE;
 		}
 	}
 }

@@ -34,14 +34,8 @@ namespace orion
 		#error "Unknown Graphics API!"
 	#endif // ORION_GRAPHICS_API_OPENGL
 
-		const char* title;         // Do NOT set directly.
-		u16         width;         // Do NOT set directly.
-		u16         height;        // Do NOT set directly.
-		b8          is_visible;    // Do NOT set directly.
-		b8          is_vsync;      // Do NOT set directly.
-		b8          is_fullscreen; // Do NOT set directly.
-		b8          is_resizable;  // Do NOT set directly.
-		handle_t    handle;
+		window_desc_t desc;
+		handle_t      handle;
 
 		/**
 		 * @brief Creates new window from given descriptor.

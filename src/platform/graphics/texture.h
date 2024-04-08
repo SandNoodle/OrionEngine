@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform/types.h"
+#include "platform/graphics/texture_format.h"
 
 #ifdef ORION_GRAPHICS_API_OPENGL
 #include "glad/glad.h"
@@ -10,30 +11,11 @@
 
 namespace orion
 {
-	enum texture_format_t : u8
-	{
-		// 3 channel
-		texture_format_rgb8,
-		texture_format_rgb16,
-		texture_format_rgb32f,
-
-		// 4 channel
-		texture_format_rgba8,
-		texture_format_rgba16,
-		texture_format_rgba32f,
-	};
-
-	enum texture_flags_t
-	{
-		texture_flags_none             = 0 << 0,
-		texture_flags_generate_mipmaps = 0 << 1,
-	};
-
 	/* Descriptor of a Texture. */
 	struct texture_desc_t
 	{
-		texture_format_t format;
-		texture_flags_t  flags;
+		texture_format format;
+		texture_flags  flags;
 		u16 width;
 		u16 height;
 	};

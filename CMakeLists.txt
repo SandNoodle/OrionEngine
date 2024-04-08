@@ -41,6 +41,8 @@ add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+add_compile_options(-Wall -Wextra -Wpedantic -fno-exceptions)
+
 # @TODO Temp force OpenGL as rendering api.
 target_compile_definitions(${PROJECT_NAME} PUBLIC ORION_GRAPHICS_API_OPENGL)
 
@@ -66,3 +68,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 add_subdirectory(lib/stb)
 set_target_properties(stb PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${PROJECT_NAME} PUBLIC stb)
+
+add_subdirectory(lib/glm)
+set_target_properties(glm PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm)

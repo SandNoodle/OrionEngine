@@ -9,46 +9,46 @@ namespace orion
 	 */
 	typedef struct pipeline_t pipeline_t;
 
-	enum fill_mode_t : u8
+	enum class fill_mode : u8
 	{
-		fill_mode_none,      // Only polygons' vertices are drawn.
-		fill_mode_solid,     // Interrior of the polygon is filled.
-		fill_mode_wireframe, // Boundary edges of the polygons are drawn.
+		none,      // Only polygons' vertices are drawn.
+		solid,     // Interrior of the polygon is filled.
+		wireframe, // Boundary edges of the polygons are drawn.
 	};
 
-	enum cull_mode_t : u8
+	enum class cull_mode : u8
 	{
-		cull_mode_none,           // No culling is done.
-		cull_mode_front,          // Only front-facing polygons are culled.
-		cull_mode_back,           // Only back-facing polygons are culled.
-		cull_mode_front_and_back, // Both front- and back- facing polygons are culled.
+		none,           // No culling is done.
+		front,          // Only front-facing polygons are culled.
+		back,           // Only back-facing polygons are culled.
+		front_and_back, // Both front- and back- facing polygons are culled.
 	};
 
-	enum primitive_topology_t : u8
+	enum class primitive_topology : u8
 	{
-		primitive_topology_triangle_list,
-		primitive_topology_triangle_strip,
-		primitive_topology_point_list,
+		triangle_list,
+		triangle_strip,
+		point_list,
 	};
 
-	enum depth_function_t : u8
+	enum class depth_function : u8
 	{
-		depth_function_none,          // Disables depth testing.
-		depth_function_never,         // Depth testing NEVER passes.
-		depth_function_always,        // Depth testing ALWAYS passes.
-		depth_function_less,          // Only depth value LESS than the value stored passes.
-		depth_function_less_equal,    // Only depth value LESS or EQUAL than the value stored passes.
-		depth_function_equal,         // Only depth value EQUAL to the value stored passes.
-		depth_function_not_equal,     // Only depth value NOT EQUAL to the value stored passes.
-		depth_function_greater,       // Only depth value GREATER than the value stored passes.
-		depth_function_greater_equal, // Only depth value GREATER or EQUAL than the value stored passes.
+		none,          // Disables depth testing.
+		never,         // Depth testing NEVER passes.
+		always,        // Depth testing ALWAYS passes.
+		less,          // Only depth value LESS than the value stored passes.
+		less_equal,    // Only depth value LESS or EQUAL than the value stored passes.
+		equal,         // Only depth value EQUAL to the value stored passes.
+		not_equal,     // Only depth value NOT EQUAL to the value stored passes.
+		greater,       // Only depth value GREATER than the value stored passes.
+		greater_equal, // Only depth value GREATER or EQUAL than the value stored passes.
 	};
 
 
-	enum pipeline_type_t : u8
+	enum pipeline_type : u8
 	{
-		pipeline_type_graphics,
-		pipeline_type_compute,
+		graphics,
+		compute,
 	};
 
 	/**
@@ -56,19 +56,19 @@ namespace orion
 	 */
 	struct pipeline_desc_t
 	{
-		pipeline_type_t type = pipeline_type_graphics;
+		pipeline_type type = pipeline_type::graphics;
 		struct pipeline_rasterizer_t
 		{
-			fill_mode_t fill_mode         = fill_mode_solid;
-			cull_mode_t cull_mode         = cull_mode_none;
-			primitive_topology_t topology = primitive_topology_triangle_list;
-			b8 front_counter_clockwise    = true;
-			b8 scissor_enable             = true;
+			fill_mode          fill_mode                 = fill_mode::solid;
+			cull_mode          cull_mode                 = cull_mode::none;
+			primitive_topology topology                  = primitive_topology::triangle_list;
+			b8                 front_counter_clockwise   = true;
+			b8                 scissor_enable            = true;
 		} rasterizer;
 		struct pipeline_depth_stencil_t
 		{
-			depth_function_t depth_function = depth_function_less_equal;
-			b8 use_depth_mask               = true;
+			depth_function depth_function = depth_function::less_equal;
+			b8             use_depth_mask = true;
 		} depth_stencil;
 	};
 

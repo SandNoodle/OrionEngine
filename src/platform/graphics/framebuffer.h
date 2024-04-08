@@ -3,6 +3,7 @@
 #include "orion_config.h"
 
 #include "platform/types.h"
+#include "platform/graphics/texture_format.h"
 
 #ifdef ORION_GRAPHICS_API_OPENGL
 #include "glad/glad.h"
@@ -10,23 +11,11 @@
 
 namespace orion
 {
-	enum framebuffer_color_texture_format_t : u8
-	{
-		framebuffer_color_format_rgba8,
-		framebuffer_color_format_rgba16,
-	};
-
-	enum framebuffer_depth_texture_format_t : u8
-	{
-		framebuffer_depth_format_none = 0,
-		framebuffer_depth_format_depth24stencil8,
-	};
-
 	/** Descriptor of a Framebuffer. */
 	struct framebuffer_desc_t
 	{
-		framebuffer_color_texture_format_t color_texture_formats[ORION_GRAPHICS_MAX_TEXTURE_SAMPLERS];
-		framebuffer_depth_texture_format_t depth_texture_format;
+		texture_format color_texture_formats[ORION_GRAPHICS_MAX_TEXTURE_SAMPLERS];
+		texture_format depth_texture_format;
 		usize color_texture_formats_count;
 		u32 width;
 		u32 height;
@@ -39,8 +28,8 @@ namespace orion
 	{
 	#ifdef ORION_GRAPHICS_API_OPENGL
 		using id_t     = GLuint;
-		using color_format_t = framebuffer_color_texture_format_t;
-		using depth_format_t = framebuffer_depth_texture_format_t;
+		using color_format_t = texture_format;
+		using depth_format_t = texture_format;
 	#else
 		#error "Unknown Graphics API!"
 	#endif // ORION_GRAPHICS_API_OPENGL

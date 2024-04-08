@@ -1,9 +1,9 @@
 #include "orion.h"
 
 #include "platform/timer.h"
+#include "core/log.h"
 
-#include "core/assert.h"
-#include "core/math/omath.h"
+#include <cmath>
 
 namespace orion
 {
@@ -44,7 +44,7 @@ namespace orion
 		{
 			_window.poll_events();
 			f64 current_time = platform_get_absolute_time();
-			f64 delta_time = math::min(current_time - last_time, max_update_time);
+			f64 delta_time = std::min(current_time - last_time, max_update_time);
 			last_time = current_time;
 
 			accumulator += delta_time;

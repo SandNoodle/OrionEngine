@@ -3,13 +3,11 @@
 #ifdef ORION_GRAPHICS_API_OPENGL
 
 #include "core/assert.h"
-#include "core/math/omath.h"
+
+#include <cmath>
 
 namespace orion
 {
-	static texture_t::format_t get_format(texture_format_t format);
-	static texture_t::format_t get_base_format(texture_format_t format);
-
 	texture_t texture_t::create_texture_2d(const texture_desc_t& desc, const void* data, u32 size)
 	{
 		texture_t t;
@@ -26,8 +24,8 @@ namespace orion
 		glTextureParameteri(t.id, GL_TEXTURE_WRAP_R, GL_REPEAT);
 		glTextureParameteri(t.id, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		const b8 generate_mipmaps = desc.flags & texture_flags_generate_mipmaps;
-		const usize mipmap_count = math::floor(math::log2(math::max(desc.width, desc.height))) + 1;
+		const b8 generate_mipmaps = desc.flags & texture_flags::generate_mipmaps;
+		const usize mipmap_count = std::floor(std::log2(std::max(desc.width, desc.height))) + 1;
 
 		glTextureStorage2D(t.id, mipmap_count, t.format, t.width, t.height);
 		glTextureSubImage2D(t.id, 0, 0, 0, t.width, t.height, t.base_format, GL_UNSIGNED_BYTE, data);
@@ -56,61 +54,6 @@ namespace orion
 	void texture_t::set_data(const void* data, u32 size)
 	{
 		OE_TODO("not implemented yet.");
-	}
-
-	u8 texture_t::channel_count() const
-	{
-		switch(format)
-		{
-			case texture_format_rgb8:
-			case texture_format_rgb16:
-			case texture_format_rgb32f:
-				return 3;
-			case texture_format_rgba8:
-			case texture_format_rgba16:
-			case texture_format_rgba32f:
-				return 4;
-			default:
-				OE_UNREACHABLE();
-		}
-	}
-
-	//
-	//
-	//
-
-	static texture_t::format_t get_format(texture_format_t format)
-	{
-		switch(format)
-		{
-			case texture_format_rgb8:    return GL_RGB8;
-			case texture_format_rgb16:   return GL_RGB16;
-			case texture_format_rgb32f:  return GL_RGB32F;
-			case texture_format_rgba8:   return GL_RGBA8;
-			case texture_format_rgba16:  return GL_RGBA16;
-			case texture_format_rgba32f: return GL_RGBA32F;
-			default:
-				OE_UNREACHABLE("Unhandled texture_format_t case.");
-				break;
-        }
-	}
-
-	static texture_t::format_t get_base_format(texture_format_t format)
-	{
-		switch(format)
-		{
-			case texture_format_rgb8:
-			case texture_format_rgb16:
-			case texture_format_rgb32f:
-				return GL_RGB;
-			case texture_format_rgba8:
-			case texture_format_rgba16:
-			case texture_format_rgba32f:
-				return GL_RGBA;
-			default:
-				OE_UNREACHABLE("Unhandled texture_format_t case.");
-				break;
-        }
 	}
 }
 

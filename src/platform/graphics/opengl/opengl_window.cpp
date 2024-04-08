@@ -29,15 +29,10 @@ namespace orion
 
 		glfwWindowHint(GLFW_RESIZABLE, desc.is_resizable ? GLFW_TRUE : GLFW_FALSE);
 
-		window_t w;
-		w.title         = desc.title;
-		w.width         = desc.width;
-		w.height        = desc.height;
-		w.is_visible    = desc.is_visible;
-		w.is_vsync      = desc.is_vsync;
-		w.is_fullscreen = desc.is_fullscreen;
-		w.is_resizable  = desc.is_resizable;
-		w.handle = glfwCreateWindow(desc.width, desc.height, desc.title, nullptr, nullptr);
+		window_t w = {
+			.desc   = desc,
+			.handle = glfwCreateWindow(desc.width, desc.height, desc.title, nullptr, nullptr),
+		};
 
 		if(!w.handle)
 		{
@@ -94,37 +89,37 @@ namespace orion
 	{
 		glfwSetWindowSize(handle, width, height);
 		glViewport(0, 0, width, height);
-		this->width = width;
-		this->height = height;
+		desc.width = width;
+		desc.height = height;
 	}
 
 	void window_t::set_title(const char* title)
 	{
 		glfwSetWindowTitle(handle, title);
-		this->title = title;
+		desc.title = title;
 	}
 
 	void window_t::set_visible(b8 visible)
 	{
-		is_visible = visible;
+		desc.is_visible = visible;
 		visible ? glfwShowWindow(handle) : glfwHideWindow(handle);
 	}
 
 	void window_t::set_resizable(b8 resizable)
 	{
-		is_resizable = resizable;
+		desc.is_resizable = resizable;
 		glfwSetWindowAttrib(handle, GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
 	}
 
 	void window_t::set_fullscreen(b8 fullscreen)
 	{
-		is_fullscreen = fullscreen;
+		desc.is_fullscreen = fullscreen;
 		// @TODO Fullscreen
 	}
 
 	void window_t::set_vsync(b8 vsync)
 	{
-		is_vsync = vsync;
+		desc.is_vsync = vsync;
 		glfwSwapInterval(vsync);
 	}
 

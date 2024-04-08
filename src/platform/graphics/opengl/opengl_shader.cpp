@@ -5,13 +5,14 @@
 #include "platform/graphics/opengl/opengl_native_types.h"
 
 #include "core/assert.h"
-#include "core/string/ostring.h"
 
 namespace orion
 {
 	static void calculate_offsets_and_stride(shader_t& s);
 
-	shader_t shader_t::create_graphics_shader(const shader_desc_t& desc, const string_t& vertex, const string_t& fragment)
+	shader_t shader_t::create_graphics_shader(const shader_desc_t& desc,
+		                                      const std::string_view vertex,
+		                                      const std::string_view fragment)
 	{
 		shader_t s = {0};
 		calculate_offsets_and_stride(s);
@@ -20,26 +21,26 @@ namespace orion
 		GLuint fragment_id = glCreateShader(GL_FRAGMENT_SHADER);
 		switch(desc.language)
 		{
-			case shader_language_glsl:
+			case shader_language::glsl:
 				{
-					glShaderSource(vertex_id, 1, (const char* const*)vertex.data, nullptr);
-					glShaderSource(fragment_id, 1, (const char* const*)fragment.data, nullptr);
+					glShaderSource(vertex_id, 1, (const char* const*)vertex.data(), nullptr);
+					glShaderSource(fragment_id, 1, (const char* const*)fragment.data(), nullptr);
 					glCompileShader(vertex_id);
 					glCompileShader(fragment_id);
 				}
 				break;
-			case shader_language_spirv:
+			case shader_language::spirv:
 				{
 					glShaderBinary(
 						1, &vertex_id,
 						GL_SHADER_BINARY_FORMAT_SPIR_V,
-						vertex.data,
-						vertex.length);
+						vertex.data(),
+						vertex.length());
 					glShaderBinary(
 						1, &fragment_id,
 						GL_SHADER_BINARY_FORMAT_SPIR_V,
-						fragment.data,
-						fragment.length);
+						fragment.data(),
+						fragment.length());
 					glSpecializeShader(vertex_id, (const GLchar *) "main", 0, nullptr, nullptr);
 					glSpecializeShader(fragment_id, (const GLchar *) "main", 0, nullptr, nullptr);
 				}

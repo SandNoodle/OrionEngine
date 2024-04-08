@@ -7,20 +7,20 @@
 #include "platform/graphics/gpu_atomic_types.h"
 #include "platform/graphics/buffer.h"
 
-#include "core/string/ostring.h"
-
 #ifdef ORION_GRAPHICS_API_OPENGL
 #include "glad/glad.h"
 #else
 #error "Unknown Graphics API!"
 #endif // ORION_GRAPHICS_API_OPENGL
 
+#include <string_view>
+
 namespace orion
 {
-	enum shader_language_t : u8
+	enum class shader_language : u8
 	{
-		shader_language_glsl,
-		shader_language_spirv,
+		glsl,
+		spirv,
 	};
 
 	struct shader_element_t
@@ -43,7 +43,7 @@ namespace orion
 	/* Descriptor of a shader. */
 	struct shader_desc_t
 	{
-		shader_language_t language;
+		shader_language   language;
 		texture_sampler_t samplers[ORION_GRAPHICS_MAX_TEXTURE_SAMPLERS];
 		shader_element_t  inputs[ORION_GRAPHICS_MAX_SHADER_INPUTS];
 		u8                samplers_count;
@@ -74,7 +74,9 @@ namespace orion
 		 * @param vertex string containig vertex shader's data.
 		 * @param fragment string containig fragmnet shader's data.
 		 */
-		static shader_t create_graphics_shader(const shader_desc_t& desc, const string_t& vertex, const string_t& fragment);
+		static shader_t create_graphics_shader(const shader_desc_t& desc,
+			                                   const std::string_view vertex,
+			                                   const std::string_view fragment);
 
 		/** Destroys given shader on the GPU side. */
 		void destroy() const;
