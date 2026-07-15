@@ -1,8 +1,8 @@
 #if defined(ORION_PLATFORM_WINDOWS)
 #include "Platform/Platform.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <memoryapi.h>
+#include <sysinfoapi.h>
 
 namespace Orion::Engine::Platform
 {

@@ -6,17 +6,20 @@
 #include "Core/Memory/Allocators/Allocator.h"
 #include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
+#include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/MoveAndForward.h"
 #include "Core/Standard/Util.h"
-#include "Platform/Platform.h"
+#include "Platform/Memory.h"
 
 #include <initializer_list>
+#include <new>
 
 namespace Orion::Engine
 {
 	/**
-	 * @brief TODO
+	 * @brief Represents type-safe container capable of holding variable amount of elements.
 	 * @tparam T Type to be stored.
+	 * @tparam Allocator Allocator to be used with the vector that will perform all the allocations.
 	 */
 	template <typename T, AllocatorKind Allocator = PlatformAllocator>
 	class Vector
@@ -40,14 +43,15 @@ namespace Orion::Engine
 
 		public:
 		constexpr explicit Vector(SizeType initial_capacity      = k_initial_capacity,
-		                          const AllocatorType& allocator = AllocatorType{});
+		                          const AllocatorType& allocator = AllocatorType());
+		constexpr Vector(std::initializer_list<ValueType>) noexcept;
 		constexpr Vector(const Vector&) noexcept;
 		constexpr Vector(Vector&&) noexcept;
 		constexpr ~Vector();
 
-		[[nodiscard]] constexpr Vector& operator=(const Vector&) noexcept;
-		[[nodiscard]] constexpr Vector& operator=(Vector&&) noexcept;
-		[[nodiscard]] constexpr Vector& operator=(std::initializer_list<ValueType>) noexcept;
+		constexpr Vector& operator=(const Vector&) noexcept;
+		constexpr Vector& operator=(Vector&&) noexcept;
+		constexpr Vector& operator=(std::initializer_list<ValueType>) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType operator[](SizeType index) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType operator[](SizeType index) const noexcept;
 
@@ -72,12 +76,13 @@ namespace Orion::Engine
 		constexpr void Add(ValueType&& value) noexcept;
 
 		/// @brief Removes the element from the back of the vector. Calls destructor.
-		constexpr void Remove() noexcept;
+		constexpr void RemoveBack() noexcept;
 
 		/// @brief Removes the element at \p index from the vector. Calls destructor.
-		constexpr void RemoveAt(SizeType index) noexcept;
+		constexpr void Remove(SizeType index) noexcept;
 
-		/// @brief TODO
+		/// @brief Reserves memory for holding at least \p size elements (might be more). Has no effect if capacity is
+		/// already greater than \p size.
 		constexpr void Reserve(SizeType size) noexcept;
 
 		/// @brief Clears the vector from all the elements. Calls destructor on each of them.
@@ -101,7 +106,7 @@ namespace Orion::Engine
 
 		public:
 		// NOLINTBEGIN(readability-identifier-naming)
-		/** Required overload for the C++'s for range loops. Prefer using uppercase versions. */
+		/** Required overload for the C++'s for range loops. */
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType begin() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType begin() const noexcept;
@@ -112,13 +117,9 @@ namespace Orion::Engine
 
 		private:
 		constexpr void DoInitialize(SizeType initial_capacity) noexcept;
-		constexpr Vector& DoMove(Vector&& other) noexcept;
-		constexpr Vector& DoCopy(const Vector& other) noexcept;
+		constexpr void DoSwap(Vector& other) noexcept;
 		constexpr void DoEnsureCapacity(SizeType new_capacity) noexcept;
 	};
-
-	// -- Deduction guides.
-	// TODO(SandNoodle): Deduction guide.
 
 	// -- Implementation.
 	template <typename T, AllocatorKind Allocator>
@@ -129,41 +130,85 @@ namespace Orion::Engine
 	}
 
 	template <typename T, AllocatorKind Allocator>
-	constexpr Vector<T, Allocator>::Vector(const Vector& other) noexcept
+	constexpr Vector<T, Allocator>::Vector(std::initializer_list<ValueType> list) noexcept : _allocator(Allocator{})
 	{
-		DoCopy(other);
+		DoInitialize(list.size());
+		ConstructItems<ValueType>(Data(), list.begin(), list.size());
+		_size = list.size();
 	}
 
 	template <typename T, AllocatorKind Allocator>
-	constexpr Vector<T, Allocator>::Vector(Vector&& other) noexcept
+	constexpr Vector<T, Allocator>::Vector(const Vector& other) noexcept
+		: _allocator(other._allocator), _capacity(other._capacity), _size(other._size)
+
 	{
-		DoMove(Move(other));
+		_data = static_cast<PointerType>(_allocator.Allocate(sizeof(ValueType) * _capacity, alignof(ValueType)));
+		if constexpr (IsTriviallyCopyable<ValueType>) {
+			Platform::MemoryCopy(_data, other._data, ByteSize());
+		} else {
+			ConstructItems(_data, other._data, Size());
+		}
+	}
+
+	template <typename T, AllocatorKind Allocator>
+	constexpr Vector<T, Allocator>::Vector(Vector&& other) noexcept : _data(nullptr), _capacity(0), _size(0)
+	{
+		DoSwap(other);
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr Vector<T, Allocator>::~Vector()
 	{
-		Clear();
-		_allocator.Free(_data);
-		_data     = nullptr;
-		_size     = 0;
-		_capacity = 0;
+		if (_data) {
+			DestructItems(_data, _size);
+			_allocator.Free(_data);
+		}
 	}
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator=(const Vector& other) noexcept -> Vector&
 	{
-		return DoCopy(other);
+		if (this == &other) {
+			return *this;
+		}
+
+		if (_data) {
+			DestructItems(_data, _size);
+			_allocator.Free(_data);
+		}
+
+		_allocator = other._allocator;
+		_capacity  = other._capacity;
+		_size      = other._size;
+		_data      = static_cast<PointerType>(_allocator.Allocate(sizeof(ValueType) * _capacity, alignof(ValueType)));
+
+		if constexpr (IsTriviallyCopyable<ValueType>) {
+			Platform::MemoryCopy(_data, other._data, ByteSize());
+		} else {
+			ConstructItems(_data, other._data, Size());
+		}
+
+		return *this;
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator=(Vector&& other) noexcept -> Vector&
 	{
-		return DoMove(other);
+		if (this == &other) {
+			return *this;
+		}
+
+		DoSwap(other);
+
+		return *this;
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator=(std::initializer_list<ValueType> list) noexcept -> Vector&
 	{
+		DestructItems(Data(), Size());
+		ConstructItems<ValueType>(Data(), list.begin(), list.size());
+		_size = list.size();
+		return *this;
 	}
 
 	template <typename T, AllocatorKind Allocator>
@@ -183,25 +228,25 @@ namespace Orion::Engine
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Front() noexcept -> ReferenceType
 	{
-		return *_data;
+		return _data[0];
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Front() const noexcept -> ConstReferenceType
 	{
-		return *_data;
+		return _data[0];
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Back() noexcept -> ReferenceType
 	{
-		return *_data[_size - 1];
+		return _data[_size - 1];
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Back() const noexcept -> ConstReferenceType
 	{
-		return *_data[_size - 1];
+		return _data[_size - 1];
 	}
 
 	template <typename T, AllocatorKind Allocator>
@@ -221,7 +266,7 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::AddConstruct(Args&&... args) noexcept -> void
 	{
 		DoEnsureCapacity(_size + 1);
-		// new (_data[_size]) ValueType(Forward<Args>(args)...);
+		new (&_data[_size]) ValueType(Forward<Args>(args)...);
 		_size += 1;
 	}
 
@@ -252,7 +297,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, AllocatorKind Allocator>
-	constexpr auto Vector<T, Allocator>::Remove() noexcept -> void
+	constexpr auto Vector<T, Allocator>::RemoveBack() noexcept -> void
 	{
 		ORION_ASSERT_DEBUG(_data);
 		ORION_ASSERT_DEBUG(_size > 0);
@@ -260,7 +305,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, AllocatorKind Allocator>
-	constexpr auto Vector<T, Allocator>::RemoveAt(SizeType index) noexcept -> void
+	constexpr auto Vector<T, Allocator>::Remove(SizeType index) noexcept -> void
 	{
 		ORION_ASSERT_DEBUG(_data);
 		ORION_ASSERT_DEBUG(_size > 0);
@@ -277,9 +322,12 @@ namespace Orion::Engine
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Clear() noexcept -> void
 	{
-		ORION_ASSERT_DEBUG(_data != nullptr);
-		for (SizeType index = 0; index < _size; ++index) {
-			_data[index].~ValueType();
+		if constexpr (!IsTriviallyDestructible<ValueType>) {
+			if (_data) {
+				for (SizeType index = 0; index < _size; ++index) {
+					_data[index].~ValueType();
+				}
+			}
 		}
 		_size = 0;
 	}
@@ -343,49 +391,21 @@ namespace Orion::Engine
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::DoInitialize(SizeType initial_capacity) noexcept -> void
 	{
-		ORION_ASSERT_DEBUG(initial_capacity > 0);
+		initial_capacity       = ORION_MAX(initial_capacity, k_initial_capacity);
 		SizeType size_in_bytes = sizeof(ValueType) * initial_capacity;
 		SizeType alignment     = alignof(ValueType);
-		PointerType new_data   = static_cast<PointerType>(_allocator.Allocate(size_in_bytes, alignment));
-		ORION_ASSERT_DEBUG(new_data);
-
-		_data     = new_data;
-		_capacity = initial_capacity;
-		_size     = 0;
+		_data                  = static_cast<PointerType>(_allocator.Allocate(size_in_bytes, alignment));
+		_capacity              = initial_capacity;
+		_size                  = 0;
 	}
 
 	template <typename T, AllocatorKind Allocator>
-	constexpr auto Vector<T, Allocator>::DoMove(Vector&& other) noexcept -> Vector&
+	constexpr auto Vector<T, Allocator>::DoSwap(Vector& other) noexcept -> void
 	{
-		if (&other == this) {
-			return *this;
-		}
-
-		_allocator = Move(other._allocator);
-		_data      = other._data;
-		_capacity  = other._capacity;
-		_size      = other._size;
-
-		other._data     = nullptr;
-		other._capacity = 0UL;
-		other._size     = 0UL;
-
-		return *this;
-	}
-
-	template <typename T, AllocatorKind Allocator>
-	constexpr auto Vector<T, Allocator>::DoCopy(const Vector& other) noexcept -> Vector&
-	{
-		if (&other == this) {
-			return *this;
-		}
-
-		_allocator = other._allocator;
-		_data      = other._data;
-		_capacity  = other._capacity;
-		_size      = other._size;
-
-		return *this;
+		Swap(_allocator, other._allocator);
+		Swap(_data, other._data);
+		Swap(_capacity, other._capacity);
+		Swap(_size, other._size);
 	}
 
 	template <typename T, AllocatorKind Allocator>

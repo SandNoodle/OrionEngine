@@ -12,22 +12,28 @@ set(ORION_GRAPHICS_API "Vulkan" CACHE STRING "Graphics API backed to be used; Po
 
 # --- [ Sources ] ---
 set(OrionEngine_SOURCES
+        Sources/Core/Console/ConsoleSystem.cpp
+        Sources/Core/Console/ConsoleSystem.h
         Sources/Core/Memory/Allocators/PlatformAllocator.h
         Sources/Core/Memory/Allocators/Allocator.h
+        Sources/Core/Standard/Algorithms/Hash.h
         Sources/Core/Standard/Algorithms/Sort.h
         Sources/Core/Standard/Containers/Array.h
         Sources/Core/Standard/Containers/HashMap.h
-        Sources/Core/Standard/Containers/Vector.h
         Sources/Core/Standard/Containers/Span.h
-        Sources/Core/Standard/Strings/StringView.h
+        Sources/Core/Standard/Containers/Vector.h
+        Sources/Core/Standard/Types/String.h
+        Sources/Core/Standard/Types/StringView.h
+        Sources/Core/Standard/Types/StringView.h
         Sources/Core/Standard/Concepts.h
+        Sources/Core/Standard/EnumFlag.h
         Sources/Core/Standard/Limits.h
         Sources/Core/Standard/MoveAndForward.h
         Sources/Core/Standard/TypeTraits.h
         Sources/Core/Standard/Util.h
         Sources/Core/Assert.h
-        Sources/Core/Log.cpp
-        Sources/Core/Log.h
+        Sources/Core/Log/Logger.cpp
+        Sources/Core/Log/Logger.h
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.cpp
         Sources/Platform/Graphics/Vulkan/RenderDeviceVK.h
         Sources/Platform/Graphics/RenderDevice.cpp
@@ -46,6 +52,9 @@ set_target_properties(OrionEngine PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(OrionEngine PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Sources>
         $<INSTALL_INTERFACE:OrionEngine>
+)
+target_compile_options(OrionEngine PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wformat -Wconversion -Wimplicit-fallthrough -Werror=format-security -fno-exceptions>
 )
 
 # --- [ GIT ] ---
@@ -74,17 +83,11 @@ target_compile_definitions(OrionEngine PUBLIC
 )
 
 # --- [ Libraries ] ---
-message(STATUS "--- [ Library: Quill ] ---")
-set(QUILL_NO_EXCEPTIONS ON)
-target_compile_definitions(quill PUBLIC QUILL_NO_EXCEPTIONS)
-add_subdirectory(ThirdParty/Quill)
-
 message(STATUS "--- [ Library: GLFW ] ---")
 add_subdirectory(ThirdParty/GLFW)
 
 target_link_libraries(OrionEngine
         PUBLIC
-        quill
         glfw
 )
 

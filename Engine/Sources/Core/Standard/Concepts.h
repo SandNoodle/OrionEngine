@@ -6,4 +6,4 @@ namespace Orion::Engine
 {
 	template <typename T, typename U>
 	concept SameAs = IsSame<T, U>;
-}
+}  // namespace Orion::Engine

@@ -6,7 +6,6 @@
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/MoveAndForward.h"
 #include "Core/Standard/TypeTraits.h"
-#include "Platform/Platform.h"
 
 namespace Orion::Engine
 {
@@ -43,11 +42,7 @@ namespace Orion::Engine
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Data() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Data() const noexcept;
 
-		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Begin() noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Begin() const noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType End() noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType End() const noexcept;
-
+		/// @brief Overrides the contents of the container with a given \p value.
 		ORION_FORCE_INLINE constexpr void Fill(ConstReferenceType value) noexcept;
 
 		/// @brief Sorts the container using a given \p compare predicate function.
@@ -65,7 +60,7 @@ namespace Orion::Engine
 
 		public:
 		// NOLINTBEGIN(readability-identifier-naming)
-		/** Required overload for the C++'s for range loops. Prefer using uppercase versions. */
+		/** Required overload for the C++'s for range loops. */
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType begin() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType begin() const noexcept;
@@ -116,12 +111,8 @@ namespace Orion::Engine
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::Fill(ConstReferenceType value) noexcept -> void
 	{
-		if constexpr (IsTriviallyCopyable<ValueType>) {
-			Platform::MemoryCopy(&_data[0], value, sizeof(ValueType) * N);
-		} else {
-			for (SizeType index = 0; index < N; ++index) {
-				_data[index] = value;
-			}
+		for (SizeType index = 0; index < N; ++index) {
+			_data[index] = value;
 		}
 	}
 
@@ -186,32 +177,6 @@ namespace Orion::Engine
 	{
 		ORION_ASSERT_DEBUG(N != 0);
 		return &_data[0];
-	}
-
-	template <typename T, USize N>
-	constexpr auto Array<T, N>::Begin() noexcept -> PointerType
-	{
-		return &_data[0];
-	}
-
-	template <typename T, USize N>
-	constexpr auto Array<T, N>::Begin() const noexcept -> ConstPointerType
-	{
-		return &_data[0];
-	}
-
-	template <typename T, USize N>
-	constexpr auto Array<T, N>::End() noexcept -> PointerType
-	{
-		ORION_ASSERT_DEBUG(N != 0);
-		return &_data[N - 1];
-	}
-
-	template <typename T, USize N>
-	constexpr auto Array<T, N>::End() const noexcept -> ConstPointerType
-	{
-		ORION_ASSERT_DEBUG(N != 0);
-		return &_data[N - 1];
 	}
 
 	template <typename T, USize N>

@@ -52,6 +52,7 @@ namespace Orion::Engine
 
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType operator[](SizeType index) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType operator[](SizeType index) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr bool operator==(const Span& other) const noexcept;
 
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Front() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Front() const noexcept;
@@ -59,11 +60,6 @@ namespace Orion::Engine
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Back() const noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Data() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Data() const noexcept;
-
-		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Begin() noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Begin() const noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType End() noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType End() const noexcept;
 
 		/// Verifies if the container is empty, i.e. points to 0 elements.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsEmpty() const noexcept;
@@ -73,7 +69,7 @@ namespace Orion::Engine
 
 		public:
 		// NOLINTBEGIN(readability-identifier-naming)
-		/** Required overload for the C++'s for range loops. Prefer using uppercase versions. */
+		/** Required overload for the C++'s for range loops. */
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType begin() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType begin() const noexcept;
@@ -154,6 +150,26 @@ namespace Orion::Engine
 	}
 
 	template <typename T, USize Extent>
+	constexpr auto Span<T, Extent>::operator==(const Span& other) const noexcept -> bool
+	{
+		if (Size() != other.Size()) {
+			return false;
+		}
+
+		if (Size() == 0) [[unlikely]] {
+			return true;
+		}
+
+		for (SizeType index = 0; index < Size(); ++index) {
+			if (_data[index] != other[index]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	template <typename T, USize Extent>
 	constexpr auto Span<T, Extent>::IsEmpty() const noexcept -> Bool8
 	{
 		return _size == 0;
@@ -205,34 +221,6 @@ namespace Orion::Engine
 	{
 		ORION_ASSERT_DEBUG(_size > 0);
 		return &_data[0];
-	}
-
-	template <typename T, USize Extent>
-	constexpr auto Span<T, Extent>::Begin() noexcept -> PointerType
-	{
-		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[0];
-	}
-
-	template <typename T, USize Extent>
-	constexpr auto Span<T, Extent>::Begin() const noexcept -> ConstPointerType
-	{
-		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[0];
-	}
-
-	template <typename T, USize Extent>
-	constexpr auto Span<T, Extent>::End() noexcept -> PointerType
-	{
-		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[_size - 1];
-	}
-
-	template <typename T, USize Extent>
-	constexpr auto Span<T, Extent>::End() const noexcept -> ConstPointerType
-	{
-		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[_size - 1];
 	}
 
 	template <typename T, USize Extent>

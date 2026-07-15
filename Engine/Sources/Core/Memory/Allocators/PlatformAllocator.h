@@ -3,7 +3,7 @@
 #include "OrionEngine.h"
 
 #include "Core/Memory/Allocators/Allocator.h"
-#include "Platform/Platform.h"
+#include "Platform/Memory.h"
 
 namespace Orion::Engine
 {
@@ -35,7 +35,7 @@ namespace Orion::Engine
 
 	ORION_FORCE_INLINE constexpr auto PlatformAllocator::Free(void* ptr) noexcept -> void
 	{
-		return Platform::MemoryFree(ptr);
+		Platform::MemoryFree(ptr);
 	}
 
 	ORION_FORCE_INLINE constexpr auto PlatformAllocator::FreeAll() noexcept -> void

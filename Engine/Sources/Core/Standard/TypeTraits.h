@@ -90,16 +90,63 @@ namespace Orion::Engine
 #endif
 
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-	template <typename T>
-	inline constexpr bool IsEnum = __is_enum(T);
+	template <class T>
+	inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
 #else
-#error "UnderlyingType is not defined for this compiler."
+#error "IsTriviallyDestructible is not defined for this compiler."
+#endif
+
+#if defined(ORION_COMPILER_CLANG)
+	template <typename T>
+	inline constexpr bool IsFloatingPoint = __is_floating_point(T);
+#else
+	namespace Detail
+	{
+		template <typename T>
+		inline constexpr bool IsFloatingPoint = false;
+
+		template <>
+		inline constexpr bool IsFloatingPoint<Float32> = true;
+
+		template <>
+		inline constexpr bool IsFloatingPoint<Float64> = true;
+	}  // namespace Detail
+
+	template <typename T>
+	inline constexpr bool IsFloatingPoint = Detail::IsFloatingPoint<T>;
 #endif
 
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 	template <typename T>
+	inline constexpr bool IsEnum = __is_enum(T);
+#else
+#error "IsEnum is not defined for this compiler."
+#endif
+
+#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
+	template <typename T>
+	inline constexpr bool IsScopedEnum = __is_scoped_enum(T);
+#else
+#error "IsScopedEnum is not defined for this compiler."
+#endif
+
+#if defined(ORION_COMPILER_CLANG)
+	template <typename T>
 		requires(IsEnum<T>)
 	using UnderlyingType = __underlying_type(T);
+#elif defined(ORION_COMPILER_GCC)
+	namespace Detail
+	{
+		template <typename T>
+		struct UnderlyingType
+		{
+			using Type = __underlying_type(T);
+		};
+	}  // namespace Detail
+
+	template <typename T>
+		requires(IsEnum<T>)
+	using UnderlyingType = Detail::UnderlyingType<T>::Type;
 #else
 #error "UnderlyingType is not defined for this compiler."
 #endif
@@ -109,6 +156,16 @@ namespace Orion::Engine
 	constexpr UnderlyingType<EnumType> ToUnderlyingType(EnumType value) noexcept
 	{
 		return static_cast<UnderlyingType<EnumType>>(value);
+	}
+
+	template <typename To, typename From>
+	[[nodiscard]] ORION_FORCE_INLINE constexpr To BitCast(const From& v) noexcept
+	{
+#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
+		return __builtin_bit_cast(To, v);
+#else
+#error "BitCast is not defined for this compiler."
+#endif
 	}
 
 }  // namespace Orion::Engine

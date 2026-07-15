@@ -9,7 +9,9 @@
 #define ORION_DEFAULT_ALIGNMENT (2 * sizeof(void*))
 #endif  // ORION_DEFAULT_ALIGNMENT
 
-/// @brief Enable tracking of
-#ifndef ORION_MEMORY_SYSTEM_ENABLE_STATISTICS
-#define ORION_MEMORY_SYSTEM_ENABLE_STATISTICS 1
-#endif  // ORION_MEMORY_SYSTEM_ENABLE_STATISTICS
+// --- Logging System ---
+
+/// @brief Maximum amount of log files -
+#ifndef ORION_LOGGING_MAX_LOG_FILES
+#define ORION_LOGGING_MAX_LOG_FILES 5
+#endif  // ORION_LOGGING_MAX_LOG_FILES

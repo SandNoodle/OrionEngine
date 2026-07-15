@@ -6,6 +6,7 @@
 
 namespace Orion::Engine
 {
+	/// @brief TODO
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE constexpr RemoveReference<T>&& Move(T&& t) noexcept
 	{

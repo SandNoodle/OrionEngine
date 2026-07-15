@@ -8,6 +8,7 @@ namespace Orion::Engine
 	{
 		StringView name;
 		StringView description;
+		StringView usage;
 		UInt32 array_index;
 		ConsoleVariableFlags flags;
 	};
@@ -16,6 +17,7 @@ namespace Orion::Engine
 	{
 		StringView name;
 		StringView description;
+		StringView usage;
 		// TODO(SandNoodle): Implement.
 	};
 
@@ -28,6 +30,10 @@ namespace Orion::Engine
 	ConsoleSystem::ConsoleSystem()
 	{
 		// -- Builtin ConsoleVariables.
-		CreateConsoleVariable<Bool8>("", "", false, static_cast<ConsoleVariableFlags>(ConsoleVariableFlag_Server | ConsoleVariableFlag_ReadWrite));
+		CreateConsoleVariable<Bool8>(
+			"Server.Cheats",
+			"Enables the use of console variables and commands that might be considered 'cheating' in a normal play.",
+			false,
+			ConsoleVariableFlags::Server | ConsoleVariableFlags::ReadWrite);
 	}
 }  // namespace Orion::Engine

@@ -1,7 +1,7 @@
 #if defined(ORION_GRAPHICS_VULKAN)
 #include "Platform/Graphics/Vulkan/RenderDeviceVk.h"
 
-#include "Core/Log.h"
+#include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/Span.h"
 #include "Core/Standard/Containers/Vector.h"
@@ -37,11 +37,13 @@ namespace Orion::Engine::Platform
 		// -- Instance
 		UInt32 required_extension_count = 0;
 		auto* required_extensions       = glfwGetRequiredInstanceExtensions(&required_extension_count);
+
 		VkApplicationInfo application_info{
-			.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-			.pNext            = nullptr,
-			.pApplicationName = "Orion Engine: Editor",
-			.pEngineName      = ORION_ENGINE_NAME,
+			.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+			.pNext              = nullptr,
+			.pApplicationName   = "Orion Engine: Editor",
+			.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+			.pEngineName        = ORION_ENGINE_NAME,
 			.engineVersion
 			= VK_MAKE_VERSION(ORION_ENGINE_VERSION_MAJOR, ORION_ENGINE_VERSION_MINOR, ORION_ENGINE_VERSION_PATCH),
 			.apiVersion = k_vulkan_api_version,
@@ -147,12 +149,15 @@ namespace Orion::Engine::Platform
 		UInt32 queue_index_transfer                   = k_invalid_queue_index;
 
 		Vector<VkDeviceQueueCreateInfo> queue_create_infos{};
-		for (USize family_index = 0; family_index < queue_family_properties.Size(); ++family_index) {
+		for (UInt32 family_index = 0; family_index < static_cast<UInt32>(queue_family_properties.Size());
+		     ++family_index) {
 			const VkFlags queue_flags = queue_family_properties[family_index].queueFamilyProperties.queueFlags;
 			Bool8 is_valid_queue      = false;
 
 			// Prefer Queue Families which support all the requested queues.
-			if (VkHasAllFlags(queue_flags, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT)) {
+			if (VkHasAllFlags(
+					queue_flags,
+					static_cast<UInt32>(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT))) {
 				queue_index_graphics = family_index;
 				queue_index_compute  = family_index;
 				queue_index_transfer = family_index;
@@ -167,7 +172,7 @@ namespace Orion::Engine::Platform
 					.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 					.pNext            = nullptr,
 					.flags            = 0,
-					.queueFamilyIndex = static_cast<UInt32>(family_index),
+					.queueFamilyIndex = family_index,
 					.queueCount       = queue_count,
 					.pQueuePriorities = queue_priorities.Data(),
 				});
@@ -196,6 +201,7 @@ namespace Orion::Engine::Platform
 		}
 
 		for (USize index = 0; index < queue_create_infos.Size(); ++index) {
+			// TODO(SandNoodle): Fill this out.
 		}
 
 		return queue_create_infos;
@@ -211,25 +217,24 @@ namespace Orion::Engine::Platform
 		static constexpr Array k_validation_layer_names  = { "VK_LAYER_KHRONOS_validation" };
 		static constexpr Array k_device_extensions_names = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-		VkPhysicalDeviceVulkan13Features enabled_13_features{
-			.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-			.pNext            = nullptr,
-			.synchronization2 = true,
-			.dynamicRendering = true,
-		};
-		VkPhysicalDeviceVulkan12Features enabled_12_features{
-			.sType                                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-			.pNext                                     = &enabled_13_features,
-			.descriptorIndexing                        = true,
-			.shaderSampledImageArrayNonUniformIndexing = true,
-			.descriptorBindingVariableDescriptorCount  = true,
-			.runtimeDescriptorArray                    = true,
-			.bufferDeviceAddress                       = true,
-		};
+		VkPhysicalDeviceVulkan13Features enabled_13_features{};
+		enabled_13_features.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		enabled_13_features.pNext            = nullptr;
+		enabled_13_features.synchronization2 = VK_TRUE;
+		enabled_13_features.dynamicRendering = VK_TRUE;
 
-		VkPhysicalDeviceFeatures enabled_10_features{
-			.samplerAnisotropy = VK_TRUE,
-		};
+		VkPhysicalDeviceVulkan12Features enabled_12_features{};
+		enabled_12_features.sType              = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		enabled_12_features.pNext              = &enabled_13_features;
+		enabled_12_features.descriptorIndexing = VK_TRUE;
+		enabled_12_features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+		enabled_12_features.descriptorBindingVariableDescriptorCount  = VK_TRUE;
+		enabled_12_features.descriptorBindingVariableDescriptorCount  = VK_TRUE;
+		enabled_12_features.runtimeDescriptorArray                    = VK_TRUE;
+		enabled_12_features.bufferDeviceAddress                       = VK_TRUE;
+
+		VkPhysicalDeviceFeatures enabled_10_features{};
+		enabled_10_features.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo logical_device_create_info{
 			.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -274,7 +279,7 @@ namespace Orion::Engine::Platform
 
 		const auto get_queue_index
 			= [&queue_family_properties, queue_family_property_count](VkQueueFlagBits flag) -> UInt32 {
-			for (USize index = 0; index < queue_family_property_count; ++index) {
+			for (UInt32 index = 0; index < static_cast<UInt32>(queue_family_property_count); ++index) {
 				if (queue_family_properties[index].queueFamilyProperties.queueFlags & flag) {
 					return index;
 				}
@@ -313,6 +318,7 @@ namespace Orion::Engine::Platform
 		};
 		Array queue_create_infos
 			= { graphics_queue_create_info, transfer_queue_create_info, compute_queue_create_info };
+		ORION_IGNORE_PARAM(queue_create_infos);
 
 		// -- VMA
 		VmaVulkanFunctions vma_vulkan_functions{
@@ -342,6 +348,7 @@ namespace Orion::Engine::Platform
 			.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2KHR,
 			.vkGetDeviceBufferMemoryRequirements     = vkGetDeviceBufferMemoryRequirements,
 			.vkGetDeviceImageMemoryRequirements      = vkGetDeviceImageMemoryRequirements,
+			.vkGetMemoryWin32HandleKHR               = VK_NULL_HANDLE,
 		};
 
 		VmaAllocator vma_allocator = VK_NULL_HANDLE;
