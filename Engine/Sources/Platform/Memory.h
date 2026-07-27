@@ -61,7 +61,7 @@ namespace Orion::Engine::Platform
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 		__builtin_memcpy(dst, src, size_in_bytes);
 #else
-		memcpy(dst, src, size_in_bytes);
+		::memcpy(dst, src, size_in_bytes);
 #endif
 	}
 
@@ -76,7 +76,7 @@ namespace Orion::Engine::Platform
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 		__builtin_memmove(dst, src, size_in_bytes);
 #else
-		memmove(dst, src, size_in_bytes);
+		::memmove(dst, src, size_in_bytes);
 #endif
 	}
 
@@ -90,7 +90,7 @@ namespace Orion::Engine::Platform
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 		__builtin_memset(dst, value, size_in_bytes);
 #else
-		memset(dst, value, size_in_bytes);
+		::memset(dst, value, size_in_bytes);
 #endif
 	}
 
@@ -104,7 +104,19 @@ namespace Orion::Engine::Platform
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 		__builtin_memset(dst, 0, size_in_bytes);
 #else
-		memset(dst, 0, size_in_bytes);
+		::memset(dst, 0, size_in_bytes);
+#endif
+	}
+
+	ORION_FORCE_INLINE constexpr int MemoryCompare(const void* lhs, const void* rhs, USize size_in_bytes) noexcept
+	{
+		ORION_ASSERT_DEBUG(lhs, "Cannot perform MemoryCompare, because lhs is null.");
+		ORION_ASSERT_DEBUG(rhs, "Cannot perform MemoryCompare, because rhs is null.");
+		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryCompare, because size_in_bytes is 0.");
+#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
+		return __builtin_memcmp(lhs, rhs, size_in_bytes);
+#else
+		return ::memcmp(lhs, rhs, size_in_bytes);
 #endif
 	}
 }  // namespace Orion::Engine::Platform

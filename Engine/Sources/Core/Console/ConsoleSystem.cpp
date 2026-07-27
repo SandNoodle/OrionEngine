@@ -1,7 +1,5 @@
 #include "Core/Console/ConsoleSystem.h"
 
-#include "Core/Standard/MoveAndForward.h"
-
 namespace Orion::Engine
 {
 	struct ConsoleVariable
@@ -35,5 +33,10 @@ namespace Orion::Engine
 			"Enables the use of console variables and commands that might be considered 'cheating' in a normal play.",
 			false,
 			ConsoleVariableFlags::Server | ConsoleVariableFlags::ReadWrite);
+
+		CreateConsoleVariable<Float32>("Server.Timescale",
+		                               "",
+		                               1.0f,
+		                               ConsoleVariableFlags::Server | ConsoleVariableFlags::ReadWrite);
 	}
 }  // namespace Orion::Engine

@@ -13,6 +13,10 @@
 #endif
 
 #elif defined(ORION_PLATFORM_LINUX)
+
+#elif defined(ORION_PLATFORM_ANDROID)
+#error "Android is not supported (yet)."
+
 #elif defined(ORION_PLATFORM_MAC)
 #error "Mac OS is not supported."
 
@@ -24,7 +28,7 @@
 #if defined(__clang__)
 #define ORION_COMPILER_CLANG 1
 
-#define ORION_FORCE_INLINE __attribute__((always_inline))
+#define ORION_FORCE_INLINE __attribute__((always_inline)) inline
 #define ORION_NEVER_INLINE __attribute__((noinline))
 
 #define ORION_BUILTIN_TRAP() __builtin_trap()
@@ -32,7 +36,7 @@
 #elif defined(__GNUC__) || defined(__GNUG__)
 #define ORION_COMPILER_GCC 1
 
-#define ORION_FORCE_INLINE __attribute__((always_inline))
+#define ORION_FORCE_INLINE __attribute__((always_inline)) inline
 #define ORION_NEVER_INLINE __attribute__((noinline))
 
 #define ORION_BUILTIN_TRAP() __builtin_trap()
@@ -107,6 +111,8 @@ namespace Orion
 
 	using USize = UInt64;
 	using ISize = Int64;
+
+	using CString = const char*;
 
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 	using UInt128 = __uint128_t;

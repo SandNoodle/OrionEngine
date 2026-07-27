@@ -28,7 +28,7 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Concepts.h
         Sources/Core/Standard/EnumFlag.h
         Sources/Core/Standard/Limits.h
-        Sources/Core/Standard/MoveAndForward.h
+        Sources/Core/Standard/Utility/MoveAndForward.h
         Sources/Core/Standard/TypeTraits.h
         Sources/Core/Standard/Util.h
         Sources/Core/Assert.h
@@ -38,9 +38,10 @@ set(OrionEngine_SOURCES
         Sources/Platform/Graphics/Vulkan/RenderDeviceVK.h
         Sources/Platform/Graphics/RenderDevice.cpp
         Sources/Platform/Graphics/RenderDevice.h
-        Sources/Platform/Platform.h
+        Sources/Platform/Platform.Android.cpp
         Sources/Platform/Platform.Linux.cpp
         Sources/Platform/Platform.Win32.cpp
+        Sources/Platform/Platform.h
         Sources/OrionConfig.h
         Sources/OrionEngine.h
         Sources/EngineEntry.cpp

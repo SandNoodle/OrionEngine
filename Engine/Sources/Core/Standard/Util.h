@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Utility/MoveAndForward.h"
+
 namespace Orion::Engine
 {
 	/// @brief Swaps values of two elements, i.e. A becomes B and B becomes A.

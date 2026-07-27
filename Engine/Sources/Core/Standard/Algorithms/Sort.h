@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Core/Standard/Utility/MoveAndForward.h"
 #include "Core/Assert.h"
-#include "Core/Standard/MoveAndForward.h"
 #include "Core/Standard/Util.h"
 
 namespace Orion::Engine::Algorithm

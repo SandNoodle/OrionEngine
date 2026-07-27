@@ -4,17 +4,24 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Hash.h"
+#include "Core/Standard/Types/Detail/StringFwd.h"
+#include "Core/Standard/Utility/StringUtils.h"
+#include "Platform/Memory.h"
 
 namespace Orion::Engine
 {
 	namespace Detail
 	{
-		template <typename CharT>
+		/**
+		 * @brief TODO
+		 * @tparam T
+		 */
+		template <StringEncoding T>
 		class StringViewBase
 		{
 			public:
-			using ThisType           = StringViewBase<CharT>;
-			using ValueType          = CharT;
+			using ThisType           = StringViewBase;
+			using ValueType          = StringTraits<T>::CharType;
 			using SizeType           = USize;
 			using PointerType        = ValueType*;
 			using ConstPointerType   = const ValueType*;
@@ -29,13 +36,11 @@ namespace Orion::Engine
 			public:
 			constexpr explicit StringViewBase() = default;
 			constexpr explicit StringViewBase(ConstPointerType data, SizeType size) noexcept;
-			constexpr explicit StringViewBase(const char* data, SizeType size) noexcept;
-
-			/// @brief Constructs a new StringView from a C-style string literal.
-			[[nodiscard]] ORION_FORCE_INLINE static constexpr StringViewBase FromStringLiteral(const char*) noexcept;
 
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType operator[](SizeType index) noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType operator[](SizeType index) const noexcept;
+
+			[[nodiscard]] static constexpr Bool8 Equal(ThisType lhs, ThisType rhs) noexcept;
 
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Front() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Front() const noexcept;
@@ -69,12 +74,21 @@ namespace Orion::Engine
 		};
 	}  // namespace Detail
 
-	using StringView = Detail::StringViewBase<Char8>;
+	// -- Type aliases.
+	using StringView      = Detail::StringViewBase<Detail::StringEncoding::ANSI>;
+	using StringViewUTF8  = Detail::StringViewBase<Detail::StringEncoding::UTF8>;
+	using StringViewUTF16 = Detail::StringViewBase<Detail::StringEncoding::UTF16>;
+	using StringViewUTF32 = Detail::StringViewBase<Detail::StringEncoding::UTF32>;
 
 	// -- Deduction guides.
 	// TODO(SandNoodle): Deduction guides.
 
-	// -- Hash
+	// -- Helper macros.
+	/// @brief Constructs StringView from a C-styled literal.
+#define ORION_STRINGVIEW(str) \
+	StringView(reinterpret_cast<StringView::ConstPointerType>(str), StringLength<Detail::StringEncoding::ANSI>(str))
+
+	// -- Hash.
 	template <>
 	struct Hash<StringView>
 	{
@@ -92,133 +106,116 @@ namespace Orion::Engine
 	// -- Implementation.
 	namespace Detail
 	{
-		template <typename CharT>
-		constexpr StringViewBase<CharT>::StringViewBase(ConstPointerType data, SizeType size) noexcept
+		template <StringEncoding T>
+		constexpr StringViewBase<T>::StringViewBase(ConstPointerType data, SizeType size) noexcept
 			: _data(data), _size(size)
 		{
 		}
 
-		template <typename CharT>
-		constexpr StringViewBase<CharT>::StringViewBase(const char* data, SizeType size) noexcept
-			: _data(data), _size(size)
+		template <StringEncoding T>
+		constexpr auto StringViewBase<T>::Equal(ThisType lhs, ThisType rhs) noexcept -> Bool8
 		{
+			if (lhs.Size() != rhs.Size()) {
+				return false;
+			}
+			return Platform::MemoryCompare(lhs._data, rhs._data, lhs.ByteSize()) == 0;
 		}
 
-		template <typename CharT>
-		constexpr auto StringViewBase<CharT>::FromStringLiteral(const char* literal) noexcept -> ThisType
-		{
-			if (literal == nullptr) [[unlikely]] {
-				return ThisType{};
-			}
-
-			SizeType length = 0UL;
-			while (literal[length++] != '\0') {
-				// Explicitly nothing.
-			}
-
-			return ThisType(reinterpret_cast<ConstPointerType>(literal), length);
-		}
-
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Front() noexcept -> ReferenceType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Front() noexcept -> ReferenceType
 		{
 			return *_data;
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Front() const noexcept -> ConstReferenceType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Front() const noexcept -> ConstReferenceType
 		{
 			return *_data;
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Back() noexcept -> ReferenceType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Back() noexcept -> ReferenceType
 		{
 			return *_data[_size - 1];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Back() const noexcept -> ConstReferenceType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Back() const noexcept -> ConstReferenceType
 		{
 			return *_data[_size - 1];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Data() noexcept -> PointerType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Data() noexcept -> PointerType
 		{
 			return _data;
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Data() const noexcept -> ConstPointerType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Data() const noexcept -> ConstPointerType
 		{
 			return _data;
 		}
 
-		template <typename CharT>
-		constexpr auto StringViewBase<CharT>::Hash() const noexcept -> HashType
+		template <StringEncoding T>
+		constexpr auto StringViewBase<T>::Hash() const noexcept -> HashType
 		{
-			HashType hash = 0xCBF29CE484222325;
-			for (SizeType index = 0; index < _size; ++index) {
-				hash ^= _data[_size];
-				hash *= 0x00000100000001B3;
-			}
-			return hash;
+			return FNV1AHash(_data, _size);
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::IsEmpty() const noexcept -> Bool8
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::IsEmpty() const noexcept -> Bool8
 		{
 			return _size == 0;
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::Size() const noexcept -> SizeType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Size() const noexcept -> SizeType
 		{
 			return _size;
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::ByteSize() const noexcept -> SizeType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::ByteSize() const noexcept -> SizeType
 		{
 			return _size * sizeof(ValueType);
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::operator[](SizeType index) noexcept -> ReferenceType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator[](SizeType index) noexcept -> ReferenceType
 		{
 			ORION_ASSERT_DEBUG(index < _size);
 			return _data[index];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::operator[](SizeType index) const noexcept
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator[](SizeType index) const noexcept
 			-> ConstReferenceType
 		{
 			ORION_ASSERT_DEBUG(index < _size);
 			return _data[index];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::begin() noexcept -> PointerType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() noexcept -> PointerType
 		{
 			return &_data[0];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::begin() const noexcept -> ConstPointerType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() const noexcept -> ConstPointerType
 		{
 			return &_data[0];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::end() noexcept -> PointerType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() noexcept -> PointerType
 		{
 			return &_data[_size - 1];
 		}
 
-		template <typename CharT>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<CharT>::end() const noexcept -> ConstPointerType
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() const noexcept -> ConstPointerType
 		{
 			return &_data[_size - 1];
 		}

@@ -7,8 +7,8 @@
 #include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/Memory/Lifetime.h"
-#include "Core/Standard/MoveAndForward.h"
 #include "Core/Standard/Util.h"
+#include "Core/Standard/Utility/MoveAndForward.h"
 #include "Platform/Memory.h"
 
 #include <initializer_list>
@@ -17,9 +17,9 @@
 namespace Orion::Engine
 {
 	/**
-	 * @brief Represents type-safe container capable of holding variable amount of elements.
+	 * @brief Represents a type-safe container capable of holding variable amount of elements.
 	 * @tparam T Type to be stored.
-	 * @tparam Allocator Allocator to be used with the vector that will perform all the allocations.
+	 * @tparam Allocator Allocator to be used with the Vector that will perform all the allocations.
 	 */
 	template <typename T, AllocatorKind Allocator = PlatformAllocator>
 	class Vector
@@ -74,6 +74,9 @@ namespace Orion::Engine
 
 		/// @brief Appends new element to the back of the vector (by Move).
 		constexpr void Add(ValueType&& value) noexcept;
+
+		/// @brief Appends \p size new elements to the back of the vector.
+		constexpr void AddRange(ConstPointerType begin, ConstPointerType end);
 
 		/// @brief Removes the element from the back of the vector. Calls destructor.
 		constexpr void RemoveBack() noexcept;
@@ -297,11 +300,25 @@ namespace Orion::Engine
 	}
 
 	template <typename T, AllocatorKind Allocator>
+	constexpr auto Vector<T, Allocator>::AddRange(ConstPointerType begin, ConstPointerType end) -> void
+	{
+		ORION_ASSERT_DEBUG(begin);
+		ORION_ASSERT_DEBUG(end);
+		ORION_ASSERT_DEBUG(begin <= end);
+		SizeType size = static_cast<SizeType>(end - begin);
+		DoEnsureCapacity(_size + size);
+		for (ConstPointerType it = begin; it < end; ++it) {
+			new (&_data[_size]) ValueType(*it);
+			_size += 1;
+		}
+	}
+
+	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::RemoveBack() noexcept -> void
 	{
 		ORION_ASSERT_DEBUG(_data);
 		ORION_ASSERT_DEBUG(_size > 0);
-		_data[_size--].~ValueType();
+		_data[--_size].~ValueType();
 	}
 
 	template <typename T, AllocatorKind Allocator>
@@ -310,7 +327,7 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG(_data);
 		ORION_ASSERT_DEBUG(_size > 0);
 		Swap(_data[index], _data[_size - 1]);
-		_data[_size--].~ValueType();
+		_data[--_size].~ValueType();
 	}
 
 	template <typename T, AllocatorKind Allocator>
@@ -367,25 +384,25 @@ namespace Orion::Engine
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::begin() noexcept -> PointerType
 	{
-		return &_data[0];
+		return _data;
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::begin() const noexcept -> ConstPointerType
 	{
-		return &_data[0];
+		return _data;
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::end() noexcept -> PointerType
 	{
-		return &_data[_size - 1];
+		return _data + _size;
 	}
 
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::end() const noexcept -> ConstPointerType
 	{
-		return &_data[_size - 1];
+		return _data + _size;
 	}
 
 	template <typename T, AllocatorKind Allocator>

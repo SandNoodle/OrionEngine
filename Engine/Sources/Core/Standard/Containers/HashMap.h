@@ -5,7 +5,9 @@
 #include "Core/Assert.h"
 #include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Hash.h"
+#include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/Types/Pair.h"
+#include "Core/Standard/Util.h"
 
 #include <initializer_list>
 
@@ -34,15 +36,15 @@ namespace Orion::Engine
 	struct Predicate;
 
 	/**
-	 * @brief TODO
+	 * @brief Represents a type-safe container capable of holding key-value pairs with unique keys.
 	 *
 	 * @warning
 	 *
-	 * @tparam Key
-	 * @tparam Value
+	 * @tparam Key Type of the key in the key-value pair.
+	 * @tparam Value Type of the value in the key-value pair.
 	 * @tparam Hash
 	 * @tparam Predicate
-	 * @tparam Allocator
+	 * @tparam Allocator Allocator to be used with the HashMap that will perform all the allocations.
 	 */
 	template <typename Key,
 	          typename Value,
@@ -54,6 +56,8 @@ namespace Orion::Engine
 		public:
 		using KeyType            = Key;
 		using ValueType          = Value;
+		using KeyValueType       = Pair<Key, Value>;
+		using StorageType        = Detail::HashMapElement<KeyType, ValueType>;
 		using SizeType           = USize;
 		using AllocatorType      = Allocator;
 		using PointerType        = ValueType*;
@@ -68,24 +72,21 @@ namespace Orion::Engine
 		static constexpr SizeType k_load_factor_percentage = 80;
 
 		private:
-		using ElementType = Detail::HashMapElement<KeyType, ValueType>;
-
-		private:
 		AllocatorType _allocator;
-		ElementType* _data;
+		StorageType* _data;
 		SizeType _capacity;
 		SizeType _size;
 
 		public:
 		constexpr explicit HashMap(SizeType initial_buckets       = k_initial_bucket_count,
 		                           const AllocatorType& allocator = AllocatorType());
-		constexpr HashMap(std::initializer_list<ValueType>) noexcept;
+		constexpr HashMap(std::initializer_list<KeyValueType>) noexcept;
 		constexpr HashMap(const HashMap&) noexcept;
 		constexpr HashMap(HashMap&&) noexcept;
 
-		[[nodiscard]] constexpr HashMap& operator=(const HashMap&) noexcept;
-		[[nodiscard]] constexpr HashMap& operator=(HashMap&&) noexcept;
-		[[nodiscard]] constexpr HashMap& operator=(std::initializer_list<ValueType>) noexcept;
+		constexpr HashMap& operator=(const HashMap&) noexcept;
+		constexpr HashMap& operator=(HashMap&&) noexcept;
+		constexpr HashMap& operator=(std::initializer_list<ValueType>) noexcept;
 
 		/** Adds new element to the hashmap. If the key already exists, it will be overridden.  */
 		///@{
@@ -139,6 +140,7 @@ namespace Orion::Engine
 		private:
 		constexpr void DoInitialize(SizeType initial_capacity) noexcept;
 		constexpr void DoEnsureCapacity(SizeType requested_capacity) noexcept;
+		constexpr void DoSwap(HashMap& other) noexcept;
 		constexpr ReferenceType DoAdd(KeyType&& key, ValueType&& value) noexcept;
 		constexpr SizeType DoFindSlot(KeyType&& key) noexcept;
 	};
@@ -152,7 +154,8 @@ namespace Orion::Engine
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
-	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(std::initializer_list<ValueType> list) noexcept
+	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(
+		std::initializer_list<KeyValueType> list) noexcept
 	{
 		DoInitialize(list.size());
 		ORION_NOT_IMPLEMENTED();
@@ -161,34 +164,27 @@ namespace Orion::Engine
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(const HashMap& other) noexcept
 	{
-		if (&other == this) {
-			return;
-		}
+		ORION_IGNORE_PARAM(other);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(HashMap&& other) noexcept
 	{
-		if (&other == this) {
-			return;
-		}
+		ORION_IGNORE_PARAM(other);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator=(const HashMap& other) noexcept -> HashMap&
 	{
-		if (&other == this) {
-			return *this;
-		}
+		ORION_IGNORE_PARAM(other);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator=(HashMap&& other) noexcept -> HashMap&
 	{
-		ORION_IGNORE_PARAM(other);
 		ORION_NOT_IMPLEMENTED();
 	}
 
@@ -196,11 +192,7 @@ namespace Orion::Engine
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator=(
 		std::initializer_list<ValueType> list) noexcept -> HashMap&
 	{
-		DoEnsureCapacity(list.size());
-		for (auto& [key, value] : list) {
-			Add(key, value);
-		}
-		return *this;
+		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
@@ -250,16 +242,16 @@ namespace Orion::Engine
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Find(const KeyType& key) noexcept
 		-> PointerType
 	{
-		SizeType slot_index = DoFindSlot(key);
-		return _data[slot_index].state == Detail::HashMapElementState::Allocated ? _data[slot_index].value : nullptr;
+		ORION_IGNORE_PARAM(key);
+		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Find(
 		const KeyType& key) const noexcept -> ConstPointerType
 	{
-		SizeType slot_index = DoFindSlot(key);
-		return _data[slot_index].state == Detail::HashMapElementState::Allocated ? _data[slot_index].value : nullptr;
+		ORION_IGNORE_PARAM(key);
+		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
@@ -278,27 +270,27 @@ namespace Orion::Engine
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::IsEmpty() const noexcept -> Bool8
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _size == 0;
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Size() const noexcept -> SizeType
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _size;
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::ByteSize() const noexcept
 		-> SizeType
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _size * sizeof(StorageType);
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Capacity() const noexcept
 		-> SizeType
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _capacity;
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
@@ -334,7 +326,7 @@ namespace Orion::Engine
 		initial_capacity       = ORION_MAX(initial_capacity, k_initial_bucket_count);
 		SizeType size_in_bytes = sizeof(ValueType);
 		SizeType alignment     = alignof(ValueType);
-		_data                  = static_cast<ElementType*>(_allocator.Allocate(size_in_bytes, alignment));
+		_data                  = static_cast<StorageType*>(_allocator.Allocate(size_in_bytes, alignment));
 		_capacity              = initial_capacity;
 		_size                  = 0;
 	}
@@ -345,6 +337,15 @@ namespace Orion::Engine
 	{
 		ORION_IGNORE_PARAM(requested_capacity);
 		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>
+	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoSwap(HashMap& other) noexcept -> void
+	{
+		Swap(_allocator, other._allocator);
+		Swap(_data, other._data);
+		Swap(_capacity, other._capacity);
+		Swap(_size, other._size);
 	}
 
 	template <typename Key, typename Value, typename Hash, typename Predicate, typename Allocator>

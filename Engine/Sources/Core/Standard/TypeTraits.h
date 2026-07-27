@@ -89,9 +89,20 @@ namespace Orion::Engine
 #error "IsTriviallyCopyable is not defined for this compiler."
 #endif
 
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
+#if defined(ORION_COMPILER_CLANG)
 	template <class T>
 	inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
+#elif defined(ORION_COMPILER_GCC)
+#if __has_builtin(__is_trivially_destructible)
+	template <class T>
+	inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
+#elif __has_builtin(__has_trivial_destructor)
+	template <class T>
+	inline constexpr bool IsTriviallyDestructible = __has_trivial_destructor(T);
+#else
+#error "__is_trivially_destructible nor __has_trivial_destructor is available for this version of the GCC compiler."
+#endif
+
 #else
 #error "IsTriviallyDestructible is not defined for this compiler."
 #endif

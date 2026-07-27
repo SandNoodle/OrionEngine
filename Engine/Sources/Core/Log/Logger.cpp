@@ -3,10 +3,7 @@
 #include "Core/Assert.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/TypeTraits.h"
-#include "Platform/Memory.h"
-
-#include <stdarg.h>
-#include <stdio.h>
+#include "Core/Standard/Types/StringView.h"
 
 namespace Orion::Engine::Log
 {
@@ -14,7 +11,7 @@ namespace Orion::Engine::Log
 	{
 		// NOTE: Must match the order of Severity.
 		static constexpr Array k_severity_name = { "Fatal", "Error", "Warn", "Info", "Debug", "Trace" };
-		return StringView::FromStringLiteral(k_severity_name[ToUnderlyingType(level)]);
+		return ORION_STRINGVIEW(k_severity_name[ToUnderlyingType(level)]);
 	}
 
 	class FileLogger : public ILogger

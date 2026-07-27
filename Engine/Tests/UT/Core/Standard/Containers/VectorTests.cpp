@@ -5,54 +5,15 @@
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/Vector.h"
 
-#include <ostream>
-
 namespace Orion::Engine::UT
 {
-	class ComplexType
+	namespace
 	{
-		public:
-		Float32 x;
-		Float32 y;
-
-		public:
-		constexpr ComplexType() : x(0), y(0) {}
-		constexpr ComplexType(Float32 x, Float32 y) : x(x), y(y) {}
-		virtual ~ComplexType() {}
-
-		ComplexType& operator*=(const ComplexType& other)
+		template <typename>
+		class VectorTest : public ::testing::Test
 		{
-			x *= other.x;
-			y *= other.y;
-			return *this;
-		}
-	};
-
-	[[nodiscard]] constexpr bool operator==(const ComplexType& lhs, const ComplexType& rhs)
-	{
-		return lhs.x == rhs.x && lhs.y == rhs.y;
-	}
-
-	[[nodiscard]] constexpr bool operator>(const ComplexType& lhs, const ComplexType& rhs)
-	{
-		return lhs.x > rhs.x && lhs.y > rhs.y;
-	}
-
-	[[nodiscard]] constexpr ComplexType operator*(const ComplexType& lhs, const ComplexType& rhs)
-	{
-		return ComplexType(lhs.x * rhs.x, lhs.y * rhs.y);
-	}
-
-	std::ostream& operator<<(std::ostream& os, const ComplexType& t)
-	{
-		os << '[' << t.x << ", " << t.y << ']';
-		return os;
-	}
-
-	template <typename>
-	class VectorTest : public ::testing::Test
-	{
-	};
+		};
+	}  // namespace
 	TYPED_TEST_SUITE_P(VectorTest);
 
 	template <typename T>
@@ -64,7 +25,7 @@ namespace Orion::Engine::UT
 	template <>
 	constexpr ComplexType Value<ComplexType>(USize index)
 	{
-		return ComplexType(static_cast<Float32>(index), static_cast<Float32>(index));
+		return ComplexType(static_cast<ComplexType::ValueType>(index));
 	}
 
 	template <typename T>
@@ -87,9 +48,9 @@ namespace Orion::Engine::UT
 			EXPECT_FALSE(result.IsEmpty());
 		}
 
-		EXPECT_EQ(expected.Size(), result.Size())
+		ASSERT_EQ(expected.Size(), result.Size())
 			<< "Expected size: " << expected.Size() << ", but got: " << result.Size();
-		EXPECT_EQ(expected.ByteSize(), result.ByteSize())
+		ASSERT_EQ(expected.ByteSize(), result.ByteSize())
 			<< "Expected byte size: " << expected.ByteSize() << ", but got: " << result.ByteSize();
 
 		for (USize index = 0; index < Size; ++index) {
@@ -153,7 +114,7 @@ namespace Orion::Engine::UT
 		Vector v1 = GetVector<TypeParam>(5);
 		Verify(k_expected_values, v1);
 
-		Vector v2 = v1;
+		Vector v2(v1);
 		Verify(k_expected_values, v2);
 	}
 
@@ -166,7 +127,7 @@ namespace Orion::Engine::UT
 		Vector v1 = GetVector<TypeParam>(5);
 		Verify(k_expected_values, v1);
 
-		Vector v2 = Move(v1);
+		Vector v2(Move(v1));
 		Verify(k_expected_values, v2);
 	}
 
@@ -280,7 +241,7 @@ namespace Orion::Engine::UT
 		v.Remove(2);
 		v.RemoveBack();
 		v.Sort(Algorithm::Compare::Greater<TypeParam>);  // NOTE: When removing elements there is no guarantee that the
-		                                                 // order will be preserved.
+		// order will be preserved.
 		Verify(k_expected_remove, v);
 
 		v.Clear();
@@ -315,5 +276,5 @@ namespace Orion::Engine::UT
 	                            Sort);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(VectorPrimitiveTypesTest, VectorTest, PrimitiveTypes);
-	INSTANTIATE_TYPED_TEST_SUITE_P(VectorComplexTypesTest, VectorTest, ::testing::Types<ComplexType>);
+	INSTANTIATE_TYPED_TEST_SUITE_P(VectorComplexTypesTest, VectorTest, ComplexType);
 }  // namespace Orion::Engine::UT

@@ -2,8 +2,8 @@
 
 #include "OrionEngine.h"
 
-#include "../Standard/Types/StringView.h"
 #include "Core/Standard/Containers/Vector.h"
+#include "Core/Standard/Types/StringView.h"
 
 namespace Orion::Engine::Log
 {
@@ -43,6 +43,7 @@ namespace Orion::Engine::Log
 		virtual void LogMessage(Severity severity, StringView formated_message) noexcept = 0;
 	};
 
+	/// @brief TODO
 	class LoggerSystem
 	{
 		private:

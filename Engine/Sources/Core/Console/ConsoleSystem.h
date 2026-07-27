@@ -90,8 +90,8 @@ namespace Orion::Engine
 		 * @warning \p name parameter **MUST** be unique!
 		 */
 		template <ConsoleVariableTypeKind T>
-		constexpr ConsoleVariable* CreateConsoleVariable(const char* name,
-		                                                 const char* description,
+		constexpr ConsoleVariable* CreateConsoleVariable(CString name,
+		                                                 CString description,
 		                                                 T default_value,
 		                                                 ConsoleVariableFlags flags = ConsoleVariableFlags::None);
 
@@ -104,8 +104,8 @@ namespace Orion::Engine
 
 	// -- Implementation.
 	template <ConsoleVariableTypeKind T>
-	constexpr auto ConsoleSystem::CreateConsoleVariable(const char* name,
-	                                                    const char* description,
+	constexpr auto ConsoleSystem::CreateConsoleVariable(CString name,
+	                                                    CString description,
 	                                                    T default_value,
 	                                                    ConsoleVariableFlags flags) -> ConsoleVariable*
 	{
@@ -114,14 +114,20 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG(description,
 		                   "Cannot create ConsoleVariable, because description was not provided (nullptr)");
 
-		StringView console_variable_name        = StringView::FromStringLiteral(name);
-		StringView console_variable_description = StringView::FromStringLiteral(description);
+		StringView console_variable_name        = ORION_STRINGVIEW(name);
+		StringView console_variable_description = ORION_STRINGVIEW(description);
 
 		ORION_ASSERT_DEBUG(!_console_variables_mapping.Contains(console_variable_name),
 		                   "Cannot create ConsoleVariable, because it already exists (name == '{}').",
 		                   name);
 
 		ConsoleVariableStorage<T>& storage = GetStorage<T>();
+
+		// TODO(SandNoodle): Implement.
+		ORION_IGNORE_PARAM(default_value);
+		ORION_IGNORE_PARAM(flags);
+		ORION_IGNORE_PARAM(console_variable_description);
+		ORION_IGNORE_PARAM(storage);
 
 		return nullptr;
 	}
