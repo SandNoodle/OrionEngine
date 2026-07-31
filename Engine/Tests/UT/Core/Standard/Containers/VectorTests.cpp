@@ -240,7 +240,7 @@ namespace Orion::Engine::UT
 
 		v.Remove(2);
 		v.RemoveBack();
-		v.Sort(Algorithm::Compare::Greater<TypeParam>);  // NOTE: When removing elements there is no guarantee that the
+		v.Sort(Algorithm::Greater<TypeParam>);  // NOTE: When removing elements there is no guarantee that the
 		// order will be preserved.
 		Verify(k_expected_remove, v);
 
@@ -255,7 +255,7 @@ namespace Orion::Engine::UT
 
 		Vector v = GetVector<TypeParam>(3);
 		Verify(k_expected_before, v);
-		v.Sort(Algorithm::Compare::Greater<TypeParam>);
+		v.Sort(Algorithm::Greater<TypeParam>);
 		Verify(k_expected_after, v);
 	}
 

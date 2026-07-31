@@ -18,42 +18,42 @@ namespace Orion::Engine::UT
 	{
 		{
 			Array arr = { 9, 0, 2, 5, 3 };
-			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Compare::Less<decltype(arr)::ValueType>);
+			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Less<decltype(arr)::ValueType>);
 			static constexpr Array k_expected_array = { 0, 2, 3, 5, 9 };
 			EXPECT_EQ(arr, k_expected_array);
 		}
 
 		{
 			Array arr = { 3, 9, 0, 2, 3 };
-			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Compare::LessEqual<decltype(arr)::ValueType>);
+			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::LessEqual<decltype(arr)::ValueType>);
 			static constexpr Array k_expected_array = { 0, 2, 3, 3, 9 };
 			EXPECT_EQ(arr, k_expected_array);
 		}
 
 		{
 			Array arr = { 9, 0, 2, 5, 3 };
-			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Compare::Greater<decltype(arr)::ValueType>);
+			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Greater<decltype(arr)::ValueType>);
 			static constexpr Array k_expected_array = { 9, 5, 3, 2, 0 };
 			EXPECT_EQ(arr, k_expected_array);
 		}
 
 		{
 			Array arr = { 3, 9, 0, 2, 3 };
-			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Compare::GreaterEqual<decltype(arr)::ValueType>);
+			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::GreaterEqual<decltype(arr)::ValueType>);
 			static constexpr Array k_expected_array = { 9, 3, 3, 2, 0 };
 			EXPECT_EQ(arr, k_expected_array);
 		}
 
 		{
 			Array arr = { 3, 9, 3, 0, 9 };
-			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Compare::Equal<decltype(arr)::ValueType>);
+			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Equal<decltype(arr)::ValueType>);
 			static constexpr Array k_expected_array = { 9, 9, 3, 3, 0 };
 			EXPECT_EQ(arr, k_expected_array);
 		}
 
 		{
 			Array arr = { 3, 9, 3, 0, 9 };
-			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::Compare::NotEqual<decltype(arr)::ValueType>);
+			Algorithm::Quicksort(arr.Data(), arr.Size(), Algorithm::NotEqual<decltype(arr)::ValueType>);
 			static constexpr Array k_expected_array = { 3, 3, 0, 9, 9 };
 			EXPECT_EQ(arr, k_expected_array);
 		}

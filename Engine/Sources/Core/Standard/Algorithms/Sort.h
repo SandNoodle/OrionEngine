@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Core/Standard/Utility/MoveAndForward.h"
 #include "Core/Assert.h"
-#include "Core/Standard/Util.h"
+#include "Core/Standard/Algorithms/Compare.h"
+#include "Core/Standard/Utility/MoveAndForward.h"
+#include "Core/Standard/Utility/Swap.h"
 
 namespace Orion::Engine::Algorithm
 {
@@ -37,54 +38,15 @@ namespace Orion::Engine::Algorithm
 		}
 	}  // namespace Internal
 
-	namespace Compare
-	{
-		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 Less(const T& lhs, const T& rhs) noexcept
-		{
-			return lhs < rhs;
-		}
-
-		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 LessEqual(const T& lhs, const T& rhs) noexcept
-		{
-			return lhs <= rhs;
-		}
-
-		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 Greater(const T& lhs, const T& rhs) noexcept
-		{
-			return lhs > rhs;
-		}
-
-		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 GreaterEqual(const T& lhs, const T& rhs) noexcept
-		{
-			return lhs >= rhs;
-		}
-
-		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 Equal(const T& lhs, const T& rhs) noexcept
-		{
-			return lhs == rhs;
-		}
-
-		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 NotEqual(const T& lhs, const T& rhs) noexcept
-		{
-			return lhs != rhs;
-		}
-	}  // namespace Compare
-
 	template <typename T, typename CompareFn>
-	constexpr void Quicksort(T* values, USize values_size, CompareFn&& compare = Compare::Less<T>)
+	constexpr void Quicksort(T* values, USize values_size, CompareFn&& compare = Less<T>)
 	{
 		ORION_ASSERT_DEBUG(values);
 		Internal::Quicksort(values, 0, values_size - 1, Forward<CompareFn>(compare));
 	}
 
 	template <typename T, typename CompareFn>
-	constexpr void Sort(T* values, USize values_size, CompareFn&& compare = Compare::Less<T>)
+	constexpr void Sort(T* values, USize values_size, CompareFn&& compare = Less<T>)
 	{
 		ORION_ASSERT_DEBUG(values);
 		Quicksort(values, values_size, Forward<CompareFn>(compare));

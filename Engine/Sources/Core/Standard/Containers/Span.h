@@ -227,27 +227,27 @@ namespace Orion::Engine
 	constexpr auto Span<T, Extent>::begin() noexcept -> PointerType
 	{
 		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[0];
+		return _data;
 	}
 
 	template <typename T, USize Extent>
 	constexpr auto Span<T, Extent>::begin() const noexcept -> ConstPointerType
 	{
 		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[0];
+		return _data;
 	}
 
 	template <typename T, USize Extent>
 	constexpr auto Span<T, Extent>::end() noexcept -> PointerType
 	{
 		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[_size - 1];
+		return _data + _size;
 	}
 
 	template <typename T, USize Extent>
 	constexpr auto Span<T, Extent>::end() const noexcept -> ConstPointerType
 	{
 		ORION_ASSERT_DEBUG(_size > 0);
-		return &_data[_size - 1];
+		return _data + _size;
 	}
 }  // namespace Orion::Engine

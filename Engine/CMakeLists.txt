@@ -14,28 +14,33 @@ set(ORION_GRAPHICS_API "Vulkan" CACHE STRING "Graphics API backed to be used; Po
 set(OrionEngine_SOURCES
         Sources/Core/Console/ConsoleSystem.cpp
         Sources/Core/Console/ConsoleSystem.h
-        Sources/Core/Memory/Allocators/PlatformAllocator.h
         Sources/Core/Memory/Allocators/Allocator.h
+        Sources/Core/Memory/Allocators/PlatformAllocator.h
+        Sources/Core/Standard/Algorithms/Compare.h
         Sources/Core/Standard/Algorithms/Hash.h
         Sources/Core/Standard/Algorithms/Sort.h
+        Sources/Core/Standard/Containers/Detail/StringFwd.h
         Sources/Core/Standard/Containers/Array.h
         Sources/Core/Standard/Containers/HashMap.h
+        Sources/Core/Standard/Containers/Pair.h
         Sources/Core/Standard/Containers/Span.h
+        Sources/Core/Standard/Containers/String.h
+        Sources/Core/Standard/Containers/StringView.h
         Sources/Core/Standard/Containers/Vector.h
-        Sources/Core/Standard/Types/String.h
-        Sources/Core/Standard/Types/StringView.h
-        Sources/Core/Standard/Types/StringView.h
+        Sources/Core/Standard/Memory/Lifetime.h
+        Sources/Core/Standard/Utility/MathUtils.h
+        Sources/Core/Standard/Utility/MoveAndForward.h
+        Sources/Core/Standard/Utility/StringUtils.h
+        Sources/Core/Standard/Utility/Swap.h
         Sources/Core/Standard/Concepts.h
         Sources/Core/Standard/EnumFlag.h
         Sources/Core/Standard/Limits.h
-        Sources/Core/Standard/Utility/MoveAndForward.h
         Sources/Core/Standard/TypeTraits.h
-        Sources/Core/Standard/Util.h
         Sources/Core/Assert.h
         Sources/Core/Log/Logger.cpp
         Sources/Core/Log/Logger.h
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.cpp
-        Sources/Platform/Graphics/Vulkan/RenderDeviceVK.h
+        Sources/Platform/Graphics/Vulkan/RenderDeviceVk.h
         Sources/Platform/Graphics/RenderDevice.cpp
         Sources/Platform/Graphics/RenderDevice.h
         Sources/Platform/Platform.Android.cpp

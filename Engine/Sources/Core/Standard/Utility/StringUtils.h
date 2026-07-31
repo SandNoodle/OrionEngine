@@ -3,8 +3,8 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
+#include "Core/Standard/Containers/Detail/StringFwd.h"
 #include "Core/Standard/Limits.h"
-#include "Core/Standard/Types/Detail/StringFwd.h"
 
 namespace Orion::Engine
 {
@@ -109,12 +109,12 @@ namespace Orion::Engine
 	}
 
 	/// @brief Hashes given sized-string into a FNV-1a Hash
-	template <typename CharT>
-	[[nodiscard]] constexpr USize FNV1AHash(const CharT* data, USize size) noexcept
+	template <typename CharT, typename SizeType = USize>
+	[[nodiscard]] constexpr SizeType FNV1AHash(const CharT* data, SizeType size) noexcept
 	{
-		USize hash = 0xCBF29CE484222325;
+		SizeType hash = 0xCBF29CE484222325;
 		for (USize index = 0; index < size; ++index) {
-			hash ^= data[index];
+			hash ^= static_cast<SizeType>(data[index]);
 			hash *= 0x00000100000001B3;
 		}
 		return hash;

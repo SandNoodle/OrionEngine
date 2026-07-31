@@ -2,8 +2,8 @@
 
 #include "Core/Console/ConsoleSystem.h"
 #include "Core/Log/Logger.h"
-#include "Core/Standard/Types/String.h"
-#include "Core/Standard/Types/StringView.h"
+#include "Core/Standard/Containers/String.h"
+#include "Core/Standard/Containers/StringView.h"
 
 namespace Orion::Engine
 {

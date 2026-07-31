@@ -101,14 +101,14 @@ namespace Orion::Engine::UT
 }  // namespace Orion::Engine::UT
 
 template <>
-struct Orion::Engine::Hash<Orion::Engine::UT::ComplexType>
+struct Orion::Engine::Algorithm::Hash<Orion::Engine::UT::ComplexType>
 {
 	public:
 	using ValueType = UT::ComplexType;
 	using SizeType  = USize;
 
 	public:
-	SizeType operator()(const ValueType& v)
+	ORION_FORCE_INLINE constexpr SizeType operator()(const ValueType& v) const noexcept
 	{
 		return static_cast<SizeType>(v.x);
 	}

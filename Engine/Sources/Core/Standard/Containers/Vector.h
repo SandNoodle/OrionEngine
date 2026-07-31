@@ -7,12 +7,14 @@
 #include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/Memory/Lifetime.h"
-#include "Core/Standard/Util.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
+#include "Core/Standard/Utility/Swap.h"
 #include "Platform/Memory.h"
 
 #include <initializer_list>
 #include <new>
+
+#include "Core/Standard/Utility/MathUtils.h"
 
 namespace Orion::Engine
 {
@@ -136,7 +138,7 @@ namespace Orion::Engine
 	constexpr Vector<T, Allocator>::Vector(std::initializer_list<ValueType> list) noexcept : _allocator(Allocator{})
 	{
 		DoInitialize(list.size());
-		ConstructItems<ValueType>(Data(), list.begin(), list.size());
+		Memory::ConstructItems<ValueType>(Data(), list.begin(), list.size());
 		_size = list.size();
 	}
 
@@ -149,7 +151,7 @@ namespace Orion::Engine
 		if constexpr (IsTriviallyCopyable<ValueType>) {
 			Platform::MemoryCopy(_data, other._data, ByteSize());
 		} else {
-			ConstructItems(_data, other._data, Size());
+			Memory::ConstructItems(_data, other._data, Size());
 		}
 	}
 
@@ -163,7 +165,7 @@ namespace Orion::Engine
 	constexpr Vector<T, Allocator>::~Vector()
 	{
 		if (_data) {
-			DestructItems(_data, _size);
+			Memory::DestructItems(_data, _size);
 			_allocator.Free(_data);
 		}
 	}
@@ -175,7 +177,7 @@ namespace Orion::Engine
 		}
 
 		if (_data) {
-			DestructItems(_data, _size);
+			Memory::DestructItems(_data, _size);
 			_allocator.Free(_data);
 		}
 
@@ -187,7 +189,7 @@ namespace Orion::Engine
 		if constexpr (IsTriviallyCopyable<ValueType>) {
 			Platform::MemoryCopy(_data, other._data, ByteSize());
 		} else {
-			ConstructItems(_data, other._data, Size());
+			Memory::ConstructItems(_data, other._data, Size());
 		}
 
 		return *this;
@@ -208,8 +210,8 @@ namespace Orion::Engine
 	template <typename T, AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator=(std::initializer_list<ValueType> list) noexcept -> Vector&
 	{
-		DestructItems(Data(), Size());
-		ConstructItems<ValueType>(Data(), list.begin(), list.size());
+		Memory::DestructItems(Data(), Size());
+		Memory::ConstructItems<ValueType>(Data(), list.begin(), list.size());
 		_size = list.size();
 		return *this;
 	}
@@ -277,9 +279,7 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::AddZeroed(SizeType count) noexcept -> void
 	{
 		DoEnsureCapacity(_size + count);
-		for (SizeType index = 0; index < count; ++index) {
-			new (&_data[_size + index]) ValueType();
-		}
+		Memory::DefaultConstructItems<ValueType>(&_data[_size], count);
 		_size += count;
 	}
 
@@ -287,7 +287,7 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::Add(const ValueType& value) noexcept -> void
 	{
 		DoEnsureCapacity(_size + 1);
-		new (&_data[_size]) ValueType(value);
+		Memory::ConstructItem(&_data[_size], value);
 		_size += 1;
 	}
 
@@ -295,7 +295,7 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::Add(ValueType&& value) noexcept -> void
 	{
 		DoEnsureCapacity(_size + 1);
-		new (&_data[_size]) ValueType(Move(value));
+		Memory::ConstructItem(&_data[_size], Move(value));
 		_size += 1;
 	}
 
@@ -306,11 +306,13 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG(end);
 		ORION_ASSERT_DEBUG(begin <= end);
 		SizeType size = static_cast<SizeType>(end - begin);
-		DoEnsureCapacity(_size + size);
-		for (ConstPointerType it = begin; it < end; ++it) {
-			new (&_data[_size]) ValueType(*it);
-			_size += 1;
+		if (size < 1) [[unlikely]] {
+			return;
 		}
+
+		DoEnsureCapacity(_size + size);
+		Memory::ConstructItems(&_data[_size], begin, size);
+		_size += size;
 	}
 
 	template <typename T, AllocatorKind Allocator>
@@ -341,9 +343,7 @@ namespace Orion::Engine
 	{
 		if constexpr (!IsTriviallyDestructible<ValueType>) {
 			if (_data) {
-				for (SizeType index = 0; index < _size; ++index) {
-					_data[index].~ValueType();
-				}
+				Memory::DestructItems(_data, _size);
 			}
 		}
 		_size = 0;
@@ -434,6 +434,7 @@ namespace Orion::Engine
 			return;
 		}
 
+		new_capacity = ToNextPowerOfTwo(new_capacity);
 		PointerType new_data
 			= static_cast<PointerType>(_allocator.Allocate(sizeof(ValueType) * new_capacity, alignof(ValueType)));
 		ORION_ASSERT_DEBUG(new_data);
@@ -443,7 +444,7 @@ namespace Orion::Engine
 				Platform::MemoryCopy(new_data, _data, ByteSize());
 			} else {
 				for (SizeType index = 0; index < Size(); ++index) {
-					new (&new_data[index]) ValueType(Move(_data[index]));
+					Memory::ConstructItem(&new_data[index], Move(_data[index]));
 					_data[index].~ValueType();
 				}
 			}

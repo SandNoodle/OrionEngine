@@ -1,9 +1,9 @@
 #include "Core/Log/Logger.h"
 
+#include "Core/Standard/Containers/StringView.h"
 #include "Core/Assert.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/TypeTraits.h"
-#include "Core/Standard/Types/StringView.h"
 
 namespace Orion::Engine::Log
 {

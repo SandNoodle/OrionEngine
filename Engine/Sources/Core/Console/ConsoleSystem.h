@@ -2,10 +2,10 @@
 
 #include "OrionEngine.h"
 
-#include "../Standard/Types/StringView.h"
 #include "Core/Standard/Concepts.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/HashMap.h"
+#include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/EnumFlag.h"
 
 namespace Orion::Engine
@@ -15,9 +15,6 @@ namespace Orion::Engine
 	                                  SameAs<T, Int32> ||  //
 	                                  SameAs<T, Float32>   //
 		;
-
-	/// @brief Represents a variable parameter accessible and/or modifiable from the console by a user.
-	struct ConsoleVariable;
 
 	/// @brief Represents properties of a given ConsoleVariable.
 	/// Any and all modifications via code are still possible no matter the flags set.
@@ -47,8 +44,24 @@ namespace Orion::Engine
 	};
 	ORION_ENUM_FLAG(ConsoleVariableFlags)
 
+	/// @brief Represents a variable parameter accessible and/or modifiable from the console by a user.
+	struct ConsoleVariable
+	{
+		StringView name;
+		StringView description;
+		StringView usage;
+		UInt32 array_index;
+		ConsoleVariableFlags flags;
+	};
+
 	/// @brief Represents a command accessible from the console by a user.
-	struct ConsoleCommand;
+	struct ConsoleCommand
+	{
+		StringView name;
+		StringView description;
+		StringView usage;
+		// TODO(SandNoodle): Implement.
+	};
 
 	/// @brief TODO
 	template <ConsoleVariableTypeKind T>

@@ -4,7 +4,7 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Hash.h"
-#include "Core/Standard/Types/Detail/StringFwd.h"
+#include "Core/Standard/Containers/Detail/StringFwd.h"
 #include "Core/Standard/Utility/StringUtils.h"
 #include "Platform/Memory.h"
 
@@ -13,15 +13,19 @@ namespace Orion::Engine
 	namespace Detail
 	{
 		/**
-		 * @brief TODO
-		 * @tparam T
+		 * @brief StringView is a class that enables lightweight view into some sequence of the characters (in a given
+		 * encoding).
+		 * @tparam T (Assumed) encoding used by the underlying string.
 		 */
 		template <StringEncoding T>
 		class StringViewBase
 		{
 			public:
 			using ThisType           = StringViewBase;
-			using ValueType          = StringTraits<T>::CharType;
+			using TraitType          = StringTraits<T>;
+			using CharType           = TraitType::CharType;
+			using WideCharType       = TraitType::WideCharType;
+			using ValueType          = CharType;
 			using SizeType           = USize;
 			using PointerType        = ValueType*;
 			using ConstPointerType   = const ValueType*;
@@ -34,11 +38,14 @@ namespace Orion::Engine
 			SizeType _size{ 0UL };
 
 			public:
-			constexpr explicit StringViewBase() = default;
-			constexpr explicit StringViewBase(ConstPointerType data, SizeType size) noexcept;
+			ORION_FORCE_INLINE constexpr explicit StringViewBase() = default;
+			ORION_FORCE_INLINE constexpr explicit StringViewBase(CString str) noexcept;
+			ORION_FORCE_INLINE constexpr explicit StringViewBase(ConstPointerType data, SizeType size) noexcept;
 
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType operator[](SizeType index) noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType operator[](SizeType index) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
 
 			[[nodiscard]] static constexpr Bool8 Equal(ThisType lhs, ThisType rhs) noexcept;
 
@@ -50,7 +57,7 @@ namespace Orion::Engine
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Data() const noexcept;
 
 			/// @brief Returns the Hash value of the StringView.
-			[[nodiscard]] constexpr HashType Hash() const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr HashType Hash() const noexcept;
 
 			/// @brief Verifies if the container is empty, i.e. can store only 0 elements.
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsEmpty() const noexcept;
@@ -89,25 +96,41 @@ namespace Orion::Engine
 	StringView(reinterpret_cast<StringView::ConstPointerType>(str), StringLength<Detail::StringEncoding::ANSI>(str))
 
 	// -- Hash.
-	template <>
-	struct Hash<StringView>
+	namespace Algorithm
 	{
-		public:
-		using ValueType = StringView;
-		using SizeType  = USize;
-
-		public:
-		SizeType operator()(const ValueType& v)
-		{
-			return v.Hash();
-		}
+#define ORION_STRINGVIEW_HASH(type)                   \
+	template <>                                       \
+	struct Hash<type>                                 \
+	{                                                 \
+		public:                                       \
+		using ValueType = type;                       \
+		using SizeType  = USize;                      \
+                                                      \
+		public:                                       \
+		SizeType operator()(const ValueType& v) const \
+		{                                             \
+			return v.Hash();                          \
+		}                                             \
 	};
+
+		ORION_STRINGVIEW_HASH(StringView);
+		ORION_STRINGVIEW_HASH(StringViewUTF8);
+		ORION_STRINGVIEW_HASH(StringViewUTF16);
+		ORION_STRINGVIEW_HASH(StringViewUTF32);
+#undef ORION_STRINGVIEW_HASH
+	}  // namespace Algorithm
 
 	// -- Implementation.
 	namespace Detail
 	{
 		template <StringEncoding T>
-		constexpr StringViewBase<T>::StringViewBase(ConstPointerType data, SizeType size) noexcept
+		ORION_FORCE_INLINE constexpr StringViewBase<T>::StringViewBase(CString str) noexcept
+			: _data(reinterpret_cast<ConstPointerType>(str)), _size(StringLength<T>(str))
+		{
+		}
+
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr StringViewBase<T>::StringViewBase(ConstPointerType data, SizeType size) noexcept
 			: _data(data), _size(size)
 		{
 		}
@@ -158,7 +181,7 @@ namespace Orion::Engine
 		}
 
 		template <StringEncoding T>
-		constexpr auto StringViewBase<T>::Hash() const noexcept -> HashType
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Hash() const noexcept -> HashType
 		{
 			return FNV1AHash(_data, _size);
 		}
@@ -197,27 +220,53 @@ namespace Orion::Engine
 		}
 
 		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator==(const ThisType& other) const noexcept -> Bool8
+		{
+			if (_size != other._size) {
+				return false;
+			}
+			for (SizeType index = 0; index < _size; ++index) {
+				if (_data[index] != other._data[index]) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator!=(const ThisType& other) const noexcept -> Bool8
+		{
+			return !(*this == other);
+		}
+
+		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() noexcept -> PointerType
 		{
-			return &_data[0];
+			ORION_ASSERT_DEBUG(_size > 0);
+			// TODO(SandNoodle): I kinda dislike the const_cast here, ideally we'd have StringViewIterator type here.
+			return const_cast<PointerType>(_data);
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() const noexcept -> ConstPointerType
 		{
-			return &_data[0];
+			ORION_ASSERT_DEBUG(_size > 0);
+			return _data;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() noexcept -> PointerType
 		{
-			return &_data[_size - 1];
+			ORION_ASSERT_DEBUG(_size > 0);
+			// TODO(SandNoodle): I kinda dislike the const_cast here, ideally we'd have StringViewIterator type here.
+			return const_cast<PointerType>(_data) + _size;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() const noexcept -> ConstPointerType
 		{
-			return &_data[_size - 1];
+			ORION_ASSERT_DEBUG(_size > 0);
+			return _data + _size;
 		}
 	}  // namespace Detail
 }  // namespace Orion::Engine

@@ -2,7 +2,7 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/Types/StringView.h"
+#include "Core/Standard/Containers/StringView.h"
 
 namespace Orion::Engine::Platform
 {

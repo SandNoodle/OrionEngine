@@ -1,7 +1,8 @@
 #if defined(ORION_PLATFORM_LINUX)
 #include "Platform/Platform.h"
 
-#include <sys/mman.h>
+#include <sys/sysinfo.h>
+#include <unistd.h>
 
 namespace Orion::Engine::Platform
 {

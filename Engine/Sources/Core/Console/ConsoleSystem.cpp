@@ -2,23 +2,6 @@
 
 namespace Orion::Engine
 {
-	struct ConsoleVariable
-	{
-		StringView name;
-		StringView description;
-		StringView usage;
-		UInt32 array_index;
-		ConsoleVariableFlags flags;
-	};
-
-	struct ConsoleCommand
-	{
-		StringView name;
-		StringView description;
-		StringView usage;
-		// TODO(SandNoodle): Implement.
-	};
-
 	ConsoleSystem& ConsoleSystem::Get() noexcept
 	{
 		static ConsoleSystem console_system;

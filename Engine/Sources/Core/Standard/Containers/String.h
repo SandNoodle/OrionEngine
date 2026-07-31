@@ -4,19 +4,21 @@
 
 #include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Hash.h"
+#include "Core/Standard/Containers/Detail/StringFwd.h"
+#include "Core/Standard/Containers/Span.h"
 #include "Core/Standard/Containers/Vector.h"
-#include "Core/Standard/Types/Detail/StringFwd.h"
-#include "Core/Standard/Types/StringView.h"
 #include "Core/Standard/Utility/StringUtils.h"
+#include "StringView.h"
 
 namespace Orion::Engine
 {
 	namespace Detail
 	{
 		/**
-		 * @brief TODO
-		 * @tparam T
-		 * @tparam Allocator
+		 * @brief String is a class that stores and allows manipulation of continuous sequence of characters in a given
+		 * encoding.
+		 * @tparam T Encoding used for storing the characters.
+		 * @tparam Allocator Allocator to be used with the string that will perform all the allocations.
 		 */
 		template <StringEncoding T, typename Allocator = PlatformAllocator>
 		class StringBase : Vector<typename StringTraits<T>::CharType, Allocator>
@@ -34,7 +36,7 @@ namespace Orion::Engine
 			using ConstPointerType   = BaseType::ConstPointerType;
 			using ReferenceType      = BaseType::ReferenceType;
 			using ConstReferenceType = BaseType::ConstReferenceType;
-			using HashType           = Hash<CharType>::ValueType;
+			using HashType           = Algorithm::Hash<CharType>::SizeType;
 
 			public:
 			constexpr explicit StringBase() noexcept = default;
@@ -49,6 +51,9 @@ namespace Orion::Engine
 			 * @warning Assumes that the C-String is in the correct encoding.
 			 */
 			constexpr ThisType& Append(CString str) noexcept;
+
+			/// @brief Appends Span of a given characters to the end of the string.
+			constexpr ThisType& Append(ReadonlySpan<CharType> view) noexcept;
 
 			/// @brief Appends StringView of a given encoding to the end of the string.
 			constexpr ThisType& Append(StringViewBase<T> view) noexcept;
@@ -91,6 +96,7 @@ namespace Orion::Engine
 			using BaseType::Data;
 			using BaseType::Front;
 			using BaseType::IsEmpty;
+			using BaseType::Reserve;
 
 			// NOLINTBEGIN(readability-identifier-naming)
 			/** Required overload for the C++'s for range loops. */
@@ -114,19 +120,29 @@ namespace Orion::Engine
 	String(reinterpret_cast<String::ConstPointerType>(str), StringLength<Detail::StringEncoding::ANSI>(str))
 
 	// -- Hash.
-	template <>
-	struct Hash<String>
+	namespace Algorithm
 	{
-		public:
-		using ValueType = String;
-		using SizeType  = USize;
-
-		public:
-		SizeType operator()(const ValueType& v)
-		{
-			return v.Hash();
-		}
+#define ORION_STRING_HASH(type)                       \
+	template <>                                       \
+	struct Hash<type>                                 \
+	{                                                 \
+		public:                                       \
+		using ValueType = type;                       \
+		using SizeType  = USize;                      \
+                                                      \
+		public:                                       \
+		SizeType operator()(const ValueType& v) const \
+		{                                             \
+			return v.Hash();                          \
+		}                                             \
 	};
+
+		ORION_STRING_HASH(String);
+		ORION_STRING_HASH(StringUTF8);
+		ORION_STRING_HASH(StringUTF16);
+		ORION_STRING_HASH(StringUTF32);
+#undef ORION_STRING_HASH
+	}  // namespace Algorithm
 
 	// -- Implementation.
 	template <Detail::StringEncoding T, typename Allocator>
@@ -176,6 +192,12 @@ namespace Orion::Engine
 	}
 
 	template <Detail::StringEncoding T, typename Allocator>
+	constexpr auto Detail::StringBase<T, Allocator>::Append(ReadonlySpan<CharType> view) noexcept -> ThisType&
+	{
+		return AppendRange(view.begin(), view.end());
+	}
+
+	template <Detail::StringEncoding T, typename Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Append(StringViewBase<T> view) noexcept -> ThisType&
 	{
 		return AppendRange(view.begin(), view.end());
@@ -211,7 +233,7 @@ namespace Orion::Engine
 			Platform::MemoryCopy(&result, BaseType::Data() + index, bytes_to_copy);
 			return result;
 		} else {
-			ORION_NOT_IMPLEMENTED("Unkown String encoding.");
+			ORION_NOT_IMPLEMENTED("Unknown String encoding.");
 		}
 	}
 
@@ -230,6 +252,6 @@ namespace Orion::Engine
 	template <Detail::StringEncoding T, typename Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Hash() const noexcept -> HashType
 	{
-		return FNV1AHash(Data(), Size());
+		return FNV1AHash<CharType, HashType>(Data(), Size());
 	}
 }  // namespace Orion::Engine

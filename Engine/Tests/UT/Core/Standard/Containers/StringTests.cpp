@@ -1,13 +1,13 @@
 #include "TestCommon.h"
 
 #include "Core/Standard/Containers/Array.h"
-#include "Core/Standard/TypeTraits.h"
-#include "Core/Standard/Types/String.h"
+#include "Core/Standard/Containers/Span.h"
+#include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Utility/StringUtils.h"
 
 namespace Orion::Engine::UT
 {
-	using StringTestTypes = ::testing::Types</*String, StringUTF8, */ StringUTF16, StringUTF32>;
+	using StringTestTypes = ::testing::Types<String, StringUTF8, StringUTF16, StringUTF32>;
 
 	namespace
 	{
@@ -137,12 +137,34 @@ namespace Orion::Engine::UT
 		}
 	}
 
-	TYPED_TEST(StringTest, Modification)
+	TYPED_TEST(StringTest, Modification_Append)
 	{
+		USize expected_length    = 0UL;
+		USize expected_size      = 0UL;
+		USize expected_byte_size = 0UL;
+
 		TypeParam s{};
 		EXPECT_TRUE(s.IsEmpty());
-		EXPECT_EQ(s.Size(), 0);
-		EXPECT_EQ(s.ByteSize(), 0);
+		EXPECT_EQ(s.Length(), expected_length);
+		EXPECT_EQ(s.Size(), expected_size);
+		EXPECT_EQ(s.ByteSize(), expected_byte_size);
+
+		const auto verify = [&]<typename T>(const T* data, USize ascii_character_count) {
+			USize previous_index = expected_size;
+
+			expected_length += ascii_character_count;
+			expected_size += ascii_character_count;
+			expected_byte_size += ascii_character_count * sizeof(typename TypeParam::CharType);
+
+			EXPECT_FALSE(s.IsEmpty());
+			EXPECT_EQ(s.Length(), expected_length);
+			EXPECT_EQ(s.Size(), expected_size);
+			EXPECT_EQ(s.ByteSize(), expected_byte_size);
+			for (USize index = previous_index; index < expected_size; ++index) {
+				EXPECT_EQ(s.GetChar(index), static_cast<TypeParam::WideCharType>(data[index - previous_index]));
+				EXPECT_EQ(s[index], static_cast<TypeParam::CharType>(data[index - previous_index]));
+			}
+		};
 
 		static constexpr USize k_buffer_size                = 64UL;
 		typename TypeParam::ValueType buffer[k_buffer_size] = {};
@@ -150,52 +172,27 @@ namespace Orion::Engine::UT
 			buffer[index] = static_cast<TypeParam::ValueType>(index);
 		}
 
-		USize expected_length    = 0UL;
-		USize expected_size      = 0UL;
-		USize expected_byte_size = 0UL;
-		{
-			expected_length += 1;
-			expected_size += 1;
-			expected_byte_size += sizeof(typename TypeParam::CharType);
+		// Single character
+		typename TypeParam::WideCharType character = 'a';
+		s.Append(character);
+		verify(&character, 1);
 
-			s.Append('a');
-			EXPECT_FALSE(s.IsEmpty());
-			EXPECT_EQ(s.Size(), expected_size);
-			EXPECT_EQ(s.ByteSize(), expected_byte_size);
-			EXPECT_EQ(s.Length(), expected_length);
-			EXPECT_EQ(s.GetChar(0), 'a');
-			EXPECT_EQ(s[0], 'a');
-		}
+		// C-styled string literal
+		s.Append(this->k_cstring_literal);
+		verify(this->k_cstring_literal, this->k_cstring_literal_size);
 
-		{
-			expected_length += this->k_cstring_literal_size;
-			expected_size += this->k_cstring_literal_size;
-			expected_byte_size += this->k_cstring_literal_size * sizeof(typename TypeParam::CharType);
+		// StringView
+		Detail::StringViewBase<TypeParam::TraitType::k_encoding> view(buffer, k_buffer_size);
+		s.Append(view);
+		verify(buffer, k_buffer_size);
 
-			s.Append(this->k_cstring_literal);
-			EXPECT_FALSE(s.IsEmpty());
-			EXPECT_EQ(s.Size(), expected_size);
-			EXPECT_EQ(s.ByteSize(), expected_byte_size);
-			EXPECT_EQ(s.Length(), expected_length);
+		// Span
+		ReadonlySpan span(buffer, k_buffer_size);
+		s.Append(span);
+		verify(buffer, k_buffer_size);
 
-			USize previous_index = expected_size - this->k_cstring_literal_size;
-			for (USize index = previous_index; index < expected_size; ++index) {
-				EXPECT_EQ(s.GetChar(index),
-				          static_cast<TypeParam::WideCharType>(this->k_cstring_literal[index - previous_index]));
-				EXPECT_EQ(s[index], static_cast<TypeParam::CharType>(this->k_cstring_literal[index - previous_index]));
-			}
-		}
-
-		{
-			// static constexpr Detail::StringEncoding k_encoding = TypeParam::TraitType::k_encoding;
-			// Detail::StringBase<k_encoding>;
-			// s.Append();
-		}
-
-		{
-			// s.AppendRange();
-		}
-
-		// s.AppendRange(buffer, buffer + k_buffer_size);
+		// Data range
+		s.AppendRange(buffer, buffer + k_buffer_size);
+		verify(buffer, k_buffer_size);
 	}
 }  // namespace Orion::Engine::UT
