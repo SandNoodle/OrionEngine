@@ -1,6 +1,6 @@
 #include "Core/Console/ConsoleSystem.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Console
 {
 	ConsoleSystem& ConsoleSystem::Get() noexcept
 	{
@@ -14,12 +14,15 @@ namespace Orion::Engine
 		CreateConsoleVariable<Bool8>(
 			"Server.Cheats",
 			"Enables the use of console variables and commands that might be considered 'cheating' in a normal play.",
+			"Server.Cheats <Bool8>",
 			false,
 			ConsoleVariableFlags::Server | ConsoleVariableFlags::ReadWrite);
 
-		CreateConsoleVariable<Float32>("Server.Timescale",
-		                               "",
-		                               1.0f,
+		CreateConsoleVariable<Float64>("Server.Timescale",
+		                               "Speed at which the simulation's update loop happens. Effectively enables "
+		                               "speeding up or slowing down the game's speed.",
+		                               "Server.Timescale <Float64>",
+		                               1.0,
 		                               ConsoleVariableFlags::Server | ConsoleVariableFlags::ReadWrite);
 	}
-}  // namespace Orion::Engine
+}  // namespace Orion::Engine::Console

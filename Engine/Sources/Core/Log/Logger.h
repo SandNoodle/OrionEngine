@@ -5,7 +5,7 @@
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Containers/Vector.h"
 
-namespace Orion::Engine::Log
+namespace Orion::Engine::Logger
 {
 	/// @brief Represents the categorized 'level' of logging.
 	enum class Severity : UInt8
@@ -43,7 +43,7 @@ namespace Orion::Engine::Log
 		virtual ~ILogger() = default;
 
 		/**
-		 * @brief
+		 * @brief TODO
 		 * @param severity
 		 * @param formated_message
 		 */
@@ -55,10 +55,16 @@ namespace Orion::Engine::Log
 	{
 		private:
 		Vector<ILogger*> _loggers;
+		Bool8 _is_initialized{ false };
 
 		public:
-		void Initialize() noexcept;
-		void Shutdown() noexcept;
+		[[nodiscard]] static LoggerSystem& Get() noexcept;
+
+		static void Initialize() noexcept;
+		static void Shutdown() noexcept;
+
+		private:
+		LoggerSystem() = default;
 	};
 
 	constexpr void LogMessage(Severity severity,
@@ -75,31 +81,31 @@ namespace Orion::Engine::Log
 		ORION_IGNORE_PARAM(format_message);
 		// TODO(SandNoodle): Format the message and pass it to the LoggerSystem.
 	}
-}  // namespace Orion::Engine::Log
+}  // namespace Orion::Engine::Logger
 
 // --------------------------------------------------------------------------------
 // Logger Macros
 // --------------------------------------------------------------------------------
 
 #if !defined(ORION_LOGGING_DISABLE)
-#define ORION_LOG_FATAL(message, ...) \
-	Orion::Engine::Log::LogMessage(   \
-		Orion::Engine::Log::Severity::Fatal, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
-#define ORION_LOG_ERROR(message, ...) \
-	Orion::Engine::Log::LogMessage(   \
-		Orion::Engine::Log::Severity::Error, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
-#define ORION_LOG_WARN(message, ...) \
-	Orion::Engine::Log::LogMessage(  \
-		Orion::Engine::Log::Severity::Warn, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
-#define ORION_LOG_INFO(message, ...) \
-	Orion::Engine::Log::LogMessage(  \
-		Orion::Engine::Log::Severity::Info, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
-#define ORION_LOG_DEBUG(message, ...) \
-	Orion::Engine::Log::LogMessage(   \
-		Orion::Engine::Log::Severity::Debug, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
-#define ORION_LOG_TRACE(message, ...) \
-	Orion::Engine::Log::LogMessage(   \
-		Orion::Engine::Log::Severity::Trace, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
+#define ORION_LOG_FATAL(message, ...)  \
+	Orion::Engine::Logger::LogMessage( \
+		Orion::Engine::Logger::Severity::Fatal, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
+#define ORION_LOG_ERROR(message, ...)  \
+	Orion::Engine::Logger::LogMessage( \
+		Orion::Engine::Logger::Severity::Error, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
+#define ORION_LOG_WARN(message, ...)   \
+	Orion::Engine::Logger::LogMessage( \
+		Orion::Engine::Logger::Severity::Warn, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
+#define ORION_LOG_INFO(message, ...)   \
+	Orion::Engine::Logger::LogMessage( \
+		Orion::Engine::Logger::Severity::Info, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
+#define ORION_LOG_DEBUG(message, ...)  \
+	Orion::Engine::Logger::LogMessage( \
+		Orion::Engine::Logger::Severity::Debug, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
+#define ORION_LOG_TRACE(message, ...)  \
+	Orion::Engine::Logger::LogMessage( \
+		Orion::Engine::Logger::Severity::Trace, __FILE__, __FUNCTION__, __LINE__, message, ##__VA_ARGS__)
 #else
 #define ORION_LOG_FATAL(message, ...)
 #define ORION_LOG_ERROR(message, ...)

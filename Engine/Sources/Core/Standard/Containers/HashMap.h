@@ -92,11 +92,10 @@ namespace Orion::Engine
 
 		/** Inserts new element to the hashmap. If the key already exists, it will be overridden.  */
 		///@{
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Insert(const KeyType& key,
-		                                                                const ValueType& value) noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Insert(const KeyType& key, ValueType&& value) noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Insert(KeyType&& key, const ValueType& value) noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Insert(KeyType&& key, ValueType&& value) noexcept;
+		ORION_FORCE_INLINE constexpr ReferenceType Insert(const KeyType& key, const ValueType& value) noexcept;
+		ORION_FORCE_INLINE constexpr ReferenceType Insert(const KeyType& key, ValueType&& value) noexcept;
+		ORION_FORCE_INLINE constexpr ReferenceType Insert(KeyType&& key, const ValueType& value) noexcept;
+		ORION_FORCE_INLINE constexpr ReferenceType Insert(KeyType&& key, ValueType&& value) noexcept;
 		///@}
 
 		/** Removes specified element from the container. Calls destructor. */
@@ -199,6 +198,7 @@ namespace Orion::Engine
 		if (_data) {
 			Memory::DestructItems(_data, _capacity);
 			_allocator.Free(_data);
+			_data = nullptr;
 		}
 	}
 

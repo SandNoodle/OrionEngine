@@ -4,7 +4,7 @@
 
 #include "Core/Standard/Concepts.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Memory
 {
 	template <typename T>
 	concept AllocatorKind = requires(T allocator, USize size_in_bytes, USize alignment, void* ptr) {

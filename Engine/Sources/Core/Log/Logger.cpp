@@ -1,11 +1,11 @@
 #include "Core/Log/Logger.h"
 
-#include "Core/Standard/Containers/StringView.h"
 #include "Core/Assert.h"
 #include "Core/Standard/Containers/Array.h"
+#include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/TypeTraits.h"
 
-namespace Orion::Engine::Log
+namespace Orion::Engine::Logger
 {
 	ORION_FORCE_INLINE static constexpr StringView SeverityName(Severity level) noexcept
 	{
@@ -14,19 +14,17 @@ namespace Orion::Engine::Log
 		return ORION_STRINGVIEW(k_severity_name[ToUnderlyingType(level)]);
 	}
 
-	class FileLogger : public ILogger
+	LoggerSystem& LoggerSystem::Get() noexcept
 	{
-		public:
-		~FileLogger() override = default;
+		static LoggerSystem logger;
+		return logger;
+	}
 
-		void LogMessage(Severity severity, StringView formated_message) noexcept override;
-	};
-
-	void FileLogger::LogMessage(Severity severity, StringView formated_message) noexcept
+	void LoggerSystem::Initialize() noexcept
 	{
-		ORION_IGNORE_PARAM(formated_message);
+	}
 
-		StringView severity_name = SeverityName(severity);
-		ORION_IGNORE_PARAM(severity_name);
+	void LoggerSystem::Shutdown() noexcept
+	{
 	}
 }  // namespace Orion::Engine::Log

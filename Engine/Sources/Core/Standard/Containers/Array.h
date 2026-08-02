@@ -2,10 +2,10 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/Utility/MoveAndForward.h"
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine
 {
@@ -22,10 +22,10 @@ namespace Orion::Engine
 		public:
 		using ValueType          = T;
 		using SizeType           = USize;
-		using PointerType        = T*;
-		using ConstPointerType   = const T*;
-		using ReferenceType      = T&;
-		using ConstReferenceType = const T&;
+		using PointerType        = ValueType*;
+		using ConstPointerType   = const ValueType*;
+		using ReferenceType      = ValueType&;
+		using ConstReferenceType = const ValueType&;
 
 		public:
 		ValueType _data[N];

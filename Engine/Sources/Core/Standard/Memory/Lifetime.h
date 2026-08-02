@@ -4,6 +4,8 @@
 
 #include "Core/Standard/TypeTraits.h"
 
+#include <new>
+
 namespace Orion::Engine::Memory
 {
 	/**

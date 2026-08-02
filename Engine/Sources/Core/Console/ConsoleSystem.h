@@ -2,19 +2,70 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/Concepts.h"
+#include "Core/Assert.h"
+#include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/HashMap.h"
+#include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/EnumFlag.h"
+#include "Core/Standard/Limits.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Console
 {
-	template <typename T>
-	concept ConsoleVariableTypeKind = SameAs<T, Bool8> ||  //
-	                                  SameAs<T, Int32> ||  //
-	                                  SameAs<T, Float32>   //
-		;
+	namespace Detail
+	{
+		/// @brief TODO
+		template <typename T>
+		struct ConsoleVariableValue
+		{
+			T default_value;
+			T current_value;
+		};
+
+		/// @brief TODO
+		template <typename T, typename S = UInt16, S Capacity = 128>
+		class ConsoleVariableStorage : Array<ConsoleVariableValue<T>, Capacity>
+		{
+			public:
+			using ThisType           = ConsoleVariableStorage;
+			using BaseType           = Array<ConsoleVariableValue<T>, Capacity>;
+			using ValueType          = T;
+			using SizeType           = S;
+			using ReferenceType      = ValueType&;
+			using ConstReferenceType = const ValueType&;
+			using PointerType        = ValueType*;
+			using ConstPointerType   = const ValueType*;
+
+			static constexpr SizeType k_maximum_console_variables = Capacity;
+			static constexpr SizeType k_invalid_index             = NumericLimits<SizeType>::Max();
+
+			private:
+			SizeType _current_size{ 0UL };
+
+			public:
+			[[nodiscard]] constexpr SizeType Add(ConstReferenceType default_value) noexcept
+			{
+				if (_current_size + 1 >= k_maximum_console_variables) {
+					return k_invalid_index;
+				}
+				BaseType::operator[](_current_size).default_value = default_value;
+				BaseType::operator[](_current_size).current_value = default_value;
+				return _current_size++;
+			}
+		};
+	}  // namespace Detail
+
+	/// @brief Underlying types of console variables supported by the ConsoleSystem.
+#define ORION_CONSOLE_SYSTEM_VARIABLE_TYPE_LIST \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(Bool8)   \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(Int32)   \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(Int64)   \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(UInt32)  \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(UInt64)  \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(Float32) \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(Float64) \
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(String)
 
 	/// @brief Represents properties of a given ConsoleVariable.
 	/// Any and all modifications via code are still possible no matter the flags set.
@@ -47,36 +98,11 @@ namespace Orion::Engine
 	/// @brief Represents a variable parameter accessible and/or modifiable from the console by a user.
 	struct ConsoleVariable
 	{
-		StringView name;
-		StringView description;
-		StringView usage;
-		UInt32 array_index;
+		String name;
+		String description;
+		String usage;
+		UInt16 storage_index;
 		ConsoleVariableFlags flags;
-	};
-
-	/// @brief Represents a command accessible from the console by a user.
-	struct ConsoleCommand
-	{
-		StringView name;
-		StringView description;
-		StringView usage;
-		// TODO(SandNoodle): Implement.
-	};
-
-	/// @brief TODO
-	template <ConsoleVariableTypeKind T>
-	class ConsoleVariableStorage
-	{
-		public:
-		using SizeType = USize;
-
-		static constexpr SizeType k_max_console_variables_of_type = 128;
-
-		private:
-		Array<T, k_max_console_variables_of_type> _storage{};
-		SizeType _size{ 0UL };
-
-		public:
 	};
 
 	/// @brief TODO
@@ -85,87 +111,92 @@ namespace Orion::Engine
 		public:
 		using SizeType = USize;
 
-		static constexpr SizeType k_max_console_variables_of_type = 128;
-
 		private:
 		HashMap<StringView, ConsoleVariable> _console_variables_mapping;
-		HashMap<StringView, ConsoleCommand> _console_command_mapping;
 
-		ConsoleVariableStorage<Bool8> _bool8_console_variables{};
-		ConsoleVariableStorage<Int32> _int32_console_variables{};
-		ConsoleVariableStorage<Float32> _float32_console_variables{};
+#define ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(type) Detail::ConsoleVariableStorage<type> _##type##_console_variables;
+		ORION_CONSOLE_SYSTEM_VARIABLE_TYPE_LIST
+#undef ORION_CONSOLE_SYSTEM_VARIABLE_TYPE
 
 		public:
+		/// @brief TODO
 		[[nodiscard]] static ConsoleSystem& Get() noexcept;
 
 		/**
-		 * @brief Creates new ConsoleVariable of a given type.
-		 * @warning \p name parameter **MUST** be unique!
+		 * @brief Registers new ConsoleVariable of a given type.
+		 *
+		 * @param name Name of the ConsoleVariable to be referred by (MUST BE UNIQUE).
+		 * @param description TODO
+		 * @param usage TODO
+		 * @param default_value TODO
+		 * @param flags TODO
 		 */
-		template <ConsoleVariableTypeKind T>
-		constexpr ConsoleVariable* CreateConsoleVariable(CString name,
-		                                                 CString description,
-		                                                 T default_value,
-		                                                 ConsoleVariableFlags flags = ConsoleVariableFlags::None);
+		template <typename T>
+		constexpr void CreateConsoleVariable(CString name,
+		                                     CString description,
+		                                     CString usage,
+		                                     T&& default_value,
+		                                     ConsoleVariableFlags flags = ConsoleVariableFlags::None);
 
 		private:
 		ConsoleSystem();
 
-		template <ConsoleVariableTypeKind T>
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ConsoleVariableStorage<T>& GetStorage() noexcept;
+		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Detail::ConsoleVariableStorage<T>& GetStorage() noexcept;
 	};
 
 	// -- Implementation.
-	template <ConsoleVariableTypeKind T>
+	template <typename T>
 	constexpr auto ConsoleSystem::CreateConsoleVariable(CString name,
 	                                                    CString description,
-	                                                    T default_value,
-	                                                    ConsoleVariableFlags flags) -> ConsoleVariable*
+	                                                    CString usage,
+	                                                    T&& default_value,
+	                                                    ConsoleVariableFlags flags) -> void
 	{
 		ORION_ASSERT_DEBUG(name, "Cannot create ConsoleVariable, because name was not provided (nullptr).");
 		ORION_ASSERT_DEBUG(*name != '\0', "Cannot create ConsoleVariable, because name is empty (size == 0).");
 		ORION_ASSERT_DEBUG(description,
 		                   "Cannot create ConsoleVariable, because description was not provided (nullptr)");
 
-		StringView console_variable_name        = ORION_STRINGVIEW(name);
-		StringView console_variable_description = ORION_STRINGVIEW(description);
+		StringView console_variable_name = ORION_STRINGVIEW(name);
+		if (_console_variables_mapping.Contains(console_variable_name)) {
+			ORION_LOG_WARN("Cannot create ConsoleVariable, because it already exists (name == '{}').", name);
+			return;
+		}
 
-		ORION_ASSERT_DEBUG(!_console_variables_mapping.Contains(console_variable_name),
-		                   "Cannot create ConsoleVariable, because it already exists (name == '{}').",
-		                   name);
+		using StorageType                            = Detail::ConsoleVariableStorage<T>;
+		StorageType& storage                         = GetStorage<T>();
+		typename StorageType::SizeType storage_index = storage.Add(Move(default_value));
+		if (storage_index >= StorageType::k_maximum_console_variables) {
+			ORION_LOG_WARN("Cannot create ConsoleVariable, because limit for this type was reached.");
+			return;
+		}
 
-		ConsoleVariableStorage<T>& storage = GetStorage<T>();
-
-		// TODO(SandNoodle): Implement.
-		ORION_IGNORE_PARAM(default_value);
-		ORION_IGNORE_PARAM(flags);
-		ORION_IGNORE_PARAM(console_variable_description);
-		ORION_IGNORE_PARAM(storage);
-
-		return nullptr;
+		ConsoleVariable console_variable{
+			.name          = ORION_STRING(name),
+			.description   = ORION_STRING(description),
+			.usage         = ORION_STRING(usage),
+			.storage_index = storage_index,
+			.flags         = flags,
+		};
+		_console_variables_mapping.Insert(console_variable_name, Move(console_variable));
 	}
 
-	template <ConsoleVariableTypeKind T>
-	constexpr ConsoleVariableStorage<T>& ConsoleSystem::GetStorage() noexcept
+	template <typename T>
+	ORION_FORCE_INLINE constexpr Detail::ConsoleVariableStorage<T>& ConsoleSystem::GetStorage() noexcept
 	{
 		ORION_NOT_IMPLEMENTED("ConsoleSystem::GetStorage<T> is not implemented for type.");
 	}
 
-	template <>
-	constexpr ConsoleVariableStorage<Bool8>& ConsoleSystem::GetStorage() noexcept
-	{
-		return _bool8_console_variables;
+#define ORION_CONSOLE_SYSTEM_VARIABLE_TYPE(type)                                                            \
+	template <>                                                                                             \
+	ORION_FORCE_INLINE constexpr Detail::ConsoleVariableStorage<type>& ConsoleSystem::GetStorage() noexcept \
+	{                                                                                                       \
+		return _##type##_console_variables;                                                                 \
 	}
 
-	template <>
-	constexpr ConsoleVariableStorage<Int32>& ConsoleSystem::GetStorage() noexcept
-	{
-		return _int32_console_variables;
-	}
+	ORION_CONSOLE_SYSTEM_VARIABLE_TYPE_LIST
+#undef ORION_CONSOLE_SYSTEM_VARIABLE_TYPE
 
-	template <>
-	constexpr ConsoleVariableStorage<Float32>& ConsoleSystem::GetStorage() noexcept
-	{
-		return _float32_console_variables;
-	}
-}  // namespace Orion::Engine
+#undef ORION_CONSOLE_SYSTEM_VARIABLE_TYPE_LIST
+}  // namespace Orion::Engine::Console

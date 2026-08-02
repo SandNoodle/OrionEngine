@@ -92,8 +92,9 @@ namespace Orion::Engine
 
 	// -- Helper macros.
 	/// @brief Constructs StringView from a C-styled literal.
-#define ORION_STRINGVIEW(str) \
-	StringView(reinterpret_cast<StringView::ConstPointerType>(str), StringLength<Detail::StringEncoding::ANSI>(str))
+#define ORION_STRINGVIEW(str)                                                                     \
+	Orion::Engine::StringView(reinterpret_cast<Orion::Engine::StringView::ConstPointerType>(str), \
+	                          Orion::Engine::StringLength<Orion::Engine::Detail::StringEncoding::ANSI>(str))
 
 	// -- Hash.
 	namespace Algorithm

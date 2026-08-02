@@ -8,7 +8,6 @@
 #include "Core/Standard/Containers/Span.h"
 #include "Core/Standard/Containers/Vector.h"
 #include "Core/Standard/Utility/StringUtils.h"
-#include "StringView.h"
 
 namespace Orion::Engine
 {
@@ -42,6 +41,11 @@ namespace Orion::Engine
 			constexpr explicit StringBase() noexcept = default;
 			constexpr explicit StringBase(CString str) noexcept;
 			constexpr explicit StringBase(ConstPointerType data, SizeType size) noexcept;
+
+			using BaseType::operator=;
+			using BaseType::operator[];
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
 
 			/// @brief Appends single \p character to the end of the string.
 			constexpr ThisType& Append(WideCharType character) noexcept;
@@ -88,8 +92,6 @@ namespace Orion::Engine
 			[[nodiscard]] constexpr HashType Hash() const noexcept;
 
 			public:
-			using BaseType::operator=;
-			using BaseType::operator[];
 			using BaseType::Back;
 			using BaseType::ByteSize;
 			using BaseType::Capacity;
@@ -116,8 +118,9 @@ namespace Orion::Engine
 
 	// -- Helper macros.
 	/// @brief Constructs String from a C-Styled literal (\p str).
-#define ORION_STRING(str) \
-	String(reinterpret_cast<String::ConstPointerType>(str), StringLength<Detail::StringEncoding::ANSI>(str))
+#define ORION_STRING(str)                                                                 \
+	Orion::Engine::String(reinterpret_cast<Orion::Engine::String::ConstPointerType>(str), \
+	                      Orion::Engine::StringLength<Orion::Engine::Detail::StringEncoding::ANSI>(str))
 
 	// -- Hash.
 	namespace Algorithm
@@ -163,6 +166,28 @@ namespace Orion::Engine
 		for (SizeType index = 0; index < size; ++index) {
 			Data()[index] = data[index];
 		}
+	}
+
+	template <Detail::StringEncoding T, typename Allocator>
+	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator==(const ThisType& other) const noexcept
+		-> Bool8
+	{
+		if (Size() != other.Size()) {
+			return false;
+		}
+		for (SizeType index = 0; index < Size(); ++index) {
+			if (Data()[index] != other.Data()[index]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	template <Detail::StringEncoding T, typename Allocator>
+	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator!=(const ThisType& other) const noexcept
+		-> Bool8
+	{
+		return !(*this == other);
 	}
 
 	template <Detail::StringEncoding T, typename Allocator>

@@ -16,6 +16,8 @@ set(OrionEngine_SOURCES
         Sources/Core/Console/ConsoleSystem.h
         Sources/Core/Memory/Allocators/Allocator.h
         Sources/Core/Memory/Allocators/PlatformAllocator.h
+        Sources/Core/Memory/MemorySystem.cpp
+        Sources/Core/Memory/MemorySystem.h
         Sources/Core/Standard/Algorithms/Compare.h
         Sources/Core/Standard/Algorithms/Hash.h
         Sources/Core/Standard/Algorithms/Sort.h

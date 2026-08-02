@@ -2,6 +2,7 @@
 
 #include "Core/Console/ConsoleSystem.h"
 #include "Core/Log/Logger.h"
+#include "Core/Memory/MemorySystem.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 
@@ -34,9 +35,17 @@ namespace Orion::Engine
 	{
 		CommandLineArguments command_line_arguments = ParseCommandLineArguments(argc, argv);
 
-		ConsoleSystem& console_system = ConsoleSystem::Get();
-		[[maybe_unused]] ConsoleVariable* console_variable
-			= console_system.CreateConsoleVariable<Int32>("Client.Foo", "", 1337, ConsoleVariableFlags::DebugVariable);
+		// -------------------------------------------------------------------------------- //
+		// Pre-Initialization
+		// -------------------------------------------------------------------------------- //
+		Memory::MemorySystem_Initialize();
+
+		// -------------------------------------------------------------------------------- //
+		//
+		// -------------------------------------------------------------------------------- //
+		// Logger::LoggerSystem_Initialize();
+		//
+		// Console::ConsoleSystem_Initialize();
 	}
 
 	void Shutdown() noexcept {}

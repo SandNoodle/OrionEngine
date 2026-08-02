@@ -7,14 +7,13 @@
 #include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/Memory/Lifetime.h"
+#include "Core/Standard/Utility/MathUtils.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 #include "Core/Standard/Utility/Swap.h"
 #include "Platform/Memory.h"
 
 #include <initializer_list>
 #include <new>
-
-#include "Core/Standard/Utility/MathUtils.h"
 
 namespace Orion::Engine
 {
@@ -167,6 +166,7 @@ namespace Orion::Engine
 		if (_data) {
 			Memory::DestructItems(_data, _size);
 			_allocator.Free(_data);
+			_data = nullptr;
 		}
 	}
 	template <typename T, AllocatorKind Allocator>

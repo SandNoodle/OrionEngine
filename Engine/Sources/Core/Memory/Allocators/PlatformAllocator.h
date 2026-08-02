@@ -5,11 +5,16 @@
 #include "Core/Memory/Allocators/Allocator.h"
 #include "Platform/Memory.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Memory
 {
-	/// @brief PlatformAllocator is a simple allocator, which allocates and deallocates memory by calling given
-	/// platform's API.
-	/// @important These calls might result in a significant latency overhead - use sparingly and with caution.
+	/**
+	 * @brief PlatformAllocator is a stateless allocator, which allocates and deallocates memory by requesting it from
+	 * the underlying platform.
+	 *
+	 * @important Underlying platform APIs calls make this allocator a *very* expensive in terms of performance
+	 * (compared to the other ones). Realistically, this allocator should be used sparingly and only in places where
+	 * dynamic allocation is required before the MemorySystem is initialized.
+	 */
 	class PlatformAllocator
 	{
 		public:
@@ -17,9 +22,7 @@ namespace Orion::Engine
 
 		public:
 		[[nodiscard]] ORION_FORCE_INLINE constexpr void* Allocate(SizeType size_in_bytes, SizeType alignment) noexcept;
-
 		ORION_FORCE_INLINE constexpr void Free(void* ptr) noexcept;
-
 		ORION_FORCE_INLINE constexpr void FreeAll() noexcept;
 	};
 	static_assert(AllocatorKind<PlatformAllocator>,
@@ -43,4 +46,4 @@ namespace Orion::Engine
 		// Explicitly nothing - this allocator does not hold any state.
 	}
 
-}  // namespace Orion::Engine
+}  // namespace Orion::Engine::Memory
