@@ -2,6 +2,7 @@
 
 #include "OrionEngine.h"
 
+#include "Core/Assert.h"
 #include "Core/Standard/TypeTraits.h"
 
 #include <new>
@@ -26,7 +27,7 @@ namespace Orion::Engine::Memory
 	ORION_FORCE_INLINE void DefaultConstructItems(ItemType* dst, SizeType count) noexcept
 	{
 		while (count--) {
-			::new (static_cast<void*>(dst)) ItemType;
+			::new (static_cast<void*>(dst)) ItemType();
 			++dst;
 		}
 	}
@@ -67,18 +68,24 @@ namespace Orion::Engine::Memory
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 	ORION_FORCE_INLINE void ConstructItem(DestinationItemType* dst, const SourceItemType& item) noexcept
 	{
-		ConstructItems(dst, &item, 1);
+		ConstructItems(dst, &item, 1UL);
 	}
-
-	/**
-	 * @brief Constructs a given element into a memory, effectively begins C++'s lifetime for it.
-	 * @param dst Destination address where the element will be constructed.
-	 * @param item Element to construct.
-	 */
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 	ORION_FORCE_INLINE void ConstructItem(DestinationItemType* dst, SourceItemType&& item) noexcept
 	{
-		ConstructItems(dst, &item, 1);
+		ConstructItems(dst, &item, 1UL);
+	}
+
+	/**
+	 * @brief Constructs a given element from \p args into a memory, effectively begins C++'s lifetime for it.
+	 * @param dst Destination address where the element will be constructed.
+	 * @param args Variadic list of arguments used for constructing the element.
+	 */
+	template <typename ItemType, typename... Args>
+	ORION_FORCE_INLINE void ConstructItem(ItemType* dst, Args&&... args)
+	{
+		ORION_ASSERT_DEBUG(dst);
+		::new (static_cast<void*>(dst)) ItemType(Forward<Args>(args)...);
 	}
 
 	/**

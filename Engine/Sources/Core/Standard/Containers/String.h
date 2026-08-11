@@ -19,7 +19,7 @@ namespace Orion::Engine
 		 * @tparam T Encoding used for storing the characters.
 		 * @tparam Allocator Allocator to be used with the string that will perform all the allocations.
 		 */
-		template <StringEncoding T, typename Allocator = PlatformAllocator>
+		template <StringEncoding T, Memory::AllocatorKind Allocator = Memory::PlatformAllocator>
 		class StringBase : Vector<typename StringTraits<T>::CharType, Allocator>
 		{
 			public:
@@ -148,7 +148,7 @@ namespace Orion::Engine
 	}  // namespace Algorithm
 
 	// -- Implementation.
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr Detail::StringBase<T, Allocator>::StringBase(CString str) noexcept
 	{
 		SizeType size = StringLength<T>(str);
@@ -158,7 +158,7 @@ namespace Orion::Engine
 		}
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr Detail::StringBase<T, Allocator>::StringBase(ConstPointerType data, SizeType size) noexcept
 	{
 		ORION_ASSERT_DEBUG(data);
@@ -168,7 +168,7 @@ namespace Orion::Engine
 		}
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator==(const ThisType& other) const noexcept
 		-> Bool8
 	{
@@ -183,14 +183,14 @@ namespace Orion::Engine
 		return true;
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator!=(const ThisType& other) const noexcept
 		-> Bool8
 	{
 		return !(*this == other);
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Append(WideCharType character) noexcept -> ThisType&
 	{
 		if constexpr (IsSame<CharType, WideCharType>) {
@@ -204,7 +204,7 @@ namespace Orion::Engine
 		return *this;
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Append(CString str) noexcept -> ThisType&
 	{
 		SizeType str_size       = StringLength<T>(str);
@@ -216,19 +216,19 @@ namespace Orion::Engine
 		return *this;
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Append(ReadonlySpan<CharType> view) noexcept -> ThisType&
 	{
 		return AppendRange(view.begin(), view.end());
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Append(StringViewBase<T> view) noexcept -> ThisType&
 	{
 		return AppendRange(view.begin(), view.end());
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::AppendRange(ConstPointerType begin, ConstPointerType end) noexcept
 		-> ThisType&
 	{
@@ -239,7 +239,7 @@ namespace Orion::Engine
 		return *this;
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::GetChar(SizeType index) const noexcept -> WideCharType
 	{
 		ORION_ASSERT_DEBUG(index < Length());
@@ -262,19 +262,19 @@ namespace Orion::Engine
 		}
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Size() const noexcept -> SizeType
 	{
 		return BaseType::Size();
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Length() const noexcept -> SizeType
 	{
 		return StringLength<T>(BaseType::begin(), BaseType::end());
 	}
 
-	template <Detail::StringEncoding T, typename Allocator>
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::Hash() const noexcept -> HashType
 	{
 		return FNV1AHash<CharType, HashType>(Data(), Size());

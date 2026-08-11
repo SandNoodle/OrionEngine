@@ -6,12 +6,17 @@
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 
+#include "Platform/Graphics/Vulkan/RenderDeviceVk.h"
+
 namespace Orion::Engine
 {
-	struct CommandLineArguments
+	namespace
 	{
-		String config_file;
-	};
+		struct CommandLineArguments
+		{
+			String config_file;
+		};
+	}  // namespace
 
 	/// @brief Parses CLI arguments while skipping the first argument (Application's executable).
 	static constexpr CommandLineArguments ParseCommandLineArguments(int argc, char** argv) noexcept
@@ -46,6 +51,14 @@ namespace Orion::Engine
 		// Logger::LoggerSystem_Initialize();
 		//
 		// Console::ConsoleSystem_Initialize();
+
+		// -------------------------------------------------------------------------------- //
+		//
+		// -------------------------------------------------------------------------------- //
+		Platform::RenderDeviceVk* render_device = Platform::RenderDeviceVk::Create();
+		ORION_ASSERT(render_device, "Failed to initialize RenderDevice");
+
+		Platform::RenderDeviceVk::Destroy(render_device);
 	}
 
 	void Shutdown() noexcept {}

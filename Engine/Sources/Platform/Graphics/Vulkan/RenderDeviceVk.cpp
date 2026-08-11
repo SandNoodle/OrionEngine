@@ -20,7 +20,27 @@ namespace Orion::Engine::Platform
 {
 	static constexpr UInt32 k_vulkan_api_version = VK_API_VERSION_1_3;
 
-	RenderDeviceVk::RenderDeviceVk(VkInstance instance) : _instance(instance) {}
+	RenderDeviceVk::RenderDeviceVk(VkInstance instance,
+	                               VkPhysicalDevice physical_device,
+	                               VkDevice logical_device,
+	                               QueueVk queue_graphics,
+	                               QueueVk queue_compute,
+	                               QueueVk queue_transfer) noexcept
+		: _instance(instance),
+		  _physical_device(physical_device),
+		  _logical_device(logical_device),
+		  _queue_graphics(queue_graphics),
+		  _queue_compute(queue_compute),
+		  _queue_transfer(queue_transfer)
+	{
+	}
+
+	RenderDeviceVk::~RenderDeviceVk() noexcept
+	{
+		// TODO(SandNoodle): Destroy + Allocation callbacks.
+		vkDestroyDevice(_logical_device, nullptr);
+		vkDestroyInstance(_instance, nullptr);
+	}
 
 	[[nodiscard]] static constexpr VkInstance CreateVulkanInstance() noexcept
 	{
@@ -34,27 +54,29 @@ namespace Orion::Engine::Platform
 			return VK_NULL_HANDLE;
 		}
 
-		// -- Instance
-		UInt32 required_extension_count = 0;
-		auto* required_extensions       = glfwGetRequiredInstanceExtensions(&required_extension_count);
-
 		VkApplicationInfo application_info{
 			.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 			.pNext              = nullptr,
 			.pApplicationName   = "Orion Engine: Editor",
-			.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+			.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0),
 			.pEngineName        = ORION_ENGINE_NAME,
-			.engineVersion
-			= VK_MAKE_VERSION(ORION_ENGINE_VERSION_MAJOR, ORION_ENGINE_VERSION_MINOR, ORION_ENGINE_VERSION_PATCH),
+			.engineVersion      = VK_MAKE_API_VERSION(
+                0, ORION_ENGINE_VERSION_MAJOR, ORION_ENGINE_VERSION_MINOR, ORION_ENGINE_VERSION_PATCH),
 			.apiVersion = k_vulkan_api_version,
 		};
+
+		UInt32 required_extension_count = 0;
+		CString* required_extensions    = glfwGetRequiredInstanceExtensions(&required_extension_count);
+
+		static constexpr Array k_validation_layer_names = { "VK_LAYER_KHRONOS_validation" };
+
 		VkInstanceCreateInfo instance_create_info{
 			.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 			.pNext                   = nullptr,
 			.flags                   = 0,
 			.pApplicationInfo        = &application_info,
-			.enabledLayerCount       = 0,
-			.ppEnabledLayerNames     = nullptr,
+			.enabledLayerCount       = k_validation_layer_names.Size(),
+			.ppEnabledLayerNames     = k_validation_layer_names.Data(),
 			.enabledExtensionCount   = required_extension_count,
 			.ppEnabledExtensionNames = required_extensions,
 		};
@@ -72,9 +94,8 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT_DEBUG(instance != VK_NULL_HANDLE);
 
 		// 1. Acquire the list of physical devices present in the system.
-		VkResult result               = VK_SUCCESS;
 		UInt32 physical_devices_count = 0;
-		result                        = vkEnumeratePhysicalDevices(instance, &physical_devices_count, nullptr);
+		VkResult result               = vkEnumeratePhysicalDevices(instance, &physical_devices_count, nullptr);
 		if (!(result == VK_SUCCESS || result == VK_INCOMPLETE) || physical_devices_count == 0) {
 			ORION_LOG_FATAL(
 				"[Vulkan] Failed to acquire amount of physical devices present in the system "
@@ -126,49 +147,63 @@ namespace Orion::Engine::Platform
 		return best_candidate[0].device;
 	}
 
-	template <typename BitFlag>
 	[[nodiscard]] ORION_FORCE_INLINE static constexpr Bool8 VkHasAllFlags(VkFlags flags,
-	                                                                      BitFlag requested_flags) noexcept
+	                                                                      VkFlags requested_flags) noexcept
 	{
 		return (flags & requested_flags) == requested_flags;
 	}
 
-	[[nodiscard]] static Vector<VkDeviceQueueCreateInfo> SelectLogicalDeviceQueues(VkPhysicalDevice physical_device)
+	static constexpr UInt32 k_invalid_queue_index = NumericLimits<UInt32>::Max();
+	namespace
+	{
+		struct VkQueueData
+		{
+			Vector<VkDeviceQueueCreateInfo> queue_create_infos{};
+			Vector<Float32> queue_priorities{};
+			UInt32 queue_index_graphics = k_invalid_queue_index;
+			UInt32 queue_index_compute  = k_invalid_queue_index;
+			UInt32 queue_index_transfer = k_invalid_queue_index;
+		};
+	}  // namespace
+
+	[[nodiscard]] static VkQueueData SelectLogicalDeviceQueues(VkPhysicalDevice physical_device)
 	{
 		UInt32 queue_family_property_count{};
 		vkGetPhysicalDeviceQueueFamilyProperties2(physical_device, &queue_family_property_count, nullptr);
 
 		Vector<VkQueueFamilyProperties2> queue_family_properties;
 		queue_family_properties.AddZeroed(queue_family_property_count);
+
+		// NOTE: Vulkan's validation layers spew a curious error, that the sType must be
+		// VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2 when calling vkGetPhysicalDeviceQueueFamilyProperties2(...).
+		for (USize index = 0; index < queue_family_property_count; ++index) {
+			queue_family_properties[index].sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+		}
+
 		vkGetPhysicalDeviceQueueFamilyProperties2(
 			physical_device, &queue_family_property_count, queue_family_properties.Data());
 
-		static constexpr UInt32 k_invalid_queue_index = NumericLimits<UInt32>::Max();
-		UInt32 queue_index_graphics                   = k_invalid_queue_index;
-		UInt32 queue_index_compute                    = k_invalid_queue_index;
-		UInt32 queue_index_transfer                   = k_invalid_queue_index;
+		VkQueueData queue_data{};
 
-		Vector<VkDeviceQueueCreateInfo> queue_create_infos{};
-		for (UInt32 family_index = 0; family_index < static_cast<UInt32>(queue_family_properties.Size());
-		     ++family_index) {
+		UInt32 queue_family_properties_size = static_cast<UInt32>(queue_family_properties.Size());
+		UInt32 queue_priorities_needed      = 0;
+		for (UInt32 family_index = 0; family_index < queue_family_properties_size; ++family_index) {
 			const VkFlags queue_flags = queue_family_properties[family_index].queueFamilyProperties.queueFlags;
+			UInt32 queue_count        = queue_family_properties[family_index].queueFamilyProperties.queueCount;
 			Bool8 is_valid_queue      = false;
 
-			// Prefer Queue Families which support all the requested queues.
-			if (VkHasAllFlags(
-					queue_flags,
-					static_cast<UInt32>(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT))) {
-				queue_index_graphics = family_index;
-				queue_index_compute  = family_index;
-				queue_index_transfer = family_index;
+			// Prefer Queue Families which support all the requested queue types.
+			if (VkHasAllFlags(queue_flags, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT)) {
+				queue_data.queue_index_graphics = family_index;
+				queue_data.queue_index_compute  = family_index;
+				queue_data.queue_index_transfer = family_index;
 
-				UInt32 queue_count = queue_family_properties[family_index].queueFamilyProperties.queueCount;
 				Vector<Float32> queue_priorities{};
 				queue_priorities.Reserve(queue_count);
 				for (USize queue_priority_index = 0; queue_priority_index < queue_count; ++queue_priority_index) {
 					queue_priorities.Add(static_cast<Float32>(queue_priority_index));
 				}
-				queue_create_infos.AddConstruct(VkDeviceQueueCreateInfo{
+				queue_data.queue_create_infos.AddConstruct(VkDeviceQueueCreateInfo{
 					.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 					.pNext            = nullptr,
 					.flags            = 0,
@@ -176,35 +211,56 @@ namespace Orion::Engine::Platform
 					.queueCount       = queue_count,
 					.pQueuePriorities = queue_priorities.Data(),
 				});
+				queue_priorities_needed = queue_count;
 				break;
 			}
 
-			if (VkHasAllFlags(queue_flags, VK_QUEUE_GRAPHICS_BIT) && queue_index_graphics == k_invalid_queue_index) {
-				queue_index_graphics = family_index;
-				is_valid_queue       = true;
+			if (VkHasAllFlags(queue_flags, VK_QUEUE_GRAPHICS_BIT)
+			    && queue_data.queue_index_graphics == k_invalid_queue_index) {
+				queue_data.queue_index_graphics = family_index;
+				is_valid_queue                  = true;
 			}
-			if (VkHasAllFlags(queue_flags, VK_QUEUE_COMPUTE_BIT) && queue_index_compute == k_invalid_queue_index) {
-				queue_index_compute = family_index;
-				is_valid_queue      = true;
+			if (VkHasAllFlags(queue_flags, VK_QUEUE_COMPUTE_BIT)
+			    && queue_data.queue_index_compute == k_invalid_queue_index) {
+				queue_data.queue_index_compute = family_index;
+				is_valid_queue                 = true;
 			}
-			if (VkHasAllFlags(queue_flags, VK_QUEUE_TRANSFER_BIT) && queue_index_transfer == k_invalid_queue_index) {
-				queue_index_transfer = family_index;
-				is_valid_queue       = true;
+			if (VkHasAllFlags(queue_flags, VK_QUEUE_TRANSFER_BIT)
+			    && queue_data.queue_index_transfer == k_invalid_queue_index) {
+				queue_data.queue_index_transfer = family_index;
+				is_valid_queue                  = true;
 			}
 
-			// NOTE: Skip queue families, which do not support the requested queues.
+			// NOTE: Skip queue families, which do not support the requested queue types.
 			if (!is_valid_queue) {
 				continue;
 			}
 
-			// TODO(SandNoodle): Add queue family to queue_create_infos.
+			queue_data.queue_create_infos.AddConstruct(VkDeviceQueueCreateInfo{
+				.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+				.pNext            = nullptr,
+				.flags            = 0,
+				.queueFamilyIndex = family_index,
+				.queueCount       = queue_count,
+				.pQueuePriorities = nullptr,
+			});
+			queue_priorities_needed += queue_count;
 		}
 
-		for (USize index = 0; index < queue_create_infos.Size(); ++index) {
-			// TODO(SandNoodle): Fill this out.
+		queue_data.queue_priorities.AddZeroed(queue_priorities_needed);
+		Float32* current_queue_priority = queue_data.queue_priorities.Data();
+		for (USize index = 0; index < queue_data.queue_create_infos.Size(); ++index) {
+			VkDeviceQueueCreateInfo& queue_create_info = queue_data.queue_create_infos[index];
+			queue_create_info.pQueuePriorities         = current_queue_priority;
+
+			UInt32 queue_count
+				= queue_family_properties[queue_create_info.queueFamilyIndex].queueFamilyProperties.queueCount;
+			for (USize queue_index = 0; queue_index < queue_count; ++queue_index) {
+				*current_queue_priority++ = 1.0f;
+			}
 		}
 
-		return queue_create_infos;
+		return queue_data;
 	}
 
 	[[nodiscard]] static constexpr VkDevice CreateLogicalDevice(
@@ -214,7 +270,6 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT(physical_device != VK_NULL_HANDLE,
 		             "[Vulkan] Failed to create Logical Device, because Physical Device was invalid (VK_NULL_HANDLE).");
 
-		static constexpr Array k_validation_layer_names  = { "VK_LAYER_KHRONOS_validation" };
 		static constexpr Array k_device_extensions_names = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 		VkPhysicalDeviceVulkan13Features enabled_13_features{};
@@ -242,8 +297,8 @@ namespace Orion::Engine::Platform
 			.flags                   = 0,
 			.queueCreateInfoCount    = static_cast<UInt32>(queue_create_infos.Size()),
 			.pQueueCreateInfos       = queue_create_infos.Data(),
-			.enabledLayerCount       = k_validation_layer_names.Size(),
-			.ppEnabledLayerNames     = k_validation_layer_names.Data(),
+			.enabledLayerCount       = 0 /* Deprecated */,
+			.ppEnabledLayerNames     = nullptr /* Deprecated */,
 			.enabledExtensionCount   = k_device_extensions_names.Size(),
 			.ppEnabledExtensionNames = k_device_extensions_names.Data(),
 			.pEnabledFeatures        = &enabled_10_features,
@@ -261,97 +316,13 @@ namespace Orion::Engine::Platform
 		return logical_device;
 	}
 
-	RenderDeviceVk* RenderDeviceVk::Create()
+	[[nodiscard]] static constexpr VmaAllocator CreateVmaAllocator(VkInstance instance,
+	                                                               VkPhysicalDevice physical_device,
+	                                                               VkDevice logical_device) noexcept
 	{
-		VkInstance instance              = CreateVulkanInstance();
-		VkPhysicalDevice physical_device = SelectPhysicalDevice(instance);
-		Vector queue_indices             = SelectLogicalDeviceQueues(physical_device);
-		VkDevice logical_device          = CreateLogicalDevice(physical_device, ReadonlySpan(queue_indices));
-
-		// -- Queues
-		UInt32 queue_family_property_count{};
-		vkGetPhysicalDeviceQueueFamilyProperties2(physical_device, &queue_family_property_count, nullptr);
-
-		Vector<VkQueueFamilyProperties2> queue_family_properties;
-		queue_family_properties.AddZeroed(queue_family_property_count);
-		vkGetPhysicalDeviceQueueFamilyProperties2(
-			physical_device, &queue_family_property_count, queue_family_properties.Data());
-
-		const auto get_queue_index
-			= [&queue_family_properties, queue_family_property_count](VkQueueFlagBits flag) -> UInt32 {
-			for (UInt32 index = 0; index < static_cast<UInt32>(queue_family_property_count); ++index) {
-				if (queue_family_properties[index].queueFamilyProperties.queueFlags & flag) {
-					return index;
-				}
-			}
-			return 0;
-		};
-
-		UInt32 graphics_queue_index = get_queue_index(VK_QUEUE_GRAPHICS_BIT);
-		UInt32 transfer_queue_index = get_queue_index(VK_QUEUE_TRANSFER_BIT);
-		UInt32 compute_queue_index  = get_queue_index(VK_QUEUE_COMPUTE_BIT);
-
-		Float32 queue_priority = 1.0f;
-		VkDeviceQueueCreateInfo graphics_queue_create_info{
-			.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.pNext            = nullptr,
-			.flags            = 0,
-			.queueFamilyIndex = graphics_queue_index,
-			.queueCount       = 1,
-			.pQueuePriorities = &queue_priority,
-		};
-		VkDeviceQueueCreateInfo transfer_queue_create_info{
-			.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.pNext            = nullptr,
-			.flags            = 0,
-			.queueFamilyIndex = transfer_queue_index,
-			.queueCount       = 1,
-			.pQueuePriorities = &queue_priority,
-		};
-		VkDeviceQueueCreateInfo compute_queue_create_info{
-			.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.pNext            = nullptr,
-			.flags            = 0,
-			.queueFamilyIndex = compute_queue_index,
-			.queueCount       = 1,
-			.pQueuePriorities = &queue_priority,
-		};
-		Array queue_create_infos
-			= { graphics_queue_create_info, transfer_queue_create_info, compute_queue_create_info };
-		ORION_IGNORE_PARAM(queue_create_infos);
-
-		// -- VMA
-		VmaVulkanFunctions vma_vulkan_functions{
-			.vkGetInstanceProcAddr                   = vkGetInstanceProcAddr,
-			.vkGetDeviceProcAddr                     = vkGetDeviceProcAddr,
-			.vkGetPhysicalDeviceProperties           = vkGetPhysicalDeviceProperties,
-			.vkGetPhysicalDeviceMemoryProperties     = vkGetPhysicalDeviceMemoryProperties,
-			.vkAllocateMemory                        = vkAllocateMemory,
-			.vkFreeMemory                            = vkFreeMemory,
-			.vkMapMemory                             = vkMapMemory,
-			.vkUnmapMemory                           = vkUnmapMemory,
-			.vkFlushMappedMemoryRanges               = vkFlushMappedMemoryRanges,
-			.vkInvalidateMappedMemoryRanges          = vkInvalidateMappedMemoryRanges,
-			.vkBindBufferMemory                      = vkBindBufferMemory,
-			.vkBindImageMemory                       = vkBindImageMemory,
-			.vkGetBufferMemoryRequirements           = vkGetBufferMemoryRequirements,
-			.vkGetImageMemoryRequirements            = vkGetImageMemoryRequirements,
-			.vkCreateBuffer                          = vkCreateBuffer,
-			.vkDestroyBuffer                         = vkDestroyBuffer,
-			.vkCreateImage                           = vkCreateImage,
-			.vkDestroyImage                          = vkDestroyImage,
-			.vkCmdCopyBuffer                         = vkCmdCopyBuffer,
-			.vkGetBufferMemoryRequirements2KHR       = vkGetBufferMemoryRequirements2KHR,
-			.vkGetImageMemoryRequirements2KHR        = vkGetImageMemoryRequirements2KHR,
-			.vkBindBufferMemory2KHR                  = vkBindBufferMemory2KHR,
-			.vkBindImageMemory2KHR                   = vkBindImageMemory2KHR,
-			.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2KHR,
-			.vkGetDeviceBufferMemoryRequirements     = vkGetDeviceBufferMemoryRequirements,
-			.vkGetDeviceImageMemoryRequirements      = vkGetDeviceImageMemoryRequirements,
-			.vkGetMemoryWin32HandleKHR               = VK_NULL_HANDLE,
-		};
-
 		VmaAllocator vma_allocator = VK_NULL_HANDLE;
+
+		VmaVulkanFunctions vma_vulkan_functions{};
 		VmaAllocatorCreateInfo vma_allocator_create_info{
 			.flags                          = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
 			.physicalDevice                 = physical_device,
@@ -365,13 +336,36 @@ namespace Orion::Engine::Platform
 			.vulkanApiVersion               = k_vulkan_api_version,
 			.pTypeExternalMemoryHandleTypes = nullptr,
 		};
-		VkResult vma_allocator_result = vmaCreateAllocator(&vma_allocator_create_info, &vma_allocator);
-		if (vma_allocator_result != VK_SUCCESS) {
+		vmaImportVulkanFunctionsFromVolk(&vma_allocator_create_info, &vma_vulkan_functions);
+		if (vmaCreateAllocator(&vma_allocator_create_info, &vma_allocator) != VK_SUCCESS) {
 			ORION_LOG_FATAL("[Vulkan] Failed to initialize the Vulkan Memory Allocator.");
-			return nullptr;
+			return VK_NULL_HANDLE;
 		}
+		return vma_allocator;
+	}
 
-		return new RenderDeviceVk(instance);
+	RenderDeviceVk* RenderDeviceVk::Create()
+	{
+		VkInstance instance              = CreateVulkanInstance();
+		VkPhysicalDevice physical_device = SelectPhysicalDevice(instance);
+		VkQueueData queue_data           = SelectLogicalDeviceQueues(physical_device);
+		VkDevice logical_device    = CreateLogicalDevice(physical_device, ReadonlySpan(queue_data.queue_create_infos));
+		VmaAllocator vma_allocator = CreateVmaAllocator(instance, physical_device, logical_device);
+
+		QueueVk queue_graphics{};
+		QueueVk queue_compute{};
+		QueueVk queue_transfer{};
+
+		vkGetDeviceQueue(logical_device, queue_data.queue_index_graphics, 0, &queue_graphics.queue);
+		vkGetDeviceQueue(logical_device, queue_data.queue_index_compute, 0, &queue_compute.queue);
+		vkGetDeviceQueue(logical_device, queue_data.queue_index_transfer, 0, &queue_transfer.queue);
+
+		queue_graphics.queue_family_index = queue_data.queue_index_graphics;
+		queue_compute.queue_family_index  = queue_data.queue_index_compute;
+		queue_transfer.queue_family_index = queue_data.queue_index_transfer;
+
+		return new RenderDeviceVk(
+			instance, physical_device, logical_device, queue_graphics, queue_compute, queue_transfer);
 	}
 
 	void RenderDeviceVk::Destroy(RenderDeviceVk* render_device)

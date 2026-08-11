@@ -3,6 +3,7 @@
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/Span.h"
 #include "Core/Standard/Containers/String.h"
+#include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Utility/StringUtils.h"
 
 namespace Orion::Engine::UT
@@ -187,7 +188,7 @@ namespace Orion::Engine::UT
 		verify(buffer, k_buffer_size);
 
 		// Span
-		ReadonlySpan span(buffer, k_buffer_size);
+		ReadonlySpan<typename TypeParam::TraitType::CharType> span(buffer, k_buffer_size);
 		s.Append(span);
 		verify(buffer, k_buffer_size);
 

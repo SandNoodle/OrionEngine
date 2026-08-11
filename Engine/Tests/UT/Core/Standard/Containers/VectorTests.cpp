@@ -79,7 +79,7 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(VectorTest, Constructor_InitialCapacity)
 	{
-		Vector v = Vector<TypeParam, DummyAllocator>(8, DummyAllocator());
+		Vector v = Vector<TypeParam, Memory::DummyAllocator>(8, Memory::DummyAllocator());
 		EXPECT_TRUE(v.IsEmpty());
 		EXPECT_EQ(v.Size(), 0);
 		EXPECT_EQ(v.ByteSize(), 0);
@@ -88,7 +88,7 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(VectorTest, Constructor_InitializerList_Empty)
 	{
-		Vector<TypeParam, DummyAllocator> v({});
+		Vector<TypeParam, Memory::DummyAllocator> v({});
 		EXPECT_TRUE(v.IsEmpty());
 		EXPECT_EQ(v.Size(), 0);
 		EXPECT_EQ(v.ByteSize(), 0);

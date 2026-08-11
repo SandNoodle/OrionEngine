@@ -2,6 +2,8 @@
 
 #include "OrionEngine.h"
 
+#include "Core/Memory/Allocators/Allocator.h"
+
 namespace Orion::Engine::Detail
 {
 	/// @brief Represents encoding used when storing the String type.
@@ -20,7 +22,7 @@ namespace Orion::Engine::Detail
 	};
 
 	// -- Type forwarding.
-	template <StringEncoding T, typename Allocator>
+	template <StringEncoding T, Memory::AllocatorKind Allocator>
 	class StringBase;
 
 	template <StringEncoding T>

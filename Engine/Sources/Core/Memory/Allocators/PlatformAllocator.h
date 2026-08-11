@@ -12,8 +12,7 @@ namespace Orion::Engine::Memory
 	 * the underlying platform.
 	 *
 	 * @important Underlying platform APIs calls make this allocator a *very* expensive in terms of performance
-	 * (compared to the other ones). Realistically, this allocator should be used sparingly and only in places where
-	 * dynamic allocation is required before the MemorySystem is initialized.
+	 * (compared to the other ones). Realistically, this allocator should be used sparingly.
 	 */
 	class PlatformAllocator
 	{

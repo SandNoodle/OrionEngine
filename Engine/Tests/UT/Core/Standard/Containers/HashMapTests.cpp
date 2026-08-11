@@ -30,8 +30,11 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(HashMapTest, Constructor_InitialCapacity)
 	{
-		using T   = TypeParam;
-		HashMap h = HashMap<T, T, Algorithm::Hash<T>, Algorithm::Equal<T>, DummyAllocator>(8, DummyAllocator());
+		HashMap h = HashMap<TypeParam,
+		                    TypeParam,
+		                    Algorithm::Hash<TypeParam>,
+		                    Algorithm::Equal<TypeParam>,
+		                    Memory::DummyAllocator>(8, Memory::DummyAllocator());
 		EXPECT_TRUE(h.IsEmpty());
 		EXPECT_EQ(h.Size(), 0);
 		EXPECT_EQ(h.ByteSize(), 0);
@@ -40,8 +43,11 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(HashMapTest, Constructor_InitializerList_Empty)
 	{
-		using T   = TypeParam;
-		HashMap h = HashMap<T, T, Algorithm::Hash<T>, Algorithm::Equal<T>, DummyAllocator>({});
+		HashMap h = HashMap<TypeParam,
+		                    TypeParam,
+		                    Algorithm::Hash<TypeParam>,
+		                    Algorithm::Equal<TypeParam>,
+		                    Memory::DummyAllocator>({});
 		EXPECT_TRUE(h.IsEmpty());
 		EXPECT_EQ(h.Size(), 0);
 		EXPECT_EQ(h.ByteSize(), 0);

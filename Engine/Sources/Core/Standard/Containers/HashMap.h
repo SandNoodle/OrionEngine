@@ -45,9 +45,9 @@ namespace Orion::Engine
 	 */
 	template <typename Key,
 	          typename Value,
-	          typename Hash      = Algorithm::Hash<Key>,
-	          auto Predicate     = Algorithm::Equal<Key>,
-	          typename Allocator = PlatformAllocator>
+	          typename Hash                   = Algorithm::Hash<Key>,
+	          auto Predicate                  = Algorithm::Equal<Key>,
+	          Memory::AllocatorKind Allocator = Memory::PlatformAllocator>
 	class HashMap
 	{
 		private:
@@ -154,7 +154,7 @@ namespace Orion::Engine
 		constexpr void DoSwap(ThisType& other) noexcept;
 	};
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(SizeType initial_buckets,
 	                                                                   const AllocatorType& allocator)
 		: _allocator(allocator)
@@ -162,7 +162,7 @@ namespace Orion::Engine
 		DoInitialize(initial_buckets);
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(
 		std::initializer_list<KeyValueType> list) noexcept
 		: _allocator(AllocatorType{})
@@ -173,7 +173,7 @@ namespace Orion::Engine
 		}
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(const HashMap& other) noexcept
 		: _allocator(other._allocator), _capacity(other._capacity), _size(other._size)
 	{
@@ -186,13 +186,13 @@ namespace Orion::Engine
 		}
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(HashMap&& other) noexcept
 	{
 		DoSwap(other);
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::~HashMap()
 	{
 		if (_data) {
@@ -202,7 +202,7 @@ namespace Orion::Engine
 		}
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator=(const HashMap& other) noexcept -> HashMap&
 	{
 		if (this == &other) {
@@ -228,7 +228,7 @@ namespace Orion::Engine
 		return *this;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator=(HashMap&& other) noexcept -> HashMap&
 	{
 		if (this == &other) {
@@ -240,7 +240,7 @@ namespace Orion::Engine
 		return *this;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator=(
 		std::initializer_list<ValueType> list) noexcept -> HashMap&
 	{
@@ -248,14 +248,14 @@ namespace Orion::Engine
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Insert(
 		const KeyType& key,
 		const ValueType& value) noexcept -> ReferenceType
 	{
 		return DoInsert({ key, value });
 	}
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Insert(
 		const KeyType& key,
 		ValueType&& value) noexcept -> ValueType&
@@ -263,7 +263,7 @@ namespace Orion::Engine
 		return DoInsert({ key, Move(value) });
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Insert(
 		KeyType&& key,
 		const ValueType& value) noexcept -> ReferenceType
@@ -271,7 +271,7 @@ namespace Orion::Engine
 		return DoInsert({ Move(key), value });
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Insert(
 		KeyType&& key,
 		ValueType&& value) noexcept -> ReferenceType
@@ -279,46 +279,46 @@ namespace Orion::Engine
 		return DoInsert({ Move(key), Move(value) });
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Remove(const KeyType& key) noexcept -> void
 	{
 		DoRemove(key);
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Remove(KeyType&& key) noexcept -> void
 	{
 		DoRemove(Move(key));
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Find(const KeyType& key) noexcept
 		-> PointerType
 	{
 		ORION_ASSERT_DEBUG(_data);
-		SizeType slot_index = DoFindSlot(key);
-		StorageType element = _data[slot_index];
-		return element.state == StorageType::State::Allocated ? &element.value : nullptr;
+		SizeType slot_index  = DoFindSlot(key);
+		StorageType* element = &_data[slot_index];
+		return element->state == StorageType::State::Allocated ? &element->value : nullptr;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Find(
 		const KeyType& key) const noexcept -> ConstPointerType
 	{
 		ORION_ASSERT_DEBUG(_data);
-		SizeType slot_index = DoFindSlot(key);
-		StorageType element = _data[slot_index];
-		return element.state == StorageType::State::Allocated ? &element.value : nullptr;
+		SizeType slot_index  = DoFindSlot(key);
+		StorageType* element = &_data[slot_index];
+		return element->state == StorageType::State::Allocated ? &element->value : nullptr;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Contains(const KeyType& key) const noexcept -> Bool8
 	{
 		SizeType slot_index = DoFindSlot(key);
 		return _data[slot_index].state == StorageType::State::Allocated;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Clear() noexcept -> void
 	{
 		for (SizeType index = 0; index < _capacity; ++index) {
@@ -333,73 +333,73 @@ namespace Orion::Engine
 		_size = 0;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::IsEmpty() const noexcept -> Bool8
 	{
 		return _size == 0UL;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Size() const noexcept -> SizeType
 	{
 		return _size;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::ByteSize() const noexcept
 		-> SizeType
 	{
 		return _size * sizeof(KeyValueType);
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Capacity() const noexcept
 		-> SizeType
 	{
 		return _capacity;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::LoadFactor() const noexcept
 		-> Float64
 	{
 		return static_cast<Float64>(_size) / static_cast<Float64>(_capacity);
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::MaxLoadFactor() const noexcept
 		-> Float64
 	{
 		return k_desired_load_factor;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::begin() noexcept -> IteratorType
 	{
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::begin() const noexcept
 		-> ConstIteratorType
 	{
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::end() noexcept -> IteratorType
 	{
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::end() const noexcept
 		-> ConstIteratorType
 	{
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoInitialize(SizeType initial_capacity) noexcept
 		-> void
 	{
@@ -417,7 +417,7 @@ namespace Orion::Engine
 		}
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoRebuildHashMapIfNeeded() noexcept -> void
 	{
 		ORION_ASSERT_DEBUG(_data);
@@ -447,7 +447,7 @@ namespace Orion::Engine
 		_capacity = new_capacity;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoInsert(KeyValueType&& element) noexcept
 		-> ReferenceType
 	{
@@ -468,7 +468,7 @@ namespace Orion::Engine
 		return _data[slot_index].value;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoRemove(KeyType&& key) noexcept -> void
 	{
 		ORION_ASSERT_DEBUG(_data);
@@ -508,7 +508,7 @@ namespace Orion::Engine
 		}
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoFindSlot(const KeyType& key) const noexcept
 		-> SizeType
 	{
@@ -519,7 +519,7 @@ namespace Orion::Engine
 		return index;
 	}
 
-	template <typename Key, typename Value, typename Hash, auto Predicate, typename Allocator>
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoSwap(ThisType& other) noexcept -> void
 	{
 		Swap(_allocator, other._allocator);

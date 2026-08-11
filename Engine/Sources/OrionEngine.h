@@ -42,7 +42,14 @@
 #define ORION_BUILTIN_TRAP() __builtin_trap()
 
 #elif defined(_MSC_VER)
-#error "MSVC is not supported."
+#warning "MSCV is not oficially supported and might not work / compile correctly."
+
+#define ORION_COMPILER_MSVC 1
+
+#define ORION_FORCE_INLINE __forceinline
+#define ORION_NEVER_INLINE __declspec(noinline)
+
+#define ORION_BUILTIN_TRAP() __debugbreak()
 
 #else
 #error "Unknown compiler detected."
@@ -52,7 +59,9 @@
 // Export
 #ifdef ORION_EXPORT
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-#define ORION_API __attribute__((visibility("default")))
+#define ORION_API extern "C" __attribute__((visibility("default")))
+#elif defined(ORION_COMPILER_MSVC)
+#define ORION_API extern "C" __decltype(ddlexport)
 #else
 #error "Cannot define ORION_API, because compiler is unknown."
 #endif
@@ -60,7 +69,9 @@
 // Import
 #else
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-#define ORION_API
+#define ORION_API extern "C"
+#elif defined(ORION_COMPILER_MSVC)
+#define ORION_API extern "C" __decltype(ddlimport)
 #else
 #error "Cannot define ORION_API, because compiler is unknown."
 #endif

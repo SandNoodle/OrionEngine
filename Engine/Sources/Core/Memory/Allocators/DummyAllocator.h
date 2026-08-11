@@ -4,7 +4,7 @@
 
 #include "Core/Memory/Allocators/Allocator.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Memory
 {
 	/**
 	 * @brief DummyAllocator is an allocator, which allocates and deallocates nothing.
@@ -17,7 +17,7 @@ namespace Orion::Engine
 
 		public:
 		[[nodiscard]] ORION_FORCE_INLINE constexpr void* Allocate(SizeType size_in_bytes, SizeType alignment) noexcept;
-		ORION_FORCE_INLINE constexpr void Free(void* ptr) noexcept;
+		ORION_FORCE_INLINE constexpr void Free(const void* ptr) noexcept;
 		ORION_FORCE_INLINE constexpr void FreeAll() noexcept;
 	};
 	static_assert(AllocatorKind<DummyAllocator>,
@@ -32,8 +32,9 @@ namespace Orion::Engine
 		return nullptr;
 	}
 
-	ORION_FORCE_INLINE constexpr auto DummyAllocator::Free(void* ptr) noexcept -> void
+	ORION_FORCE_INLINE constexpr auto DummyAllocator::Free(const void* ptr) noexcept -> void
 	{
+		ORION_IGNORE_PARAM(ptr);
 		// Explicitly nothing - this allocator does not deallocate any memory.
 	}
 
@@ -42,4 +43,4 @@ namespace Orion::Engine
 		// Explicitly nothing - this allocator does not deallocate any memory.
 	}
 
-}  // namespace Orion::Engine
+}  // namespace Orion::Engine::Memory
