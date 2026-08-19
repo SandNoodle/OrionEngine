@@ -14,12 +14,6 @@ set(ORION_GRAPHICS_API "Vulkan" CACHE STRING "Graphics API backed to be used; Po
 set(OrionEngine_SOURCES
         Sources/Core/Console/ConsoleSystem.cpp
         Sources/Core/Console/ConsoleSystem.h
-        Sources/Core/Memory/Allocators/Allocator.h
-        Sources/Core/Memory/Allocators/ArenaAllocator.h
-        Sources/Core/Memory/Allocators/DummyAllocator.h
-        Sources/Core/Memory/Allocators/PlatformAllocator.h
-        Sources/Core/Memory/MemorySystem.cpp
-        Sources/Core/Memory/MemorySystem.h
         Sources/Core/Standard/Algorithms/Compare.h
         Sources/Core/Standard/Algorithms/Hash.h
         Sources/Core/Standard/Algorithms/Sort.h
@@ -27,10 +21,15 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Containers/Array.h
         Sources/Core/Standard/Containers/HashMap.h
         Sources/Core/Standard/Containers/Pair.h
+        Sources/Core/Standard/Containers/Result.h
         Sources/Core/Standard/Containers/Span.h
         Sources/Core/Standard/Containers/String.h
         Sources/Core/Standard/Containers/StringView.h
         Sources/Core/Standard/Containers/Vector.h
+        Sources/Core/Standard/Memory/Allocators/Allocator.h
+        Sources/Core/Standard/Memory/Allocators/ArenaAllocator.h
+        Sources/Core/Standard/Memory/Allocators/DummyAllocator.h
+        Sources/Core/Standard/Memory/Allocators/PlatformAllocator.h
         Sources/Core/Standard/Memory/Lifetime.h
         Sources/Core/Standard/Utility/MathUtils.h
         Sources/Core/Standard/Utility/MoveAndForward.h
@@ -47,6 +46,7 @@ set(OrionEngine_SOURCES
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.h
         Sources/Platform/Graphics/RenderDevice.cpp
         Sources/Platform/Graphics/RenderDevice.h
+        Sources/Platform/Memory.h
         Sources/Platform/Platform.Android.cpp
         Sources/Platform/Platform.Linux.cpp
         Sources/Platform/Platform.Win32.cpp
@@ -69,7 +69,7 @@ target_compile_options(OrionEngine PRIVATE
 
 # --- [ GIT ] ---
 find_package(Git)
-if (GIT_Found)
+if (Git_FOUND)
     execute_process(
             COMMAND git log -1 --format=%h
             WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}

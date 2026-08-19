@@ -2,9 +2,9 @@
 
 #include "Core/Console/ConsoleSystem.h"
 #include "Core/Log/Logger.h"
-#include "Core/Memory/MemorySystem.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
+#include "Platform/FileSystem/FileSystem.h"
 
 #include "Platform/Graphics/Vulkan/RenderDeviceVk.h"
 
@@ -41,16 +41,22 @@ namespace Orion::Engine
 		CommandLineArguments command_line_arguments = ParseCommandLineArguments(argc, argv);
 
 		// -------------------------------------------------------------------------------- //
-		// Pre-Initialization
+		// Pre-Initialization: Engine Critical Systems
 		// -------------------------------------------------------------------------------- //
-		Memory::MemorySystem_Initialize();
+		Logger::LoggerSystem::Initialize();
 
 		// -------------------------------------------------------------------------------- //
 		//
 		// -------------------------------------------------------------------------------- //
-		// Logger::LoggerSystem_Initialize();
 		//
-		// Console::ConsoleSystem_Initialize();
+		// Console::ConsoleSystem::Initialize();
+
+		Platform::FileSystem::FileSystem file_system{};
+		Bool8 is_filesystem_initialized = file_system.Initialize();
+		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem");
+
+		Bool8 is_filesystem_deinitialized = file_system.Shutdown();
+		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem");
 
 		// -------------------------------------------------------------------------------- //
 		//

@@ -172,7 +172,7 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Data() noexcept -> PointerType
 		{
-			return _data;
+			return const_cast<PointerType>(_data);
 		}
 
 		template <StringEncoding T>
@@ -209,7 +209,7 @@ namespace Orion::Engine
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator[](SizeType index) noexcept -> ReferenceType
 		{
 			ORION_ASSERT_DEBUG(index < _size);
-			return _data[index];
+			return const_cast<PointerType>(_data)[index];
 		}
 
 		template <StringEncoding T>

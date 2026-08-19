@@ -1,6 +1,6 @@
 #include "TestCommon.h"
 
-#include "Core/Memory/Allocators/DummyAllocator.h"
+#include "Core/Standard/Memory/Allocators/DummyAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/Vector.h"
@@ -93,6 +93,18 @@ namespace Orion::Engine::UT
 		EXPECT_EQ(v.Size(), 0);
 		EXPECT_EQ(v.ByteSize(), 0);
 		EXPECT_EQ(v.Capacity(), decltype(v)::k_initial_capacity);
+	}
+
+	TYPED_TEST_P(VectorTest, Constructor_Range)
+	{
+		static const Array k_expected_values = {
+			Value<TypeParam>(0),
+			Value<TypeParam>(1),
+			Value<TypeParam>(2),
+			Value<TypeParam>(3),
+		};
+		Vector v(k_expected_values.begin(), k_expected_values.end());
+		Verify(k_expected_values, v);
 	}
 
 	TYPED_TEST_P(VectorTest, Constructor_InitializerList)
@@ -261,6 +273,7 @@ namespace Orion::Engine::UT
 
 	REGISTER_TYPED_TEST_SUITE_P(VectorTest,
 	                            Constructor_InitialCapacity,
+	                            Constructor_Range,
 	                            Constructor_InitializerList_Empty,
 	                            Constructor_InitializerList,
 	                            Constructor_Copy,

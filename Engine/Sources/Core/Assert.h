@@ -18,7 +18,7 @@
 #define ORION_ASSERT_DEBUG(condition, ...)
 #endif
 
-#if defined(ORION_BUILD_DEBUG) && defined(ORION_ENGINE_ENABLE_SLOW_ASSERTS)
+#if defined(ORION_ENGINE_ENABLE_SLOW_ASSERTS)
 /// @brief Evaluates some condition to be true. If the evaluation fails, fatal error is logged. Check is performed only
 /// in Debug builds (with slow checks enabled).
 #define ORION_ASSERT_DEBUG_SLOW(condition, ...) ORION_ASSERT(condition, ##__VA_ARGS__)

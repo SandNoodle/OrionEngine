@@ -16,6 +16,18 @@ namespace Orion::Engine::Platform
 			.logical_processor_count = static_cast<UInt32>(get_nprocs()),
 		};
 	}
+
+	Bool8 FileExists(CString path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 DirectoryExists(CString path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
 }  // namespace Orion::Engine::Platform
 
 #endif  // ORION_PLATFORM_LINUX

@@ -4,6 +4,7 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/TypeTraits.h"
+#include "Platform/Memory.h"
 
 #include <new>
 
@@ -14,6 +15,7 @@ namespace Orion::Engine::Memory
 	 * @param dst Destination address to where copy the elements.
 	 * @param count Number of elements to construct.
 	 */
+	///@{
 	template <typename ItemType, typename SizeType = USize>
 		requires(sizeof(ItemType) > 0 && !!IsZeroConstructible<ItemType>)
 	ORION_FORCE_INLINE void DefaultConstructItems(ItemType* dst, SizeType count) noexcept
@@ -31,6 +33,7 @@ namespace Orion::Engine::Memory
 			++dst;
 		}
 	}
+	///@}
 
 	/**
 	 * @brief Constructs \p count elements into a memory, effectively begins C++'s lifetime for these elements.
@@ -39,6 +42,7 @@ namespace Orion::Engine::Memory
 	 * @param src Source address of the first element to pass.
 	 * @param count Number of elements to copy from \p src.
 	 */
+	///@{
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 		requires(sizeof(SourceItemType) > 0 && sizeof(DestinationItemType) > 0
 	             && !IsTriviallyConstructible<DestinationItemType>)
@@ -59,12 +63,14 @@ namespace Orion::Engine::Memory
 			Platform::MemoryCopy(dst, src, sizeof(SourceItemType) * count);
 		}
 	}
+	///@}
 
 	/**
 	 * @brief Constructs a given element into a memory, effectively begins C++'s lifetime for it.
 	 * @param dst Destination address where the element will be constructed.
 	 * @param item Element to construct.
 	 */
+	///@{
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 	ORION_FORCE_INLINE void ConstructItem(DestinationItemType* dst, const SourceItemType& item) noexcept
 	{
@@ -75,6 +81,7 @@ namespace Orion::Engine::Memory
 	{
 		ConstructItems(dst, &item, 1UL);
 	}
+	///@}
 
 	/**
 	 * @brief Constructs a given element from \p args into a memory, effectively begins C++'s lifetime for it.

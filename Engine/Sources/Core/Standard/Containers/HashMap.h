@@ -3,7 +3,7 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Memory/Allocators/PlatformAllocator.h"
+#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Hash.h"
 #include "Core/Standard/Containers/Pair.h"
@@ -17,7 +17,6 @@ namespace Orion::Engine
 {
 	namespace Detail
 	{
-
 		/// @brief Actual storage type for a single HashMap's key-value pair.
 		template <typename T1, typename T2>
 		struct HashMapElement

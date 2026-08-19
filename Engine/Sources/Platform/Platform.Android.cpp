@@ -8,6 +8,18 @@ namespace Orion::Engine::Platform
 	{
 		ORION_NOT_IMPLEMENTED();
 	}
+
+	Bool8 FileExists(CString path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 DirectoryExists(CString path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
 }  // namespace Orion::Engine::Platform
 
 #endif

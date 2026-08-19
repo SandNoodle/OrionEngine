@@ -73,7 +73,7 @@
 #elif defined(ORION_COMPILER_MSVC)
 #define ORION_API extern "C" __decltype(ddlimport)
 #else
-#error "Cannot define ORION_API, because compiler is unknown."
+#error "Cannot define ORION_API - unknown compiler."
 #endif
 #endif
 

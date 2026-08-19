@@ -3,9 +3,9 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Memory/Allocators/Allocator.h"
-#include "Core/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
+#include "Core/Standard/Memory/Allocators/Allocator.h"
+#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/Utility/MathUtils.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
@@ -45,6 +45,7 @@ namespace Orion::Engine
 		public:
 		constexpr explicit Vector(SizeType initial_capacity      = k_initial_capacity,
 		                          const AllocatorType& allocator = AllocatorType());
+		constexpr explicit Vector(ConstPointerType begin, ConstPointerType end) noexcept;
 		constexpr Vector(std::initializer_list<ValueType>) noexcept;
 		constexpr Vector(const Vector&) noexcept;
 		constexpr Vector(Vector&&) noexcept;
@@ -131,6 +132,19 @@ namespace Orion::Engine
 		: _allocator(allocator)
 	{
 		DoInitialize(initial_capacity);
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	constexpr Vector<T, Allocator>::Vector(ConstPointerType begin, ConstPointerType end) noexcept
+		: _allocator(Allocator{})
+	{
+		ORION_ASSERT_DEBUG_SLOW(begin);
+		ORION_ASSERT_DEBUG_SLOW(end);
+		ORION_ASSERT_DEBUG_SLOW(begin <= end);
+		SizeType size = static_cast<SizeType>(end - begin) + 1;
+		DoInitialize(size);
+		Memory::ConstructItems<ValueType>(Data(), begin, size);
+		_size = size;
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>

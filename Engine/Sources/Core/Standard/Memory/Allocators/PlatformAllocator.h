@@ -2,7 +2,7 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Memory/Allocators/Allocator.h"
+#include "Core/Standard/Memory/Allocators/Allocator.h"
 #include "Platform/Memory.h"
 
 namespace Orion::Engine::Memory

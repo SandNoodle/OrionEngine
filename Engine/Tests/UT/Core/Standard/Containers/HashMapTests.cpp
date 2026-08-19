@@ -1,6 +1,6 @@
 #include "TestCommon.h"
 
-#include "Core/Memory/Allocators/DummyAllocator.h"
+#include "Core/Standard/Memory/Allocators/DummyAllocator.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/HashMap.h"
 
