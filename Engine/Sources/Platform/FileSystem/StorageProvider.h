@@ -12,6 +12,23 @@
 namespace Orion::Engine::Platform::FileSystem
 {
 	/// @brief TODO
+	enum class IOError : UInt8
+	{
+		FileCreationFailed,
+		FileDeletionFailed,
+		FileDoesNotExist,
+
+		ProtocolNotPresent,
+		ProtocolNotRecognized,
+
+		InternalError,
+	};
+
+	/// @brief TODO
+	template <typename T>
+	using IOResult = Result<T, IOError>;
+
+	/// @brief TODO
 	enum class StorageProviderProtocol : UInt8
 	{
 		Local,
@@ -37,14 +54,14 @@ namespace Orion::Engine::Platform::FileSystem
 #if 0
 		/// @brief TODO
 		/// @param [IN, REQUIRED] data TODO
-		[[nodiscard]] virtual Optional<Error> Write(ReadonlySpan<Byte> data) = 0;
+		[[nodiscard]] virtual Optional<IOError> Write(ReadonlySpan<Byte> data) = 0;
 
 		/// @brief TODO
 		/// @param [IN, REQUIRED] offset TODO
-		[[nodiscard]] virtual Optional<Error> Seek(USize offset);
+		[[nodiscard]] virtual Optional<IOError> Seek(USize offset);
 
 		/// @brief TODO
-		[[nodiscard]] virtual Optional<Error> Close() = 0;
+		[[nodiscard]] virtual Optional<IOError> Close() = 0;
 #endif
 	};
 
@@ -69,28 +86,28 @@ namespace Orion::Engine::Platform::FileSystem
 		/// @brief Attempts to create a file under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
 		/// @param [IN, REQUIRED] path Path to the file to create.
-		[[nodiscard]] virtual Optional<Error> Create(StringView path) noexcept = 0;
+		[[nodiscard]] virtual Optional<IOError> Create(StringView path) noexcept = 0;
 
 		/// @brief Attempts to remove a file under a given \p path.
 		/// @warning Removing non-existent file doesn't result in an Error.
 		/// @warning \p path must NOT contain the protocol's prefix.
 		/// @param [IN, REQUIRED] path Path to the file to remove.
-		[[nodiscard]] virtual Optional<Error> Remove(StringView path) noexcept = 0;
+		[[nodiscard]] virtual Optional<IOError> Remove(StringView path) noexcept = 0;
 
 		/// @brief Attempts to provide a writer to a file at a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
 		/// @param [IN, REQUIRED] path Path to the file to write.
-		[[nodiscard]] virtual Result<IStorageFileWriter*> Write(StringView path) noexcept = 0;
+		[[nodiscard]] virtual IOResult<IStorageFileWriter*> Write(StringView path) noexcept = 0;
 
 		/// @brief Attempts to provide a reader of a file at a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
 		/// @param [IN, REQUIRED] path Path to the file to read.
-		[[nodiscard]] virtual Result<IStorageFileReader*> Read(StringView path) noexcept = 0;
+		[[nodiscard]] virtual IOResult<IStorageFileReader*> Read(StringView path) noexcept = 0;
 
 		/// @brief Queries the underlying storage to check that file exists under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
 		/// @param [IN, REQUIRED] path Path to the file to stat.
-		[[nodiscard]] virtual Result<StorageStatInfo> Stat(StringView path) noexcept = 0;
+		[[nodiscard]] virtual IOResult<StorageStatInfo> Stat(StringView path) noexcept = 0;
 
 		/// @brief Queries the underlying storage to list every file under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
@@ -123,6 +140,20 @@ namespace Orion::Engine::Platform::FileSystem
 			default:
 				ORION_NOT_IMPLEMENTED("unhandled protocol prefix");
 		}
+	}
+
+	/// @brief Tries to match given \p prefix with its StorageProviderProtocol's counterpart.
+	[[nodiscard]] constexpr Optional<StorageProviderProtocol> FromProtocolPrefix(StringView prefix) noexcept
+	{
+		if (StringView::Equal(prefix, ORION_STRINGVIEW("local://"))) {
+			return StorageProviderProtocol::Local;
+		}
+
+		if (StringView::Equal(prefix, ORION_STRINGVIEW("mem://"))) {
+			return StorageProviderProtocol::Memory;
+		}
+
+		return k_null_option;
 	}
 }  // namespace Orion::Engine::Platform::FileSystem
 

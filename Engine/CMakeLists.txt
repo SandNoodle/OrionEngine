@@ -42,6 +42,11 @@ set(OrionEngine_SOURCES
         Sources/Core/Assert.h
         Sources/Core/Log/Logger.cpp
         Sources/Core/Log/Logger.h
+        Sources/Platform/FileSystem/Storage/LocalStorage.h
+        Sources/Platform/FileSystem/Storage/MemoryStorage.h
+        Sources/Platform/FileSystem/FileSystem.cpp
+        Sources/Platform/FileSystem/FileSystem.h
+        Sources/Platform/FileSystem/StorageProvider.h
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.cpp
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.h
         Sources/Platform/Graphics/RenderDevice.cpp

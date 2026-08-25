@@ -24,11 +24,11 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] static constexpr ThisType* Create(AllocatorType& allocator = AllocatorType()) noexcept;
 
 		[[nodiscard]] StorageProviderProtocol Protocol() noexcept override;
-		[[nodiscard]] Optional<Error> Create(StringView path) noexcept override;
-		[[nodiscard]] Optional<Error> Remove(StringView path) noexcept override;
-		[[nodiscard]] Result<IStorageFileWriter*> Write(StringView path) noexcept override;
-		[[nodiscard]] Result<IStorageFileReader*> Read(StringView path) noexcept override;
-		[[nodiscard]] Result<StorageStatInfo> Stat(StringView path) noexcept override;
+		[[nodiscard]] Optional<IOError> Create(StringView path) noexcept override;
+		[[nodiscard]] Optional<IOError> Remove(StringView path) noexcept override;
+		[[nodiscard]] IOResult<IStorageFileWriter*> Write(StringView path) noexcept override;
+		[[nodiscard]] IOResult<IStorageFileReader*> Read(StringView path) noexcept override;
+		[[nodiscard]] IOResult<StorageStatInfo> Stat(StringView path) noexcept override;
 		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept override;
 	};
 
@@ -80,35 +80,35 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<Error>
+	auto MemoryStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<IOError>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<Error>
+	auto MemoryStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<IOError>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Write(StringView path) noexcept -> Result<IStorageFileWriter*>
+	auto MemoryStorageProvider<Allocator>::Write(StringView path) noexcept -> IOResult<IStorageFileWriter*>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Read(StringView path) noexcept -> Result<IStorageFileReader*>
+	auto MemoryStorageProvider<Allocator>::Read(StringView path) noexcept -> IOResult<IStorageFileReader*>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Stat(StringView path) noexcept -> Result<StorageStatInfo>
+	auto MemoryStorageProvider<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();

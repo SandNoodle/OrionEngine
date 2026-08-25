@@ -55,6 +55,9 @@ namespace Orion::Engine
 		Bool8 is_filesystem_initialized = file_system.Initialize();
 		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem");
 
+		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> stat_result
+			= file_system.Stat(ORION_STRINGVIEW("local://./OrionEditor"));
+
 		Bool8 is_filesystem_deinitialized = file_system.Shutdown();
 		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem");
 

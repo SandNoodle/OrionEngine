@@ -77,14 +77,14 @@ namespace Orion::Engine
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::operator[](SizeType index) noexcept -> ReferenceType
 	{
-		ORION_ASSERT_DEBUG(index < N);
+		ORION_ASSERT_DEBUG_SLOW(index < N);
 		return _data[index];
 	}
 
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::operator[](SizeType index) const noexcept -> ConstReferenceType
 	{
-		ORION_ASSERT_DEBUG(index < N);
+		ORION_ASSERT_DEBUG_SLOW(index < N);
 		return _data[index];
 	}
 
@@ -167,40 +167,40 @@ namespace Orion::Engine
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::Data() noexcept -> PointerType
 	{
-		ORION_ASSERT_DEBUG(N != 0);
-		return &_data[0];
+		ORION_ASSERT_DEBUG_SLOW(N != 0);
+		return _data;
 	}
 
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::Data() const noexcept -> ConstPointerType
 	{
-		ORION_ASSERT_DEBUG(N != 0);
-		return &_data[0];
+		ORION_ASSERT_DEBUG_SLOW(N != 0);
+		return _data;
 	}
 
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::begin() noexcept -> PointerType
 	{
-		return &_data[0];
+		return _data;
 	}
 
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::begin() const noexcept -> ConstPointerType
 	{
-		return &_data[0];
+		return _data;
 	}
 
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::end() noexcept -> PointerType
 	{
-		ORION_ASSERT_DEBUG(N != 0);
-		return &_data[N - 1];
+		ORION_ASSERT_DEBUG_SLOW(N != 0);
+		return _data + N;
 	}
 
 	template <typename T, USize N>
 	constexpr auto Array<T, N>::end() const noexcept -> ConstPointerType
 	{
-		ORION_ASSERT_DEBUG(N != 0);
-		return &_data[N - 1];
+		ORION_ASSERT_DEBUG_SLOW(N != 0);
+		return _data + N;
 	}
 }  // namespace Orion::Engine

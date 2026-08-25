@@ -44,4 +44,18 @@ namespace Orion::Engine
 	{                                                                                                             \
 		return static_cast<Enum>(~ToUnderlyingType(e));                                                           \
 	}
+
+	/// @brief Checks if \p flags has all of the \p requested_flags set.
+	template <typename Enum>
+	[[nodiscard]] ORION_FORCE_INLINE Bool8 EnumHasAllFlags(Enum flags, Enum requested_flags) noexcept
+	{
+		return ToUnderlyingType(flags & requested_flags) == ToUnderlyingType(requested_flags);
+	}
+
+	/// @brief Checks if \p flags contain any of the \p requested_flags.
+	template <typename Enum>
+	[[nodiscard]] ORION_FORCE_INLINE Bool8 EnumHasAnyFlags(Enum flags, Enum requested_flags) noexcept
+	{
+		return ToUnderlyingType(flags & requested_flags) != 0;
+	}
 }  // namespace Orion::Engine

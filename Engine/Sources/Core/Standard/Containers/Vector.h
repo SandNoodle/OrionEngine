@@ -141,7 +141,7 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG_SLOW(begin);
 		ORION_ASSERT_DEBUG_SLOW(end);
 		ORION_ASSERT_DEBUG_SLOW(begin <= end);
-		SizeType size = static_cast<SizeType>(end - begin) + 1;
+		SizeType size = static_cast<SizeType>(end - begin);
 		DoInitialize(size);
 		Memory::ConstructItems<ValueType>(Data(), begin, size);
 		_size = size;

@@ -94,17 +94,17 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG(end);
 		ORION_ASSERT_DEBUG(begin <= end);
 
+		SizeType size = static_cast<SizeType>(end - begin);
 		if constexpr (Encoding == Detail::StringEncoding::UTF8) {
 			SizeType length    = 0UL;
 			SizeType codepoint = 0UL;
-			SizeType size      = static_cast<SizeType>(end - begin);
 			for (; length < size; ++length) {
 				CharType c = begin[codepoint];
 				codepoint += UTF8CodepointsForCharacter(c);
 			}
 			return length;
 		} else {
-			return static_cast<SizeType>(end - begin);
+			return size;
 		}
 	}
 

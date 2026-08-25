@@ -5,6 +5,7 @@
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Hash.h"
 #include "Core/Standard/Containers/Detail/StringFwd.h"
+#include "Core/Standard/Limits.h"
 #include "Core/Standard/Utility/StringUtils.h"
 #include "Platform/Memory.h"
 
@@ -33,6 +34,8 @@ namespace Orion::Engine
 			using ConstReferenceType = const ValueType&;
 			using HashType           = UInt64;
 
+			static constexpr SizeType k_invalid_index = NumericLimits<SizeType>::Max();
+
 			private:
 			ConstPointerType _data{ nullptr };
 			SizeType _size{ 0UL };
@@ -49,12 +52,21 @@ namespace Orion::Engine
 
 			[[nodiscard]] static constexpr Bool8 Equal(ThisType lhs, ThisType rhs) noexcept;
 
+			/// @brief TODO
+			/// @param [IN, REQUIRED] begin TODO
+			/// @param [IN, REQUIRED] end TODO
+			[[nodiscard]] ORION_FORCE_INLINE constexpr ThisType SubView(SizeType begin, SizeType end) noexcept;
+
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Front() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Front() const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Back() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Back() const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Data() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Data() const noexcept;
+
+			/// @brief Iterates over the StringView and returns the index into the first occurrence of the sub-string
+			/// (if it exists; if not - returns k_invalid_index).
+			[[nodiscard]] constexpr SizeType Find(ThisType view) const noexcept;
 
 			/// @brief Returns the Hash value of the StringView.
 			[[nodiscard]] ORION_FORCE_INLINE constexpr HashType Hash() const noexcept;
@@ -146,44 +158,105 @@ namespace Orion::Engine
 		}
 
 		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::SubView(SizeType begin, SizeType end) noexcept -> ThisType
+		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
+			ORION_ASSERT_DEBUG_SLOW(0 < begin < _size);
+			ORION_ASSERT_DEBUG_SLOW(0 < end < _size);
+			ORION_ASSERT_DEBUG_SLOW(begin <= end);
+			SizeType size         = end - begin;
+			ConstPointerType data = reinterpret_cast<ConstPointerType>(Data() + begin);
+			return ThisType(data, size);
+		}
+
+		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Front() noexcept -> ReferenceType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
 			return *_data;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Front() const noexcept -> ConstReferenceType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
 			return *_data;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Back() noexcept -> ReferenceType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
 			return *_data[_size - 1];
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Back() const noexcept -> ConstReferenceType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
 			return *_data[_size - 1];
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Data() noexcept -> PointerType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
 			return const_cast<PointerType>(_data);
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Data() const noexcept -> ConstPointerType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
 			return _data;
+		}
+
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Find(ThisType view) const noexcept -> SizeType
+		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
+			ORION_ASSERT_DEBUG_SLOW(_size > 0);
+			ORION_ASSERT_DEBUG_SLOW(view.Data());
+			ORION_ASSERT_DEBUG_SLOW(view.Size() > 0);
+
+			CharType sequence_start_character = view.Data()[0];
+			for (SizeType index = 0; index < Size(); ++index) {
+				if (_data[index] != sequence_start_character) {
+					// NOTE: We didn't find the start of the sequence.
+					continue;
+				}
+
+				SizeType pivot_index = index;
+				if (pivot_index + view.Size() > Size()) {
+					// NOTE: Sequence is only partly present or not at all - either way we didn't match it whole.
+					return k_invalid_index;
+				}
+
+				Bool8 sequence_found    = true;
+				SizeType sequence_index = 0;
+				for (; sequence_index < view.Size(); ++sequence_index) {
+					if (_data[pivot_index + sequence_index] != view.Data()[sequence_index]) {
+						sequence_found = false;
+						break;
+					}
+				}
+
+				if (!sequence_found) {
+					index += sequence_index;
+					continue;
+				}
+
+				return pivot_index;
+			}
+
+			return k_invalid_index;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Hash() const noexcept -> HashType
 		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
+			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			return FNV1AHash(_data, _size);
 		}
 
@@ -208,7 +281,7 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator[](SizeType index) noexcept -> ReferenceType
 		{
-			ORION_ASSERT_DEBUG(index < _size);
+			ORION_ASSERT_DEBUG_SLOW(index < _size);
 			return const_cast<PointerType>(_data)[index];
 		}
 
@@ -216,7 +289,7 @@ namespace Orion::Engine
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator[](SizeType index) const noexcept
 			-> ConstReferenceType
 		{
-			ORION_ASSERT_DEBUG(index < _size);
+			ORION_ASSERT_DEBUG_SLOW(index < _size);
 			return _data[index];
 		}
 
@@ -243,7 +316,7 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() noexcept -> PointerType
 		{
-			ORION_ASSERT_DEBUG(_size > 0);
+			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			// TODO(SandNoodle): I kinda dislike the const_cast here, ideally we'd have StringViewIterator type here.
 			return const_cast<PointerType>(_data);
 		}
@@ -251,14 +324,14 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() const noexcept -> ConstPointerType
 		{
-			ORION_ASSERT_DEBUG(_size > 0);
+			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			return _data;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() noexcept -> PointerType
 		{
-			ORION_ASSERT_DEBUG(_size > 0);
+			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			// TODO(SandNoodle): I kinda dislike the const_cast here, ideally we'd have StringViewIterator type here.
 			return const_cast<PointerType>(_data) + _size;
 		}
@@ -266,7 +339,7 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() const noexcept -> ConstPointerType
 		{
-			ORION_ASSERT_DEBUG(_size > 0);
+			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			return _data + _size;
 		}
 	}  // namespace Detail

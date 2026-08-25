@@ -3,10 +3,10 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Hash.h"
 #include "Core/Standard/Containers/Pair.h"
+#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/TypeTraits.h"
 #include "Core/Standard/Utility/MathUtils.h"
@@ -88,6 +88,8 @@ namespace Orion::Engine
 		constexpr HashMap& operator=(const HashMap&) noexcept;
 		constexpr HashMap& operator=(HashMap&&) noexcept;
 		constexpr HashMap& operator=(std::initializer_list<ValueType>) noexcept;
+		constexpr ReferenceType operator[](const KeyType& key) noexcept;
+		constexpr ConstReferenceType operator[](const KeyType& key) const noexcept;
 
 		/** Inserts new element to the hashmap. If the key already exists, it will be overridden.  */
 		///@{
@@ -245,6 +247,24 @@ namespace Orion::Engine
 	{
 		ORION_IGNORE_PARAM(list);
 		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
+	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator[](const KeyType& key) noexcept
+		-> ReferenceType
+	{
+		ORION_ASSERT_DEBUG(_data);
+		SizeType slot_index = DoFindSlot(key);
+		return _data[slot_index].value;
+	}
+
+	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
+	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator[](const KeyType& key) const noexcept
+		-> ConstReferenceType
+	{
+		ORION_ASSERT_DEBUG(_data);
+		SizeType slot_index = DoFindSlot(key);
+		return _data[slot_index].value;
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>

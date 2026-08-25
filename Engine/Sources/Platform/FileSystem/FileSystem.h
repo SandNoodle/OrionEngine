@@ -3,6 +3,9 @@
 #include "Core/Assert.h"
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/HashMap.h"
+#include "Core/Standard/Containers/Optional.h"
+#include "Core/Standard/Containers/Pair.h"
+#include "Core/Standard/Containers/Result.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Memory/Allocators/Allocator.h"
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
@@ -49,16 +52,26 @@ namespace Orion::Engine::Platform::FileSystem
 		/// @brief TODO
 		[[nodiscard]] constexpr Bool8 Shutdown() noexcept;
 
+		/// @brief Queries the filesystem to check that the file exists under a given \p path.
+		/// @warning \p path MUST contain the protocol's prefix.
+		/// @param [IN, REQUIRED] path Path to the file to stat.
+		[[nodiscard]] constexpr IOResult<StorageStatInfo> Stat(StringView path) noexcept;
+
 		private:
 		/// @brief TODO
 		[[nodiscard]] constexpr Bool8 RegisterStorageProvider(StorageProviderProtocol protocol,
 		                                                      IStorageProvider* storage_provider) noexcept;
+
+		/// @brief TODO
+		[[nodiscard]] static constexpr IOResult<Pair<StorageProviderProtocol, StringView>> SplitProtocolAndPath(
+			StringView path) noexcept;
 	};
 
 	// -- Implementation.
 	template <Memory::AllocatorKind Allocator>
 	constexpr auto FileSystem<Allocator>::Initialize() noexcept -> Bool8
 	{
+		ORION_LOG_DEBUG("[FileSystem] Initializing...");
 		Bool8 is_initialized = true;
 
 		LocalStorageProvider<AllocatorType>* local_storage_provider
@@ -69,14 +82,37 @@ namespace Orion::Engine::Platform::FileSystem
 		is_initialized &= RegisterStorageProvider(StorageProviderProtocol::Local, local_storage_provider);
 		is_initialized &= RegisterStorageProvider(StorageProviderProtocol::Memory, memory_storage_provider);
 
+		ORION_LOG_DEBUG("[FileSystem] Initialized.");
 		return is_initialized;
 	}
 
 	template <Memory::AllocatorKind Allocator>
 	constexpr auto FileSystem<Allocator>::Shutdown() noexcept -> Bool8
 	{
+		ORION_LOG_DEBUG("[FileSystem] Shutting down.");
 		_storage_providers.Clear();
 		return true;
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
+	{
+		IOResult<Pair<StorageProviderProtocol, StringView>> split_result = SplitProtocolAndPath(path);
+		if (split_result.IsError()) {
+			return split_result.Error();
+		}
+
+		StorageProviderProtocol protocol   = split_result.Value().first;
+		IStorageProvider* storage_provider = _storage_providers[protocol];
+		if (!storage_provider) {
+			ORION_LOG_ERROR(
+				"[FileSystem] Failed to stat file ('{}'), StorageProvider for '{}' protocol does not exist.",
+				path,
+				ProtocolName(protocol));
+			return IOError::InternalError;
+		}
+		StringView path_without_prefix = split_result.Value().second;
+		return storage_provider->Stat(path_without_prefix);
 	}
 
 	template <Memory::AllocatorKind Allocator>
@@ -100,5 +136,26 @@ namespace Orion::Engine::Platform::FileSystem
 		_storage_providers.Insert(protocol, storage_provider);
 
 		return true;
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::SplitProtocolAndPath(StringView path) noexcept
+		-> IOResult<Pair<StorageProviderProtocol, StringView>>
+	{
+		USize split_index = path.Find(ORION_STRINGVIEW("://"));
+		if (split_index == StringView::k_invalid_index) {
+			return IOError::ProtocolNotPresent;
+		}
+
+		split_index += 3;  // Skip over the separator (protocol's suffix).
+		StringView protocol_name                          = path.SubView(0, split_index);
+		StringView path_without_prefix                    = path.SubView(split_index, path.Size());
+		Optional<StorageProviderProtocol> protocol_result = FromProtocolPrefix(protocol_name);
+		if (!protocol_result.IsValue()) {
+			ORION_LOG_ERROR("[FileSystem] Unrecognized protocol: '{}'.", protocol_name);
+			return IOError::ProtocolNotRecognized;
+		}
+
+		return Pair(*protocol_result, path_without_prefix);
 	}
 }  // namespace Orion::Engine::Platform::FileSystem

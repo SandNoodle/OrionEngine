@@ -8,13 +8,13 @@
 
 namespace Orion::Engine
 {
+	/// @brief TODO
 	class Error final
 	{
 		private:
 		String _message{};
 
 		public:
-		constexpr Error() noexcept {}
 		constexpr explicit Error(const String& message) noexcept : _message(message) {}
 		constexpr explicit Error(String&& message) noexcept : _message(Move(message)) {}
 
@@ -24,6 +24,7 @@ namespace Orion::Engine
 		}
 	};
 
+	/// @brief TODO
 	template <typename T, typename E = Error>
 		requires(!IsLValueReference<T> && !IsLValueReference<E>)
 	class Result final
@@ -49,10 +50,10 @@ namespace Orion::Engine
 		constexpr Result(Result&&) noexcept      = default;
 		constexpr ~Result() noexcept;
 
-		constexpr Result& operator=(ValueType&& value) noexcept;
-		constexpr Result& operator=(const ValueType& value) noexcept;
-		constexpr Result& operator=(ErrorType&& value) noexcept;
-		constexpr Result& operator=(const ErrorType& value) noexcept;
+		constexpr Result& operator=(ValueType&&) noexcept;
+		constexpr Result& operator=(const ValueType&) noexcept;
+		constexpr Result& operator=(ErrorType&&) noexcept;
+		constexpr Result& operator=(const ErrorType&) noexcept;
 		constexpr Result& operator=(const Result&) noexcept = default;
 		constexpr Result& operator=(Result&&) noexcept      = default;
 
@@ -124,6 +125,38 @@ namespace Orion::Engine
 
 	template <typename T, typename E>
 		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	constexpr auto Result<T, E>::operator=(ValueType&& value) noexcept -> Result&
+	{
+		ORION_IGNORE_PARAM(value);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	constexpr auto Result<T, E>::operator=(const ValueType& value) noexcept -> Result&
+	{
+		ORION_IGNORE_PARAM(value);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	constexpr auto Result<T, E>::operator=(ErrorType&& error) noexcept -> Result&
+	{
+		ORION_IGNORE_PARAM(error);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	constexpr auto Result<T, E>::operator=(const ErrorType& error) noexcept -> Result&
+	{
+		ORION_IGNORE_PARAM(error);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
 	constexpr auto Result<T, E>::IsValue() const noexcept -> Bool8
 	{
 		return _has_value;
@@ -134,5 +167,79 @@ namespace Orion::Engine
 	constexpr auto Result<T, E>::IsError() const noexcept -> Bool8
 	{
 		return !_has_value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Value() const noexcept -> const ValueType&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Value() noexcept -> ValueType&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(const ValueType&) noexcept -> ValueType&
+	{
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(ValueType&&) noexcept -> ValueType&
+	{
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(const ValueType&) const noexcept -> const ValueType&
+	{
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(ValueType&&) const noexcept -> const ValueType&
+	{
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] constexpr auto Result<T, E>::ValueOrDefault() noexcept -> ValueType&
+	{
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] constexpr auto Result<T, E>::ValueOrDefault() const noexcept -> const ValueType&
+	{
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Error() const noexcept -> const ErrorType&
+	{
+		ORION_ASSERT_DEBUG_SLOW(!_has_value);
+		return _error;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Error() noexcept -> ErrorType&
+	{
+		ORION_ASSERT_DEBUG_SLOW(!_has_value);
+		return _error;
 	}
 }  // namespace Orion::Engine

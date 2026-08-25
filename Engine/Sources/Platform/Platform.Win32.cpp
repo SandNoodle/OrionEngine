@@ -1,4 +1,5 @@
 #if defined(ORION_PLATFORM_WINDOWS)
+#include "Platform.h"
 #include "Platform/Platform.h"
 
 #include "Core/Standard/Containers/Array.h"
@@ -58,6 +59,7 @@ namespace Orion::Engine::Platform
 		             "[Platform] Cannot stat the file ('{}'), because it does not exist.",
 		             path);
 
+		// TODO(SandNoodle): What about files we cannot read nor write?
 		PlatformFileAccessFlags access_flags = !(file_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 		                                         ? PlatformFileAccessFlags::All
 		                                         : PlatformFileAccessFlags::Read;

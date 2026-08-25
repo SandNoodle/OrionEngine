@@ -32,15 +32,15 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] static constexpr ThisType* Create(AllocatorType& allocator = AllocatorType()) noexcept;
 
 		[[nodiscard]] StorageProviderProtocol Protocol() noexcept override;
-		[[nodiscard]] Optional<Error> Create(StringView path) noexcept override;
-		[[nodiscard]] Optional<Error> Remove(StringView path) noexcept override;
-		[[nodiscard]] Result<IStorageFileWriter*> Write(StringView path) noexcept override;
-		[[nodiscard]] Result<IStorageFileReader*> Read(StringView path) noexcept override;
-		[[nodiscard]] Result<StorageStatInfo> Stat(StringView path) noexcept override;
+		[[nodiscard]] Optional<IOError> Create(StringView path) noexcept override;
+		[[nodiscard]] Optional<IOError> Remove(StringView path) noexcept override;
+		[[nodiscard]] IOResult<IStorageFileWriter*> Write(StringView path) noexcept override;
+		[[nodiscard]] IOResult<IStorageFileReader*> Read(StringView path) noexcept override;
+		[[nodiscard]] IOResult<StorageStatInfo> Stat(StringView path) noexcept override;
 		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept override;
 
 		private:
-		[[nodiscard]] constexpr String SanitizeIntoBuffer(StringView path) const noexcept;
+		[[nodiscard]] static constexpr String SanitizeIntoBuffer(StringView path) noexcept;
 	};
 
 	/// @brief TODO
@@ -83,41 +83,49 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<Error>
+	auto LocalStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<IOError>
+	{
+		String buffer     = SanitizeIntoBuffer(path);
+		CString file_path = reinterpret_cast<CString>(buffer.Data());
+		if (!FileCreate(file_path, PlatformFileAccessFlags::All)) {
+			return IOError::FileCreationFailed;
+		}
+		return k_null_option;
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	auto LocalStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<IOError>
+	{
+		String buffer     = SanitizeIntoBuffer(path);
+		CString file_path = reinterpret_cast<CString>(buffer.Data());
+		if (!FileRemove(file_path)) {
+			return IOError::FileDeletionFailed;
+		}
+		return k_null_option;
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	auto LocalStorageProvider<Allocator>::Write(StringView path) noexcept -> IOResult<IStorageFileWriter*>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<Error>
+	auto LocalStorageProvider<Allocator>::Read(StringView path) noexcept -> IOResult<IStorageFileReader*>
 	{
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Write(StringView path) noexcept -> Result<IStorageFileWriter*>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Read(StringView path) noexcept -> Result<IStorageFileReader*>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Stat(StringView path) noexcept -> Result<StorageStatInfo>
+	auto LocalStorageProvider<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
 	{
 		String buffer     = SanitizeIntoBuffer(path);
 		CString file_path = reinterpret_cast<CString>(buffer.Data());
 
 		if (!FileExists(file_path)) {
-			return (Error){};
+			return IOError::FileDoesNotExist;
 		}
 
 		PlatformFileStat platform_file_stat = StatFile(file_path);
@@ -139,7 +147,7 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	constexpr auto LocalStorageProvider<Allocator>::SanitizeIntoBuffer(StringView path) const noexcept -> String
+	constexpr auto LocalStorageProvider<Allocator>::SanitizeIntoBuffer(StringView path) noexcept -> String
 	{
 		String buffer{};
 		buffer.Reserve(path.Size() + 1);
