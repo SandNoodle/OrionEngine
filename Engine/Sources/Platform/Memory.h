@@ -4,7 +4,6 @@
 
 #include "Core/Assert.h"
 
-#include <stdlib.h>
 #if !defined(ORION_COMPILER_CLANG) && !defined(ORION_COMPILER_GCC)
 #include <string.h>
 #endif
@@ -108,6 +107,10 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
+	/// @brief TODO
+	/// @param[IN, REQUIRED] lhs TODO
+	/// @param[IN, REQUIRED] rhs TODO
+	/// @param[IN, REQUIRED] size_in_bytes TODO
 	ORION_FORCE_INLINE constexpr int MemoryCompare(const void* lhs, const void* rhs, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(lhs, "Cannot perform MemoryCompare, because lhs is null.");

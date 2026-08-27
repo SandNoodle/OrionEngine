@@ -1,5 +1,4 @@
 #if defined(ORION_PLATFORM_WINDOWS)
-#include "Platform.h"
 #include "Platform/Platform.h"
 
 #include "Core/Standard/Containers/Array.h"
@@ -26,16 +25,28 @@ namespace Orion::Engine::Platform
 		};
 	}
 
-	Bool8 FileExists(CString path) noexcept
+	Bool8 FileCreate(StringView path, PlatformFileAccessFlags flags) noexcept
 	{
-		ORION_ASSERT_DEBUG(path);
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 FileRemove(StringView path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 FileExists(StringView path) noexcept
+	{
+		ORION_ASSERT_DEBUG(path.Size() > 0);
 		DWORD attributes = GetFileAttributes(path);
 		return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	Bool8 DirectoryExists(CString path) noexcept
+	Bool8 DirectoryExists(StringView path) noexcept
 	{
-		ORION_ASSERT_DEBUG(path);
+		ORION_ASSERT_DEBUG(path.Size() > 0);
 		DWORD attributes = GetFileAttributes(path);
 		return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
@@ -49,9 +60,9 @@ namespace Orion::Engine::Platform
 		return (foo.QuadPart - 116444736000000000) / 10000000;
 	}
 
-	PlatformFileStat StatFile(CString path) noexcept
+	PlatformFileStat StatFile(StringView path) noexcept
 	{
-		ORION_ASSERT_DEBUG(path);
+		ORION_ASSERT_DEBUG(path.Size() > 0);
 
 		WIN32_FIND_DATAA file_data;
 		HANDLE file_handle = FindFirstFile(path, &file_data);
@@ -80,6 +91,31 @@ namespace Orion::Engine::Platform
 			                                 file_data.ftLastAccessTime.dwHighDateTime),
 			.access_flags       = access_flags,
 		};
+	}
+
+	Vector<PlatformFileStat> ListFiles(StringView path, Bool8 recursive) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_IGNORE_PARAM(recursive);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 DirectoryCreate(StringView path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 DirectoryRemove(StringView path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	Bool8 DirectoryExists(StringView path) noexcept
+	{
+		ORION_IGNORE_PARAM(path);
+		ORION_NOT_IMPLEMENTED();
 	}
 }  // namespace Orion::Engine::Platform
 

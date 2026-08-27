@@ -2,8 +2,6 @@
 
 #include "OrionEngine.h"
 
-#include <math.h>
-
 namespace Orion::Engine
 {
 	template <typename T>

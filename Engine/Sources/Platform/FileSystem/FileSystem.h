@@ -15,10 +15,8 @@
 
 namespace Orion::Engine::Platform::FileSystem
 {
-	/**
-	 * @brief TODO
-	 * @tparam Allocator
-	 */
+	/// @brief TODO
+	/// @tparam Allocator TODO
 	template <Memory::AllocatorKind Allocator = Memory::PlatformAllocator>
 	class FileSystem final
 	{
@@ -52,10 +50,37 @@ namespace Orion::Engine::Platform::FileSystem
 		/// @brief TODO
 		[[nodiscard]] constexpr Bool8 Shutdown() noexcept;
 
+		/// @brief Attempts to create a file under a given \p path.
+		/// @warning \p path MUST contain the protocol's prefix.
+		/// @param [IN, REQUIRED] path Path to the file to create.
+		[[nodiscard]] constexpr Optional<IOError> Create(StringView path) noexcept;
+
+		/// @brief Attempts to remove a file under a given \p path.
+		/// @warning Removing non-existent file doesn't result in an Error.
+		/// @warning \p path MUST contain the protocol's prefix.
+		/// @param [IN, REQUIRED] path Path to the file to remove.
+		[[nodiscard]] constexpr Optional<IOError> Remove(StringView path) noexcept;
+
+		/// @brief Attempts to provide a writer to a file at a given \p path.
+		/// @warning \p path MUST contain the protocol's prefix.
+		/// @param [IN, REQUIRED] path Path to the file to write.
+		[[nodiscard]] constexpr IOResult<IStorageFileWriter*> Write(StringView path) noexcept;
+
+		/// @brief Attempts to provide a reader of a file at a given \p path.
+		/// @warning \p path MUST contain the protocol's prefix.
+		/// @param [IN, REQUIRED] path Path to the file to read.
+		[[nodiscard]] constexpr IOResult<IStorageFileReader*> Read(StringView path) noexcept;
+
 		/// @brief Queries the filesystem to check that the file exists under a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
 		/// @param [IN, REQUIRED] path Path to the file to stat.
 		[[nodiscard]] constexpr IOResult<StorageStatInfo> Stat(StringView path) noexcept;
+
+		/// @brief Queries the filesystem to list every file under a given \p path.
+		/// @warning \p path MUST contain the protocol's prefix.
+		/// @param [IN, REQUIRED] path Path to the 'directory' under which to query the files.
+		/// @param [IN, REQUIRED] recursive Should files in sub-directories also be listed.
+		[[nodiscard]] constexpr Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept;
 
 		private:
 		/// @brief TODO
@@ -63,7 +88,7 @@ namespace Orion::Engine::Platform::FileSystem
 		                                                      IStorageProvider* storage_provider) noexcept;
 
 		/// @brief TODO
-		[[nodiscard]] static constexpr IOResult<Pair<StorageProviderProtocol, StringView>> SplitProtocolAndPath(
+		[[nodiscard]] constexpr IOResult<Pair<IStorageProvider*, StringView>> GetProviderAndPath(
 			StringView path) noexcept;
 	};
 
@@ -95,24 +120,75 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::Create(StringView path) noexcept -> Optional<IOError>
+	{
+		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
+		if (result.IsError()) {
+			return result.Error();
+		}
+		IStorageProvider* storage_provider = result.Value().first;
+		StringView path_without_prefix     = result.Value().second;
+		return storage_provider->Create(path_without_prefix);
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::Remove(StringView path) noexcept -> Optional<IOError>
+	{
+		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
+		if (result.IsError()) {
+			return result.Error();
+		}
+		IStorageProvider* storage_provider = result.Value().first;
+		StringView path_without_prefix     = result.Value().second;
+		return storage_provider->Remove(path_without_prefix);
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::Write(StringView path) noexcept -> IOResult<IStorageFileWriter*>
+	{
+		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
+		if (result.IsError()) {
+			return result.Error();
+		}
+		IStorageProvider* storage_provider = result.Value().first;
+		StringView path_without_prefix     = result.Value().second;
+		return storage_provider->Write(path_without_prefix);
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::Read(StringView path) noexcept -> IOResult<IStorageFileReader*>
+	{
+		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
+		if (result.IsError()) {
+			return result.Error();
+		}
+		IStorageProvider* storage_provider = result.Value().first;
+		StringView path_without_prefix     = result.Value().second;
+		return storage_provider->Read(path_without_prefix);
+	}
+
+	template <Memory::AllocatorKind Allocator>
 	constexpr auto FileSystem<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
 	{
-		IOResult<Pair<StorageProviderProtocol, StringView>> split_result = SplitProtocolAndPath(path);
-		if (split_result.IsError()) {
-			return split_result.Error();
+		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
+		if (result.IsError()) {
+			return result.Error();
 		}
-
-		StorageProviderProtocol protocol   = split_result.Value().first;
-		IStorageProvider* storage_provider = _storage_providers[protocol];
-		if (!storage_provider) {
-			ORION_LOG_ERROR(
-				"[FileSystem] Failed to stat file ('{}'), StorageProvider for '{}' protocol does not exist.",
-				path,
-				ProtocolName(protocol));
-			return IOError::InternalError;
-		}
-		StringView path_without_prefix = split_result.Value().second;
+		IStorageProvider* storage_provider = result.Value().first;
+		StringView path_without_prefix     = result.Value().second;
 		return storage_provider->Stat(path_without_prefix);
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::List(StringView path, Bool8 recursive) noexcept -> Vector<StorageStatInfo>
+	{
+		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
+		if (result.IsError()) {
+			return Vector<StorageStatInfo>{};
+		}
+		IStorageProvider* storage_provider = result.Value().first;
+		StringView path_without_prefix     = result.Value().second;
+		return storage_provider->List(path_without_prefix, recursive);
 	}
 
 	template <Memory::AllocatorKind Allocator>
@@ -124,9 +200,10 @@ namespace Orion::Engine::Platform::FileSystem
 			return false;
 		}
 
-		// NOTE: We cannot register multiple StorageProviders operating on the same protocol as they will conflict with
-		//       each other - and there isn't much point nor meaning in trying to resolve this. Instead we just don't
-		//       register the provider at all.
+		// NOTE: We cannot register multiple StorageProviders operating on the same protocol as they will conflict
+		// with
+		//       each other - and there isn't much point nor meaning in trying to resolve this. Instead we just
+		//       don't register the provider at all.
 		if (_storage_providers.Contains(protocol)) {
 			ORION_LOG_ERROR("[FileSystem] StorageProvider for '{}' protocol already exists.", ProtocolName(protocol));
 			return false;
@@ -139,11 +216,12 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	constexpr auto FileSystem<Allocator>::SplitProtocolAndPath(StringView path) noexcept
-		-> IOResult<Pair<StorageProviderProtocol, StringView>>
+	constexpr auto FileSystem<Allocator>::GetProviderAndPath(StringView path) noexcept
+		-> IOResult<Pair<IStorageProvider*, StringView>>
 	{
 		USize split_index = path.Find(ORION_STRINGVIEW("://"));
 		if (split_index == StringView::k_invalid_index) {
+			ORION_LOG_ERROR("[FileSystem] Failed to stat file ('{}'), protocol is not present.", path);
 			return IOError::ProtocolNotPresent;
 		}
 
@@ -152,10 +230,19 @@ namespace Orion::Engine::Platform::FileSystem
 		StringView path_without_prefix                    = path.SubView(split_index, path.Size());
 		Optional<StorageProviderProtocol> protocol_result = FromProtocolPrefix(protocol_name);
 		if (!protocol_result.IsValue()) {
-			ORION_LOG_ERROR("[FileSystem] Unrecognized protocol: '{}'.", protocol_name);
+			ORION_LOG_ERROR(
+				"[FileSystem] Failed to stat file ('{}'), unrecognized protocol: '{}'.", path, protocol_name);
 			return IOError::ProtocolNotRecognized;
 		}
 
-		return Pair(*protocol_result, path_without_prefix);
+		IStorageProvider* storage_provider = _storage_providers[*protocol_result];
+		if (!storage_provider) {
+			ORION_LOG_ERROR(
+				"[FileSystem] Failed to stat file ('{}'), StorageProvider for '{}' protocol does not exist.",
+				path,
+				ProtocolName(*protocol_result));
+			return IOError::InternalError;
+		}
+		return Pair(storage_provider, path_without_prefix);
 	}
 }  // namespace Orion::Engine::Platform::FileSystem

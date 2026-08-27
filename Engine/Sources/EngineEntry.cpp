@@ -29,7 +29,7 @@ namespace Orion::Engine
 		}
 
 		for (USize argument_index = 1; argument_index < argument_count; ++argument_index) {
-			if (StringView::Equal(ORION_STRINGVIEW(argv[argument_index]), ORION_STRINGVIEW("--config"))) {
+			if (ORION_STRINGVIEW(argv[argument_index]) == ORION_STRINGVIEW("--config")) {
 				arguments.config_file = ORION_STRING(argv[argument_index]);
 			}
 		}
@@ -55,8 +55,19 @@ namespace Orion::Engine
 		Bool8 is_filesystem_initialized = file_system.Initialize();
 		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem");
 
-		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> stat_result
-			= file_system.Stat(ORION_STRINGVIEW("local://./OrionEditor"));
+		StringView file = ORION_STRINGVIEW("local://foo.txt");
+
+		Optional<Platform::FileSystem::IOError> create_result = file_system.Create(file);
+		ORION_ASSERT(!create_result.IsValue(), "Failed to create a file.");
+
+		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> stat_result = file_system.Stat(file);
+		ORION_ASSERT(stat_result.IsValue(), "Failed to stat a file.");
+
+		Optional<Platform::FileSystem::IOError> remove_result = file_system.Remove(file);
+		ORION_ASSERT(!remove_result.IsValue(), "Failed to remove a file.");
+
+		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> post_stat_result = file_system.Stat(file);
+		ORION_ASSERT(!post_stat_result.IsValue(), "Failed to stat a file.");
 
 		Bool8 is_filesystem_deinitialized = file_system.Shutdown();
 		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem");

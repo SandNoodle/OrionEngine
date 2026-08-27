@@ -57,7 +57,6 @@ set(OrionEngine_SOURCES
         Sources/Platform/Platform.Win32.cpp
         Sources/Platform/Platform.h
         Sources/OrionConfig.h
-        Sources/OrionEngine.h
         Sources/EngineEntry.cpp
         Sources/EngineEntry.h
 )
@@ -71,6 +70,7 @@ target_include_directories(OrionEngine PUBLIC
 target_compile_options(OrionEngine PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wformat -Wconversion -Wimplicit-fallthrough -Werror=format-security -fno-exceptions>
 )
+target_precompile_headers(OrionEngine PUBLIC Sources/StdAfx.h Sources/OrionEngine.h)
 
 # --- [ GIT ] ---
 find_package(Git)
@@ -93,8 +93,9 @@ target_compile_definitions(OrionEngine PUBLIC
         ORION_ENGINE_GIT_HASH=${ORION_ENGINE_GIT_HASH}
         $<$<PLATFORM_ID:Windows>:ORION_PLATFORM_WINDOWS>
         $<$<PLATFORM_ID:Linux>:ORION_PLATFORM_LINUX>
-        $<$<CONFIG:Debug>:ORION_BUILD_DEBUG>
+        $<$<CONFIG:Debug,RelWithDebInfo>:ORION_BUILD_DEBUG>
         $<$<CONFIG:Release>:ORION_BUILD_RELEASE>
+        $<$<CONFIG:Distribution>:ORION_BUILD_DISTRIBUTION>
 )
 
 # --- [ Libraries ] ---

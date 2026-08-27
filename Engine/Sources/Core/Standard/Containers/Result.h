@@ -56,6 +56,12 @@ namespace Orion::Engine
 		constexpr Result& operator=(const ErrorType&) noexcept;
 		constexpr Result& operator=(const Result&) noexcept = default;
 		constexpr Result& operator=(Result&&) noexcept      = default;
+		ORION_FORCE_INLINE constexpr ValueType& operator*() & noexcept;
+		ORION_FORCE_INLINE constexpr const ValueType& operator*() const& noexcept;
+		ORION_FORCE_INLINE constexpr ValueType&& operator*() && noexcept;
+		ORION_FORCE_INLINE constexpr const ValueType&& operator*() const&& noexcept;
+		ORION_FORCE_INLINE constexpr ValueType* operator->() noexcept;
+		ORION_FORCE_INLINE constexpr const ValueType* operator->() const noexcept;
 
 		/// @brief TODO
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsValue() const noexcept;
@@ -153,6 +159,54 @@ namespace Orion::Engine
 	{
 		ORION_IGNORE_PARAM(error);
 		ORION_NOT_IMPLEMENTED();
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() & noexcept -> ValueType&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() const& noexcept -> const ValueType&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() && noexcept -> ValueType&&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() const&& noexcept -> const ValueType&&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator->() noexcept -> ValueType*
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return &_value;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator->() const noexcept -> const ValueType*
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return &_value;
 	}
 
 	template <typename T, typename E>

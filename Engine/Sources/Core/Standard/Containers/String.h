@@ -2,11 +2,11 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Algorithms/Hash.h"
 #include "Core/Standard/Containers/Detail/StringFwd.h"
 #include "Core/Standard/Containers/Span.h"
 #include "Core/Standard/Containers/Vector.h"
+#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Utility/StringUtils.h"
 
 namespace Orion::Engine
@@ -41,11 +41,16 @@ namespace Orion::Engine
 			constexpr explicit StringBase() noexcept = default;
 			constexpr explicit StringBase(CString str) noexcept;
 			constexpr explicit StringBase(ConstPointerType data, SizeType size) noexcept;
+			constexpr explicit StringBase(ConstPointerType begin, ConstPointerType end) noexcept;
 
 			using BaseType::operator=;
 			using BaseType::operator[];
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<=(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>=(const ThisType& other) const noexcept;
 
 			/// @brief Appends single \p character to the end of the string.
 			constexpr ThisType& Append(WideCharType character) noexcept;
@@ -95,6 +100,7 @@ namespace Orion::Engine
 			using BaseType::Back;
 			using BaseType::ByteSize;
 			using BaseType::Capacity;
+			using BaseType::Clear;
 			using BaseType::Data;
 			using BaseType::Front;
 			using BaseType::IsEmpty;
@@ -149,7 +155,7 @@ namespace Orion::Engine
 
 	// -- Implementation.
 	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
-	constexpr Detail::StringBase<T, Allocator>::StringBase(CString str) noexcept
+	constexpr Detail::StringBase<T, Allocator>::StringBase(CString str) noexcept : BaseType()
 	{
 		SizeType size = StringLength<T>(str);
 		BaseType::AddZeroed(size);
@@ -159,9 +165,9 @@ namespace Orion::Engine
 	}
 
 	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
-	constexpr Detail::StringBase<T, Allocator>::StringBase(ConstPointerType data, SizeType size) noexcept
+	constexpr Detail::StringBase<T, Allocator>::StringBase(ConstPointerType data, SizeType size) noexcept : BaseType()
 	{
-		ORION_ASSERT_DEBUG(data);
+		ORION_ASSERT_DEBUG_SLOW(data);
 		BaseType::AddZeroed(size);
 		for (SizeType index = 0; index < size; ++index) {
 			Data()[index] = data[index];
@@ -169,25 +175,51 @@ namespace Orion::Engine
 	}
 
 	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
+	constexpr Detail::StringBase<T, Allocator>::StringBase(ConstPointerType begin, ConstPointerType end) noexcept
+		: BaseType(begin, end)
+	{
+	}
+
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator==(const ThisType& other) const noexcept
 		-> Bool8
 	{
-		if (Size() != other.Size()) {
-			return false;
-		}
-		for (SizeType index = 0; index < Size(); ++index) {
-			if (Data()[index] != other.Data()[index]) {
-				return false;
-			}
-		}
-		return true;
+		return BaseType::operator==(other);
 	}
 
 	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator!=(const ThisType& other) const noexcept
 		-> Bool8
 	{
-		return !(*this == other);
+		return BaseType::operator!=(other);
+	}
+
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator<(const ThisType& other) const noexcept
+		-> Bool8
+	{
+		return BaseType::operator<(other);
+	}
+
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator<=(const ThisType& other) const noexcept
+		-> Bool8
+	{
+		return BaseType::operator<=(other);
+	}
+
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator>(const ThisType& other) const noexcept
+		-> Bool8
+	{
+		return BaseType::operator>(other);
+	}
+
+	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Detail::StringBase<T, Allocator>::operator>=(const ThisType& other) const noexcept
+		-> Bool8
+	{
+		return BaseType::operator>=(other);
 	}
 
 	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
@@ -232,9 +264,9 @@ namespace Orion::Engine
 	constexpr auto Detail::StringBase<T, Allocator>::AppendRange(ConstPointerType begin, ConstPointerType end) noexcept
 		-> ThisType&
 	{
-		ORION_ASSERT_DEBUG(begin);
-		ORION_ASSERT_DEBUG(end);
-		ORION_ASSERT_DEBUG(begin <= end);
+		ORION_ASSERT_DEBUG_SLOW(begin);
+		ORION_ASSERT_DEBUG_SLOW(end);
+		ORION_ASSERT_DEBUG_SLOW(begin <= end);
 		this->AddRange(begin, end);
 		return *this;
 	}
@@ -242,7 +274,7 @@ namespace Orion::Engine
 	template <Detail::StringEncoding T, Memory::AllocatorKind Allocator>
 	constexpr auto Detail::StringBase<T, Allocator>::GetChar(SizeType index) const noexcept -> WideCharType
 	{
-		ORION_ASSERT_DEBUG(index < Length());
+		ORION_ASSERT_DEBUG_SLOW(index < Length());
 		if constexpr (IsSame<CharType, WideCharType>) {
 			return BaseType::operator[](index);
 		}

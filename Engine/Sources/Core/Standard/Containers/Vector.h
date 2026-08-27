@@ -3,6 +3,7 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
+#include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/Memory/Allocators/Allocator.h"
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
@@ -11,9 +12,6 @@
 #include "Core/Standard/Utility/MoveAndForward.h"
 #include "Core/Standard/Utility/Swap.h"
 #include "Platform/Memory.h"
-
-#include <initializer_list>
-#include <new>
 
 namespace Orion::Engine
 {
@@ -56,6 +54,12 @@ namespace Orion::Engine
 		constexpr Vector& operator=(std::initializer_list<ValueType>) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType operator[](SizeType index) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType operator[](SizeType index) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const Vector& other) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const Vector& other) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<(const Vector& other) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<=(const Vector& other) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>(const Vector& other) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>=(const Vector& other) const noexcept;
 
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Front() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Front() const noexcept;
@@ -169,7 +173,8 @@ namespace Orion::Engine
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
-	constexpr Vector<T, Allocator>::Vector(Vector&& other) noexcept : _data(nullptr), _capacity(0), _size(0)
+	constexpr Vector<T, Allocator>::Vector(Vector&& other) noexcept
+		: _allocator(Move(other._allocator)), _data(nullptr), _capacity(0), _size(0)
 	{
 		DoSwap(other);
 	}
@@ -179,6 +184,11 @@ namespace Orion::Engine
 	{
 		if (_data) {
 			Memory::DestructItems(_data, _size);
+			if constexpr (k_orion_build_debug) {
+				if (_capacity > 0) {
+					Platform::MemoryZero(_data, sizeof(ValueType) * _capacity);
+				}
+			}
 			_allocator.Free(_data);
 			_data = nullptr;
 		}
@@ -216,6 +226,12 @@ namespace Orion::Engine
 			return *this;
 		}
 
+		if (_data) {
+			Memory::DestructItems(_data, _size);
+			_allocator.Free(_data);
+			_data = nullptr;
+		}
+
 		DoSwap(other);
 
 		return *this;
@@ -225,6 +241,9 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::operator=(std::initializer_list<ValueType> list) noexcept -> Vector&
 	{
 		Memory::DestructItems(Data(), Size());
+		if (Capacity() < list.size()) {
+			DoEnsureCapacity(list.size());
+		}
 		Memory::ConstructItems<ValueType>(Data(), list.begin(), list.size());
 		_size = list.size();
 		return *this;
@@ -242,6 +261,42 @@ namespace Orion::Engine
 	{
 		ORION_ASSERT_DEBUG_SLOW(index < _size);
 		return _data[index];
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Vector<T, Allocator>::operator==(const Vector& other) const noexcept -> Bool8
+	{
+		return Algorithm::Compare(Data(), other.Data(), Size(), other.Size()) == 0;
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Vector<T, Allocator>::operator!=(const Vector& other) const noexcept -> Bool8
+	{
+		return !(*this == other);
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Vector<T, Allocator>::operator<(const Vector& other) const noexcept -> Bool8
+	{
+		return Algorithm::Compare(Data(), other.Data(), Size(), other.Size()) < 0;
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Vector<T, Allocator>::operator<=(const Vector& other) const noexcept -> Bool8
+	{
+		return Algorithm::Compare(Data(), other.Data(), Size(), other.Size()) <= 0;
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Vector<T, Allocator>::operator>(const Vector& other) const noexcept -> Bool8
+	{
+		return Algorithm::Compare(Data(), other.Data(), Size(), other.Size()) > 0;
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	ORION_FORCE_INLINE constexpr auto Vector<T, Allocator>::operator>=(const Vector& other) const noexcept -> Bool8
+	{
+		return Algorithm::Compare(Data(), other.Data(), Size(), other.Size()) >= 0;
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
@@ -360,6 +415,11 @@ namespace Orion::Engine
 				Memory::DestructItems(_data, _size);
 			}
 		}
+		if constexpr (k_orion_build_debug) {
+			if (_data && _size > 0) {
+				Platform::MemoryZero(_data, sizeof(ValueType) * _size);
+			}
+		}
 		_size = 0;
 	}
 
@@ -426,8 +486,13 @@ namespace Orion::Engine
 		SizeType size_in_bytes = sizeof(ValueType) * initial_capacity;
 		SizeType alignment     = alignof(ValueType);
 		_data                  = static_cast<PointerType>(_allocator.Allocate(size_in_bytes, alignment));
-		_capacity              = initial_capacity;
-		_size                  = 0;
+		if constexpr (k_orion_build_debug) {
+			if (_data) {
+				Platform::MemoryZero(_data, size_in_bytes);
+			}
+		}
+		_capacity = initial_capacity;
+		_size     = 0;
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
@@ -443,7 +508,6 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::DoEnsureCapacity(SizeType new_capacity) noexcept -> void
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
-		ORION_ASSERT_DEBUG_SLOW(new_capacity > 0);
 		if (_capacity >= new_capacity) {
 			return;
 		}
@@ -464,7 +528,9 @@ namespace Orion::Engine
 			}
 		}
 
-		_allocator.Free(_data);
+		if (_data) {
+			_allocator.Free(_data);
+		}
 		_data     = new_data;
 		_capacity = new_capacity;
 	}

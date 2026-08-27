@@ -18,6 +18,9 @@ namespace Orion::Engine::Platform::FileSystem
 		FileDeletionFailed,
 		FileDoesNotExist,
 
+		DirectoryCreationFailed,
+		DirectoryDeletionFailed,
+
 		ProtocolNotPresent,
 		ProtocolNotRecognized,
 
@@ -145,11 +148,11 @@ namespace Orion::Engine::Platform::FileSystem
 	/// @brief Tries to match given \p prefix with its StorageProviderProtocol's counterpart.
 	[[nodiscard]] constexpr Optional<StorageProviderProtocol> FromProtocolPrefix(StringView prefix) noexcept
 	{
-		if (StringView::Equal(prefix, ORION_STRINGVIEW("local://"))) {
+		if (prefix == ORION_STRINGVIEW("local://")) {
 			return StorageProviderProtocol::Local;
 		}
 
-		if (StringView::Equal(prefix, ORION_STRINGVIEW("mem://"))) {
+		if (prefix == ORION_STRINGVIEW("mem://")) {
 			return StorageProviderProtocol::Memory;
 		}
 

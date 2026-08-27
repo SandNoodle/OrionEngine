@@ -25,7 +25,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		public:
 		constexpr explicit LocalStorageProvider(const AllocatorType& allocator = AllocatorType()) noexcept;
-		~LocalStorageProvider() override = default;
+		constexpr ~LocalStorageProvider() override = default;
 
 		/// @brief TODO
 		/// @param[IN, REQUIRED] allocator TODO
@@ -40,7 +40,7 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept override;
 
 		private:
-		[[nodiscard]] static constexpr String SanitizeIntoBuffer(StringView path) noexcept;
+		[[nodiscard]] static constexpr Optional<IOError> EnsureDirectoryStructure(StringView path) noexcept;
 	};
 
 	/// @brief TODO
@@ -85,9 +85,12 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	auto LocalStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<IOError>
 	{
-		String buffer     = SanitizeIntoBuffer(path);
-		CString file_path = reinterpret_cast<CString>(buffer.Data());
-		if (!FileCreate(file_path, PlatformFileAccessFlags::All)) {
+		if (Optional<IOError> ensure_directory_structure_result = EnsureDirectoryStructure(path);
+		    ensure_directory_structure_result.IsValue()) {
+			return ensure_directory_structure_result;
+		}
+
+		if (!FileCreate(path, PlatformFileAccessFlags::All)) {
 			return IOError::FileCreationFailed;
 		}
 		return k_null_option;
@@ -96,9 +99,7 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	auto LocalStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<IOError>
 	{
-		String buffer     = SanitizeIntoBuffer(path);
-		CString file_path = reinterpret_cast<CString>(buffer.Data());
-		if (!FileRemove(file_path)) {
+		if (!FileRemove(path)) {
 			return IOError::FileDeletionFailed;
 		}
 		return k_null_option;
@@ -121,14 +122,11 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	auto LocalStorageProvider<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
 	{
-		String buffer     = SanitizeIntoBuffer(path);
-		CString file_path = reinterpret_cast<CString>(buffer.Data());
-
-		if (!FileExists(file_path)) {
+		if (!FileExists(path)) {
 			return IOError::FileDoesNotExist;
 		}
 
-		PlatformFileStat platform_file_stat = StatFile(file_path);
+		PlatformFileStat platform_file_stat = StatFile(path);
 		return (StorageStatInfo){
 			.file_name          = Move(platform_file_stat.file_name),
 			.size_in_bytes      = platform_file_stat.size_in_bytes,
@@ -141,18 +139,42 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	auto LocalStorageProvider<Allocator>::List(StringView path, Bool8 recursive) noexcept -> Vector<StorageStatInfo>
 	{
-		ORION_IGNORE_PARAM(path);
-		ORION_IGNORE_PARAM(recursive);
-		ORION_NOT_IMPLEMENTED();
+		Vector<PlatformFileStat> platform_files = ListFiles(path, recursive);
+		Vector<StorageStatInfo> result{};
+		result.Reserve(platform_files.Size());
+		for (USize index = 0; index < platform_files.Size(); ++index) {
+			result.AddConstruct((StorageStatInfo){
+				.file_name          = Move(platform_files[index].file_name),
+				.size_in_bytes      = platform_files[index].size_in_bytes,
+				.time_created       = platform_files[index].time_created,
+				.time_last_accessed = platform_files[index].time_last_accessed,
+				.time_last_modified = platform_files[index].time_last_modified,
+			});
+		}
+		return result;
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	constexpr auto LocalStorageProvider<Allocator>::SanitizeIntoBuffer(StringView path) noexcept -> String
+	constexpr auto LocalStorageProvider<Allocator>::EnsureDirectoryStructure(const StringView path) noexcept
+		-> Optional<IOError>
 	{
-		String buffer{};
-		buffer.Reserve(path.Size() + 1);
-		buffer.AppendRange(path.begin(), path.end());
-		buffer.Append(static_cast<String::WideCharType>('\0'));  // Null terminator.
-		return buffer;
+		if (path.IsEmpty()) [[unlikely]] {
+			return k_null_option;
+		}
+
+		StringView::SizeType directory_index_end = 0UL;
+		while (true) {
+			directory_index_end = path.Find(ORION_STRINGVIEW("/"), directory_index_end);
+			if (directory_index_end == StringView::k_invalid_index) {
+				return k_null_option;
+			}
+
+			const StringView directory_path = path.SubView(0UL, ++directory_index_end);
+			if (!DirectoryExists(directory_path)) {
+				if (!DirectoryCreate(directory_path)) {
+					return IOError::DirectoryCreationFailed;
+				}
+			}
+		}
 	}
 }  // namespace Orion::Engine::Platform::FileSystem

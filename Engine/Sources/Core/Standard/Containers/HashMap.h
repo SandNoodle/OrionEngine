@@ -11,8 +11,6 @@
 #include "Core/Standard/TypeTraits.h"
 #include "Core/Standard/Utility/MathUtils.h"
 
-#include <initializer_list>
-
 namespace Orion::Engine
 {
 	namespace Detail

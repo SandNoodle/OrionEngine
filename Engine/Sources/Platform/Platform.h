@@ -51,39 +51,40 @@ namespace Orion::Engine::Platform
 	[[nodiscard]] PlatformInfo GetPlatformInfo() noexcept;
 
 	/// @brief TODO
-	/// @param path TODO
+	/// @param path Path to the file.
 	/// @param flags TODO
-	[[nodiscard]] Bool8 FileCreate(CString path, PlatformFileAccessFlags flags) noexcept;
+	[[nodiscard]] Bool8 FileCreate(StringView path, PlatformFileAccessFlags flags) noexcept;
 
 	/// @brief TODO
-	/// @param path TODO
-	[[nodiscard]] Bool8 FileRemove(CString path) noexcept;
+	/// @param path Path to the file.
+	[[nodiscard]] Bool8 FileRemove(StringView path) noexcept;
 
 	/// @brief Queries the underlying platform to check that file exists under a given path.
-	/// @param path Null-terminated path to the file.
+	/// @param path Path to the file.
 	/// @warning DO NOT USE DIRECTLY! All filesystem calls should be handled through the Platform::FileSystem module.
-	[[nodiscard]] Bool8 FileExists(CString path) noexcept;
+	[[nodiscard]] Bool8 FileExists(StringView path) noexcept;
 
 	/// @brief Queries the underlying platform to acquire metadata about the file under a given path.
 	/// @warning Assumes that FileExists(...) was called beforehand, i.e. file exists.
-	/// @param path Null-terminated path to the file.
+	/// @param path Path to the file.
 	/// @warning DO NOT USE DIRECTLY! All filesystem calls should be handled through the Platform::FileSystem module.
-	[[nodiscard]] PlatformFileStat StatFile(CString path) noexcept;
+	[[nodiscard]] PlatformFileStat StatFile(StringView path) noexcept;
 
 	/// @brief TODO
 	/// @param path TODO
-	[[nodiscard]] Vector<PlatformFileStat> ListFiles(CString path) noexcept;
+	/// @param recursive TODO
+	[[nodiscard]] Vector<PlatformFileStat> ListFiles(StringView path, Bool8 recursive) noexcept;
 
 	/// @brief TODO
 	/// @param path TODO
-	[[nodiscard]] Bool8 DirectoryCreate(CString path) noexcept;
+	[[nodiscard]] Bool8 DirectoryCreate(StringView path) noexcept;
 
 	/// @brief TODO
 	/// @param path TODO
-	[[nodiscard]] Bool8 DirectoryRemove(CString path) noexcept;
+	[[nodiscard]] Bool8 DirectoryRemove(StringView path) noexcept;
 
 	/// @brief Queries the underlying platform to check that directory exists under a given path.
-	/// @param path Null-terminated path to the directory.
+	/// @param path Path to the directory.
 	/// @warning DO NOT USE DIRECTLY! All filesystem calls should be handled through the Platform::FileSystem module.
-	[[nodiscard]] Bool8 DirectoryExists(CString path) noexcept;
+	[[nodiscard]] Bool8 DirectoryExists(StringView path) noexcept;
 }  // namespace Orion::Engine::Platform

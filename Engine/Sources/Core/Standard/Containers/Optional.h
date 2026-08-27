@@ -4,6 +4,7 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine
 {
@@ -39,19 +40,41 @@ namespace Orion::Engine
 		Bool8 _has_value;
 
 		public:
-		constexpr Optional(const ValueType& value) noexcept : _value(value), _has_value(true) {}
-		constexpr Optional(ValueType&& value) noexcept : _value(Move(value)), _has_value(true) {}
-		constexpr Optional(Detail::OptionalNull) : _null_value(k_null_option), _has_value(false) {}
+		constexpr Optional(const ValueType& value) noexcept;
+		constexpr Optional(ValueType&& value) noexcept;
+		constexpr Optional(Detail::OptionalNull);
 		constexpr ~Optional();
 
-		ORION_FORCE_INLINE constexpr ReferenceType operator*() noexcept;
-		ORION_FORCE_INLINE constexpr ConstReferenceType operator*() const noexcept;
+		ORION_FORCE_INLINE constexpr ReferenceType operator*() & noexcept;
+		ORION_FORCE_INLINE constexpr ConstReferenceType operator*() const& noexcept;
+		ORION_FORCE_INLINE constexpr ValueType&& operator*() && noexcept;
+		ORION_FORCE_INLINE constexpr const ValueType&& operator*() const&& noexcept;
+		ORION_FORCE_INLINE constexpr PointerType operator->() noexcept;
+		ORION_FORCE_INLINE constexpr ConstPointerType operator->() const noexcept;
 
 		/// @brief TODO
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsValue() const noexcept;
 	};
 
 	// -- Implementation.
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	constexpr Optional<T>::Optional(const ValueType& value) noexcept : _value(value), _has_value(true)
+	{
+	}
+
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	constexpr Optional<T>::Optional(ValueType&& value) noexcept : _value(Move(value)), _has_value(true)
+	{
+	}
+
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	constexpr Optional<T>::Optional(Detail::OptionalNull) : _null_value(k_null_option), _has_value(false)
+	{
+	}
+
 	template <typename T>
 		requires(!IsLValueReference<T>)
 	constexpr Optional<T>::~Optional()
@@ -65,7 +88,7 @@ namespace Orion::Engine
 
 	template <typename T>
 		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() noexcept -> ReferenceType
+	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() & noexcept -> ReferenceType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
 		return _value;
@@ -73,10 +96,42 @@ namespace Orion::Engine
 
 	template <typename T>
 		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() const noexcept -> ConstReferenceType
+	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() const& noexcept -> ConstReferenceType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
 		return _value;
+	}
+
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() && noexcept -> ValueType&&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() const&& noexcept -> const ValueType&&
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return _value;
+	}
+
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::operator->() noexcept -> PointerType
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return &_value;
+	}
+
+	template <typename T>
+		requires(!IsLValueReference<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::operator->() const noexcept -> ConstPointerType
+	{
+		ORION_ASSERT_DEBUG_SLOW(_has_value);
+		return &_value;
 	}
 
 	template <typename T>

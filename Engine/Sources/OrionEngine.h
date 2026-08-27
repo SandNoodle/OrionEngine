@@ -2,8 +2,7 @@
 
 #include "OrionConfig.h"
 
-#include <float.h>
-#include <stdint.h>
+#include "StdAfx.h"
 
 // ---- [ Platform ] ----
 #if defined(ORION_PLATFORM_WINDOWS)
@@ -22,6 +21,21 @@
 
 #else
 #error "Unkown platform detected."
+#endif
+
+// ---- [ Build Type ] ----
+#if defined(ORION_BUILD_DEBUG)
+static constexpr bool k_orion_build_debug        = false;
+static constexpr bool k_orion_build_release      = false;
+static constexpr bool k_orion_build_distribution = false;
+#elif defined(ORION_BUILD_RELEASE)
+static constexpr bool k_orion_build_debug        = false;
+static constexpr bool k_orion_build_release      = true;
+static constexpr bool k_orion_build_distribution = false;
+#elif defined(ORION_BUILD_DISTRIBUTION)
+static constexpr bool k_orion_build_debug        = false;
+static constexpr bool k_orion_build_release      = false;
+static constexpr bool k_orion_build_distribution = true;
 #endif
 
 // ---- [ Compiler detection ] ----

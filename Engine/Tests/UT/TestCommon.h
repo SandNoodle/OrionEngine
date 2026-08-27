@@ -5,6 +5,8 @@
 #include "OrionEngine.h"
 
 #include "Core/Standard/Algorithms/Hash.h"
+#include "Core/Standard/Containers/String.h"
+#include "Core/Standard/Containers/StringView.h"
 
 #include <ostream>
 
@@ -99,6 +101,29 @@ namespace Orion::Engine::UT
 		return os << '[' << c.x << ']';
 	}
 }  // namespace Orion::Engine::UT
+
+namespace Orion::Engine
+{
+	inline std::ostream& operator<<(std::ostream& os, const StringView& c)
+	{
+		os << '[';
+		for (StringView::SizeType index = 0; index < c.Size(); ++index) {
+			os << static_cast<char>(c[index]);
+		}
+		os << ']';
+		return os;
+	}
+
+	inline std::ostream& operator<<(std::ostream& os, const String& c)
+	{
+		os << '[';
+		for (StringView::SizeType index = 0; index < c.Size(); ++index) {
+			os << static_cast<char>(c[index]);
+		}
+		os << ']';
+		return os;
+	}
+}  // namespace Orion::Engine
 
 template <>
 struct Orion::Engine::Algorithm::Hash<Orion::Engine::UT::ComplexType>

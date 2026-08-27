@@ -26,8 +26,10 @@ set(OrionEngine_UT_SOURCES
         Core/Standard/Containers/ArrayTests.cpp
         Core/Standard/Containers/HashMapTests.cpp
         Core/Standard/Containers/SpanTests.cpp
-        Core/Standard/Containers/VectorTests.cpp
         Core/Standard/Containers/StringTests.cpp
+        Core/Standard/Containers/VectorTests.cpp
+        Platform/FileSystem/Storage/LocalStorageTest.cpp
+        TestCommon.h
 )
 add_executable(OrionEngine_UT ${OrionEngine_UT_SOURCES})
 set_target_properties(OrionEngine_UT PROPERTIES LINKER_LANGUAGE CXX)

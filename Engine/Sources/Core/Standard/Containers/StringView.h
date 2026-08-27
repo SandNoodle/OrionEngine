@@ -44,18 +44,21 @@ namespace Orion::Engine
 			ORION_FORCE_INLINE constexpr explicit StringViewBase() = default;
 			ORION_FORCE_INLINE constexpr explicit StringViewBase(CString str) noexcept;
 			ORION_FORCE_INLINE constexpr explicit StringViewBase(ConstPointerType data, SizeType size) noexcept;
+			ORION_FORCE_INLINE constexpr explicit StringViewBase(ConstPointerType begin, ConstPointerType end) noexcept;
 
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType operator[](SizeType index) noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType operator[](SizeType index) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
-
-			[[nodiscard]] static constexpr Bool8 Equal(ThisType lhs, ThisType rhs) noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<(const ThisType& other) const noexcept;
 
 			/// @brief TODO
 			/// @param [IN, REQUIRED] begin TODO
 			/// @param [IN, REQUIRED] end TODO
+			/// @{
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ThisType SubView(SizeType begin, SizeType end) noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr ThisType SubView(SizeType begin, SizeType end) const noexcept;
+			/// @}
 
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ReferenceType Front() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstReferenceType Front() const noexcept;
@@ -66,7 +69,7 @@ namespace Orion::Engine
 
 			/// @brief Iterates over the StringView and returns the index into the first occurrence of the sub-string
 			/// (if it exists; if not - returns k_invalid_index).
-			[[nodiscard]] constexpr SizeType Find(ThisType view) const noexcept;
+			[[nodiscard]] constexpr SizeType Find(ThisType view, SizeType start_index = 0UL) const noexcept;
 
 			/// @brief Returns the Hash value of the StringView.
 			[[nodiscard]] ORION_FORCE_INLINE constexpr HashType Hash() const noexcept;
@@ -147,14 +150,14 @@ namespace Orion::Engine
 			: _data(data), _size(size)
 		{
 		}
-
 		template <StringEncoding T>
-		constexpr auto StringViewBase<T>::Equal(ThisType lhs, ThisType rhs) noexcept -> Bool8
+		ORION_FORCE_INLINE constexpr StringViewBase<T>::StringViewBase(ConstPointerType begin,
+		                                                               ConstPointerType end) noexcept
+			: _data(begin), _size(static_cast<SizeType>(end - begin))
 		{
-			if (lhs.Size() != rhs.Size()) {
-				return false;
-			}
-			return Platform::MemoryCompare(lhs._data, rhs._data, lhs.ByteSize()) == 0;
+			ORION_ASSERT_DEBUG_SLOW(begin);
+			ORION_ASSERT_DEBUG_SLOW(end);
+			ORION_ASSERT_DEBUG_SLOW(begin <= end);
 		}
 
 		template <StringEncoding T>
@@ -164,9 +167,20 @@ namespace Orion::Engine
 			ORION_ASSERT_DEBUG_SLOW(0 < begin < _size);
 			ORION_ASSERT_DEBUG_SLOW(0 < end < _size);
 			ORION_ASSERT_DEBUG_SLOW(begin <= end);
-			SizeType size         = end - begin;
-			ConstPointerType data = reinterpret_cast<ConstPointerType>(Data() + begin);
-			return ThisType(data, size);
+			SizeType size = end - begin;
+			return ThisType(Data() + begin, size);
+		}
+
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::SubView(SizeType begin, SizeType end) const noexcept
+			-> ThisType
+		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
+			ORION_ASSERT_DEBUG_SLOW(0 < begin < _size);
+			ORION_ASSERT_DEBUG_SLOW(0 < end < _size);
+			ORION_ASSERT_DEBUG_SLOW(begin <= end);
+			SizeType size = end - begin;
+			return ThisType(Data() + begin, size);
 		}
 
 		template <StringEncoding T>
@@ -212,15 +226,17 @@ namespace Orion::Engine
 		}
 
 		template <StringEncoding T>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Find(ThisType view) const noexcept -> SizeType
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::Find(ThisType view, SizeType start_index) const noexcept
+			-> SizeType
 		{
 			ORION_ASSERT_DEBUG_SLOW(_data);
 			ORION_ASSERT_DEBUG_SLOW(_size > 0);
+			ORION_ASSERT_DEBUG_SLOW(start_index <= _size);
 			ORION_ASSERT_DEBUG_SLOW(view.Data());
 			ORION_ASSERT_DEBUG_SLOW(view.Size() > 0);
 
 			CharType sequence_start_character = view.Data()[0];
-			for (SizeType index = 0; index < Size(); ++index) {
+			for (SizeType index = start_index; index < Size(); ++index) {
 				if (_data[index] != sequence_start_character) {
 					// NOTE: We didn't find the start of the sequence.
 					continue;
@@ -299,18 +315,33 @@ namespace Orion::Engine
 			if (_size != other._size) {
 				return false;
 			}
-			for (SizeType index = 0; index < _size; ++index) {
-				if (_data[index] != other._data[index]) {
-					return false;
-				}
+
+			if (!_data) {
+				return !other._data;
 			}
-			return true;
+
+			return Platform::MemoryCompare(_data, other._data, ByteSize()) == 0;
 		}
 
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator!=(const ThisType& other) const noexcept -> Bool8
 		{
 			return !(*this == other);
+		}
+
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator<(const ThisType& other) const noexcept -> Bool8
+		{
+			if (_size < other._size) {
+				return true;
+			}
+
+			if (!_data) {
+				return !other._data;
+			}
+
+			SizeType size_in_bytes = ORION_MIN(_size, other._size) * sizeof(CharType);
+			return Platform::MemoryCompare(_data, other._data, size_in_bytes) < 0;
 		}
 
 		template <StringEncoding T>
