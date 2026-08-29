@@ -59,8 +59,8 @@ namespace Orion::Engine::Platform::FileSystem
 
 		Optional<IOError> create_result = _storage_provider.Create(file_name);
 		ASSERT_FALSE(create_result.IsValue());
-		IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(file_name);
 
+		IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(file_name);
 		ASSERT_TRUE(stat_result.IsValue());
 		EXPECT_EQ(stat_result->file_name, String(file_name.Data(), file_name.Size()));
 		EXPECT_EQ(stat_result->size_in_bytes, 0UL);

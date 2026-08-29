@@ -47,6 +47,7 @@ namespace Orion::Engine
 
 	/// @brief Checks if \p flags has all of the \p requested_flags set.
 	template <typename Enum>
+		requires(IsEnum<Enum> || IsScopedEnum<Enum>)
 	[[nodiscard]] ORION_FORCE_INLINE Bool8 EnumHasAllFlags(Enum flags, Enum requested_flags) noexcept
 	{
 		return ToUnderlyingType(flags & requested_flags) == ToUnderlyingType(requested_flags);
@@ -54,8 +55,28 @@ namespace Orion::Engine
 
 	/// @brief Checks if \p flags contain any of the \p requested_flags.
 	template <typename Enum>
+		requires(IsEnum<Enum> || IsScopedEnum<Enum>)
 	[[nodiscard]] ORION_FORCE_INLINE Bool8 EnumHasAnyFlags(Enum flags, Enum requested_flags) noexcept
 	{
 		return ToUnderlyingType(flags & requested_flags) != 0;
 	}
+
+	/// @brief Checks if \p flags has all of the \p requested_flags set.
+	template <typename BitFlag>
+	[[nodiscard]] ORION_FORCE_INLINE Bool8 BitFlagHasAllFlags(BitFlag flags, BitFlag requested_flags) noexcept
+	{
+		static_assert(!(IsEnum<BitFlag> || IsScopedEnum<BitFlag>),
+		              "BitFlagHasAllFlags cannot be used with (scoped) enums - use EnumHasAllFlags instead.");
+		return (flags & requested_flags) == requested_flags;
+	}
+
+	/// @brief Checks if \p flags contain any of the \p requested_flags.
+	template <typename BitFlag>
+	[[nodiscard]] ORION_FORCE_INLINE Bool8 BitFlagHasAnyFlags(BitFlag flags, BitFlag requested_flags) noexcept
+	{
+		static_assert(!(IsEnum<BitFlag> || IsScopedEnum<BitFlag>),
+		              "BitFlagHasAnyFlags cannot be used with (scoped) enums - use EnumHasAnyFlags instead.");
+		return (flags & requested_flags) != 0;
+	}
+
 }  // namespace Orion::Engine

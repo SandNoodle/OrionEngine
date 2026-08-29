@@ -124,11 +124,8 @@ namespace Orion::Engine::Platform
 	static constexpr void DoListFiles(Vector<PlatformFileStat>& file_stats, StringView path, Bool8 recursive) noexcept
 	{
 		ORION_ASSERT_DEBUG(path.Size() > 0);
-		ORION_IGNORE_PARAM(path);
-		ORION_IGNORE_PARAM(recursive);
 
 		CString native_path = SanitizePath(path);
-
 		DIR* base_directory = opendir(native_path);
 		if (!base_directory) [[unlikely]] {
 			return;
