@@ -51,7 +51,7 @@ namespace Orion::Engine::Algorithm
 	/// @param lhs_count TODO
 	/// @param rhs_count TODO
 	template <typename T, typename SizeType = USize>
-	[[nodiscard]] constexpr Int8 Compare(const T* lhs, const T* rhs, SizeType lhs_count, SizeType rhs_count) noexcept
+	[[nodiscard]] constexpr Int32 Compare(const T* lhs, const T* rhs, SizeType lhs_count, SizeType rhs_count) noexcept
 	{
 		ORION_ASSERT_DEBUG_SLOW(lhs);
 		ORION_ASSERT_DEBUG_SLOW(rhs);
@@ -63,7 +63,7 @@ namespace Orion::Engine::Algorithm
 		SizeType count = ORION_MIN(lhs_count, rhs_count);
 		if constexpr (IsTriviallyConstructible<T>) {
 			SizeType size_in_bytes = sizeof(T) * count;
-			Int8 result            = Platform::MemoryCompare(lhs, rhs, size_in_bytes);
+			Int32 result           = Platform::MemoryCompare(lhs, rhs, size_in_bytes);
 			if (result == 0) {
 				if (lhs_count < rhs_count) {
 					return -1;

@@ -1,9 +1,9 @@
 #include "TestCommon.h"
 
-#include "Core/Standard/Memory/Allocators/DummyAllocator.h"
 #include "Core/Standard/Algorithms/Sort.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/Vector.h"
+#include "Core/Standard/Memory/Allocators/DummyAllocator.h"
 
 namespace Orion::Engine::UT
 {

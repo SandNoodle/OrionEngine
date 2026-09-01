@@ -36,9 +36,9 @@ namespace Orion::Engine
 
 		private:
 		AllocatorType _allocator;
-		PointerType _data;
-		SizeType _capacity;
-		SizeType _size;
+		PointerType _data{ nullptr };
+		SizeType _capacity{ 0UL };
+		SizeType _size{ 0UL };
 
 		public:
 		constexpr explicit Vector(SizeType initial_capacity      = k_initial_capacity,
@@ -128,6 +128,7 @@ namespace Orion::Engine
 		constexpr void DoInitialize(SizeType initial_capacity) noexcept;
 		constexpr void DoSwap(Vector& other) noexcept;
 		constexpr void DoEnsureCapacity(SizeType new_capacity) noexcept;
+		constexpr void DoCheckAddress(ConstPointerType address) const noexcept;
 	};
 
 	// -- Implementation.
@@ -164,17 +165,12 @@ namespace Orion::Engine
 		: _allocator(other._allocator), _capacity(other._capacity), _size(other._size)
 
 	{
-		_data = static_cast<PointerType>(_allocator.Allocate(sizeof(ValueType) * _capacity, alignof(ValueType)));
-		if constexpr (IsTriviallyCopyable<ValueType>) {
-			Platform::MemoryCopy(_data, other._data, ByteSize());
-		} else {
-			Memory::ConstructItems(_data, other._data, Size());
-		}
+		_data = Memory::AllocateCount<ValueType>(_allocator, _capacity, alignof(ValueType));
+		Memory::ConstructItems(_data, other._data, Size());
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr Vector<T, Allocator>::Vector(Vector&& other) noexcept
-		: _allocator(Move(other._allocator)), _data(nullptr), _capacity(0), _size(0)
 	{
 		DoSwap(other);
 	}
@@ -184,11 +180,6 @@ namespace Orion::Engine
 	{
 		if (_data) {
 			Memory::DestructItems(_data, _size);
-			if constexpr (k_orion_build_debug) {
-				if (_capacity > 0) {
-					Platform::MemoryZero(_data, sizeof(ValueType) * _capacity);
-				}
-			}
 			_allocator.Free(_data);
 			_data = nullptr;
 		}
@@ -203,18 +194,14 @@ namespace Orion::Engine
 		if (_data) {
 			Memory::DestructItems(_data, _size);
 			_allocator.Free(_data);
+			_data = nullptr;
 		}
 
 		_allocator = other._allocator;
 		_capacity  = other._capacity;
 		_size      = other._size;
-		_data      = static_cast<PointerType>(_allocator.Allocate(sizeof(ValueType) * _capacity, alignof(ValueType)));
-
-		if constexpr (IsTriviallyCopyable<ValueType>) {
-			Platform::MemoryCopy(_data, other._data, ByteSize());
-		} else {
-			Memory::ConstructItems(_data, other._data, Size());
-		}
+		_data      = Memory::AllocateCount<ValueType>(_allocator, _capacity, alignof(ValueType));
+		Memory::ConstructItems(_data, other._data, Size());
 
 		return *this;
 	}
@@ -222,17 +209,9 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator=(Vector&& other) noexcept -> Vector&
 	{
-		if (this == &other) {
-			return *this;
+		if (this != &other) {
+			DoSwap(other);
 		}
-
-		if (_data) {
-			Memory::DestructItems(_data, _size);
-			_allocator.Free(_data);
-			_data = nullptr;
-		}
-
-		DoSwap(other);
 
 		return *this;
 	}
@@ -241,9 +220,7 @@ namespace Orion::Engine
 	constexpr auto Vector<T, Allocator>::operator=(std::initializer_list<ValueType> list) noexcept -> Vector&
 	{
 		Memory::DestructItems(Data(), Size());
-		if (Capacity() < list.size()) {
-			DoEnsureCapacity(list.size());
-		}
+		DoEnsureCapacity(list.size());
 		Memory::ConstructItems<ValueType>(Data(), list.begin(), list.size());
 		_size = list.size();
 		return *this;
@@ -355,6 +332,7 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Add(const ValueType& value) noexcept -> void
 	{
+		DoCheckAddress(&value);
 		DoEnsureCapacity(_size + 1);
 		Memory::ConstructItem(&_data[_size], value);
 		_size += 1;
@@ -363,6 +341,7 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Add(ValueType&& value) noexcept -> void
 	{
+		DoCheckAddress(&value);
 		DoEnsureCapacity(_size + 1);
 		Memory::ConstructItem(&_data[_size], Move(value));
 		_size += 1;
@@ -374,6 +353,8 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG_SLOW(begin);
 		ORION_ASSERT_DEBUG_SLOW(end);
 		ORION_ASSERT_DEBUG_SLOW(begin <= end);
+		DoCheckAddress(begin);
+		DoCheckAddress(end);
 		SizeType size = static_cast<SizeType>(end - begin);
 		if (size < 1) [[unlikely]] {
 			return;
@@ -413,11 +394,6 @@ namespace Orion::Engine
 		if constexpr (!IsTriviallyDestructible<ValueType>) {
 			if (_data) {
 				Memory::DestructItems(_data, _size);
-			}
-		}
-		if constexpr (k_orion_build_debug) {
-			if (_data && _size > 0) {
-				Platform::MemoryZero(_data, sizeof(ValueType) * _size);
 			}
 		}
 		_size = 0;
@@ -482,17 +458,10 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::DoInitialize(SizeType initial_capacity) noexcept -> void
 	{
-		initial_capacity       = ORION_MAX(initial_capacity, k_initial_capacity);
-		SizeType size_in_bytes = sizeof(ValueType) * initial_capacity;
-		SizeType alignment     = alignof(ValueType);
-		_data                  = static_cast<PointerType>(_allocator.Allocate(size_in_bytes, alignment));
-		if constexpr (k_orion_build_debug) {
-			if (_data) {
-				Platform::MemoryZero(_data, size_in_bytes);
-			}
-		}
-		_capacity = initial_capacity;
-		_size     = 0;
+		initial_capacity = ORION_MAX(initial_capacity, k_initial_capacity);
+		_data            = Memory::AllocateCount<ValueType>(_allocator, initial_capacity, alignof(ValueType));
+		_capacity        = initial_capacity;
+		_size            = 0;
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
@@ -512,9 +481,8 @@ namespace Orion::Engine
 			return;
 		}
 
-		new_capacity = ToNextPowerOfTwo(new_capacity);
-		PointerType new_data
-			= static_cast<PointerType>(_allocator.Allocate(sizeof(ValueType) * new_capacity, alignof(ValueType)));
+		new_capacity         = ToNextPowerOfTwo(new_capacity);
+		PointerType new_data = Memory::AllocateCount<ValueType>(_allocator, new_capacity, alignof(ValueType));
 		ORION_ASSERT_DEBUG_SLOW(new_data);
 
 		if (_size > 0) {
@@ -533,5 +501,12 @@ namespace Orion::Engine
 		}
 		_data     = new_data;
 		_capacity = new_capacity;
+	}
+
+	template <typename T, Memory::AllocatorKind Allocator>
+	constexpr auto Vector<T, Allocator>::DoCheckAddress(ConstPointerType address) const noexcept -> void
+	{
+		ORION_ASSERT_DEBUG_SLOW(address < Data() || address >= (Data() + Capacity()),
+		                        "Attempting to use element, which already is contained in the Vector.");
 	}
 }  // namespace Orion::Engine

@@ -176,13 +176,8 @@ namespace Orion::Engine
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(const HashMap& other) noexcept
 		: _allocator(other._allocator), _capacity(other._capacity), _size(other._size)
 	{
-		SizeType size_in_bytes = sizeof(StorageType) * _capacity;
-		_data                  = static_cast<StorageType*>(_allocator.Allocate(size_in_bytes, alignof(StorageType)));
-		if constexpr (IsTriviallyCopyable<StorageType>) {
-			Platform::MemoryCopy(_data, other._data, size_in_bytes);
-		} else {
-			Memory::ConstructItems(_data, other._data, _capacity);
-		}
+		_data = Memory::AllocateCount<StorageType>(_allocator, _capacity, alignof(StorageType));
+		Memory::ConstructItems(_data, other._data, _capacity);
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -211,18 +206,14 @@ namespace Orion::Engine
 		if (_data) {
 			Memory::DestructItems(_data, _capacity);
 			_allocator.Free(_data);
+			_data = nullptr;
 		}
 
 		_allocator = other._allocator;
 		_capacity  = other._capacity;
 		_size      = other._size;
-		_data = static_cast<StorageType*>(_allocator.Allocate(sizeof(StorageType) * _capacity, alignof(StorageType)));
-
-		if constexpr (IsTriviallyCopyable<ValueType>) {
-			Platform::MemoryCopy(_data, other._data, sizeof(StorageType) * _capacity);
-		} else {
-			Memory::ConstructItems(_data, other._data, _capacity);
-		}
+		_data      = Memory::AllocateCount<StorageType>(_allocator, _capacity, alignof(StorageType));
+		Memory::ConstructItems(_data, other._data, _capacity);
 
 		return *this;
 	}
@@ -420,12 +411,10 @@ namespace Orion::Engine
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoInitialize(SizeType initial_capacity) noexcept
 		-> void
 	{
-		initial_capacity       = ORION_MAX(initial_capacity, k_initial_bucket_count);
-		SizeType size_in_bytes = sizeof(StorageType) * initial_capacity;
-		SizeType alignment     = alignof(StorageType);
-		_data                  = static_cast<StorageType*>(_allocator.Allocate(size_in_bytes, alignment));
-		_capacity              = initial_capacity;
-		_size                  = 0;
+		initial_capacity = ORION_MAX(initial_capacity, k_initial_bucket_count);
+		_data            = Memory::AllocateCount<StorageType>(_allocator, initial_capacity, alignof(StorageType));
+		_capacity        = initial_capacity;
+		_size            = 0;
 
 		if (_data) {
 			for (SizeType index = 0; index < _capacity; ++index) {
@@ -442,9 +431,8 @@ namespace Orion::Engine
 			return;
 		}
 
-		SizeType new_capacity  = ToNextPowerOfTwo(_capacity + 1);
-		SizeType size_in_bytes = sizeof(StorageType) * new_capacity;
-		StorageType* new_data  = static_cast<StorageType*>(_allocator.Allocate(size_in_bytes, alignof(StorageType)));
+		SizeType new_capacity = ToNextPowerOfTwo(_capacity + 1);
+		StorageType* new_data = Memory::AllocateCount<StorageType>(_allocator, new_capacity, alignof(StorageType));
 		ORION_ASSERT_DEBUG(new_data);
 
 		if (_capacity > 0) {

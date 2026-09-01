@@ -25,7 +25,7 @@
 
 // ---- [ Build Type ] ----
 #if defined(ORION_BUILD_DEBUG)
-static constexpr bool k_orion_build_debug        = false;
+static constexpr bool k_orion_build_debug        = true;
 static constexpr bool k_orion_build_release      = false;
 static constexpr bool k_orion_build_distribution = false;
 #elif defined(ORION_BUILD_RELEASE)
