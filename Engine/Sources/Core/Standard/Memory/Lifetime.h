@@ -104,7 +104,9 @@ namespace Orion::Engine::Memory
 	{
 		if (!IsTriviallyDestructible<ItemType>) {
 			while (count--) {
+				ORION_ASSERT_DEBUG_SLOW(src);
 				src->ItemType::~ItemType();
+				++src;
 			}
 		}
 	}
