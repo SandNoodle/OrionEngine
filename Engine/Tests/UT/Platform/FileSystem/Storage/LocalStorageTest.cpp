@@ -37,9 +37,9 @@ namespace Orion::Engine::Platform::FileSystem
 		ASSERT_TRUE(stat_result.IsValue());
 		EXPECT_EQ(stat_result->file_name, String(file_name.Data(), file_name.Size()));
 		EXPECT_EQ(stat_result->size_in_bytes, 0UL);
-		EXPECT_NE(stat_result->time_created, 0UL);
-		EXPECT_NE(stat_result->time_last_accessed, 0UL);
-		EXPECT_NE(stat_result->time_last_modified, 0UL);
+		EXPECT_NE(stat_result->unix_time_created, 0UL);
+		EXPECT_NE(stat_result->unix_time_last_accessed, 0UL);
+		EXPECT_NE(stat_result->unix_time_last_modified, 0UL);
 
 		Optional<IOError> remove_result = _storage_provider.Remove(file_name);
 		ASSERT_FALSE(remove_result.IsValue());
@@ -64,9 +64,9 @@ namespace Orion::Engine::Platform::FileSystem
 		ASSERT_TRUE(stat_result.IsValue());
 		EXPECT_EQ(stat_result->file_name, String(file_name.Data(), file_name.Size()));
 		EXPECT_EQ(stat_result->size_in_bytes, 0UL);
-		EXPECT_NE(stat_result->time_created, 0UL);
-		EXPECT_NE(stat_result->time_last_accessed, 0UL);
-		EXPECT_NE(stat_result->time_last_modified, 0UL);
+		EXPECT_NE(stat_result->unix_time_created, 0UL);
+		EXPECT_NE(stat_result->unix_time_last_accessed, 0UL);
+		EXPECT_NE(stat_result->unix_time_last_modified, 0UL);
 
 		Optional<IOError> override_create_result = _storage_provider.Create(file_name);
 		ASSERT_TRUE(override_create_result.IsValue());
@@ -119,9 +119,9 @@ namespace Orion::Engine::Platform::FileSystem
 		for (USize index = 0; index < post_creation_files.Size(); ++index) {
 			EXPECT_EQ(post_creation_files[index].file_name, ORION_STRING(k_file_names[index]));
 			EXPECT_EQ(post_creation_files[index].size_in_bytes, 0UL);
-			EXPECT_NE(post_creation_files[index].time_created, 0UL);
-			EXPECT_NE(post_creation_files[index].time_last_accessed, 0UL);
-			EXPECT_NE(post_creation_files[index].time_last_modified, 0UL);
+			EXPECT_NE(post_creation_files[index].unix_time_created, 0UL);
+			EXPECT_NE(post_creation_files[index].unix_time_last_accessed, 0UL);
+			EXPECT_NE(post_creation_files[index].unix_time_last_modified, 0UL);
 		}
 
 		// Cleanup afterwards the directory.
@@ -168,9 +168,9 @@ namespace Orion::Engine::Platform::FileSystem
 		for (USize index = 0; index < post_creation_files.Size(); ++index) {
 			EXPECT_EQ(post_creation_files[index].file_name, ORION_STRING(k_file_names[index]));
 			EXPECT_EQ(post_creation_files[index].size_in_bytes, 0UL);
-			EXPECT_NE(post_creation_files[index].time_created, 0UL);
-			EXPECT_NE(post_creation_files[index].time_last_accessed, 0UL);
-			EXPECT_NE(post_creation_files[index].time_last_modified, 0UL);
+			EXPECT_NE(post_creation_files[index].unix_time_created, 0UL);
+			EXPECT_NE(post_creation_files[index].unix_time_last_accessed, 0UL);
+			EXPECT_NE(post_creation_files[index].unix_time_last_modified, 0UL);
 		}
 
 		// Cleanup afterwards the directory.

@@ -31,24 +31,26 @@ namespace Orion::Engine::Platform::FileSystem
 	template <typename T>
 	using IOResult = Result<T, IOError>;
 
-	/// @brief TODO
+	/// @brief Represents
 	enum class StorageProviderProtocol : UInt8
 	{
 		Local,
 		Memory,
 	};
 
-	/// @brief TODO
+	/// @brief Structure tha holds metadata of a given file in the storage.
 	struct StorageStatInfo
 	{
 		String file_name;
 		UInt64 size_in_bytes;
-		UInt64 time_created;
-		UInt64 time_last_accessed;
-		UInt64 time_last_modified;
+		UInt64 unix_time_created;
+		UInt64 unix_time_last_accessed;
+		UInt64 unix_time_last_modified;
 	};
 
-	/// @brief TODO
+	/// @brief Represents writing access point to the underlying file, be it local, in-memory, etc.
+	/// @warning Only one access operation can be active for a given file. If the file is locked for reading then no
+	/// writing can take place. However, multiple writers CANNOT access the same file concurrently.
 	class IStorageFileWriter
 	{
 		public:
@@ -56,11 +58,11 @@ namespace Orion::Engine::Platform::FileSystem
 
 #if 0
 		/// @brief TODO
-		/// @param [IN, REQUIRED] data TODO
+		/// @param[IN, REQUIRED] data TODO
 		[[nodiscard]] virtual Optional<IOError> Write(ReadonlySpan<Byte> data) = 0;
 
 		/// @brief TODO
-		/// @param [IN, REQUIRED] offset TODO
+		/// @param[IN, REQUIRED] offset TODO
 		[[nodiscard]] virtual Optional<IOError> Seek(USize offset);
 
 		/// @brief TODO
@@ -68,7 +70,9 @@ namespace Orion::Engine::Platform::FileSystem
 #endif
 	};
 
-	/// @brief TODO
+	/// @brief Represents reading access point to the underlying file, be it local, in-memory, etc.
+	/// @warning Only one access operation can be active for a given file. If the file is locked for reading
+	/// then no writing can take place. However, multiple multiple readers CAN access the same file concurrently.
 	class IStorageFileReader
 	{
 		public:
@@ -88,34 +92,34 @@ namespace Orion::Engine::Platform::FileSystem
 
 		/// @brief Attempts to create a file under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to create.
+		/// @param[IN, REQUIRED] path Path to the file to create.
 		[[nodiscard]] virtual Optional<IOError> Create(StringView path) noexcept = 0;
 
 		/// @brief Attempts to remove a file under a given \p path.
 		/// @warning Removing non-existent file doesn't result in an Error.
 		/// @warning \p path must NOT contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to remove.
+		/// @param[IN, REQUIRED] path Path to the file to remove.
 		[[nodiscard]] virtual Optional<IOError> Remove(StringView path) noexcept = 0;
 
 		/// @brief Attempts to provide a writer to a file at a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to write.
+		/// @param[IN, REQUIRED] path Path to the file to write.
 		[[nodiscard]] virtual IOResult<IStorageFileWriter*> Write(StringView path) noexcept = 0;
 
 		/// @brief Attempts to provide a reader of a file at a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to read.
+		/// @param[IN, REQUIRED] path Path to the file to read.
 		[[nodiscard]] virtual IOResult<IStorageFileReader*> Read(StringView path) noexcept = 0;
 
 		/// @brief Queries the underlying storage to check that file exists under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to stat.
+		/// @param[IN, REQUIRED] path Path to the file to stat.
 		[[nodiscard]] virtual IOResult<StorageStatInfo> Stat(StringView path) noexcept = 0;
 
 		/// @brief Queries the underlying storage to list every file under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the 'directory' under which to query the files.
-		/// @param [IN, REQUIRED] recursive Should files in sub-directories also be listed.
+		/// @param[IN, REQUIRED] path Path to the 'directory' under which to query the files.
+		/// @param[IN, REQUIRED] recursive Should files in sub-directories also be listed.
 		[[nodiscard]] virtual Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept = 0;
 	};
 

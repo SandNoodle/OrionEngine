@@ -66,7 +66,7 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	constexpr auto MemoryStorageProvider<Allocator>::Create(AllocatorType& allocator) noexcept -> ThisType*
 	{
-		ThisType* provider = static_cast<ThisType*>(allocator.Allocate(sizeof(ThisType), alignof(ThisType)));
+		ThisType* provider = Memory::Allocate<ThisType>(allocator);
 		if (provider) {
 			Memory::ConstructItem(provider, allocator);
 		}

@@ -69,7 +69,7 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	constexpr auto LocalStorageProvider<Allocator>::Create(AllocatorType& allocator) noexcept -> ThisType*
 	{
-		ThisType* provider = static_cast<ThisType*>(allocator.Allocate(sizeof(ThisType), alignof(ThisType)));
+		ThisType* provider = Memory::Allocate<ThisType>(allocator);
 		if (provider) {
 			Memory::ConstructItem(provider, allocator);
 		}
@@ -128,11 +128,11 @@ namespace Orion::Engine::Platform::FileSystem
 
 		PlatformFileStat platform_file_stat = StatFile(path);
 		return (StorageStatInfo){
-			.file_name          = Move(platform_file_stat.file_name),
-			.size_in_bytes      = platform_file_stat.size_in_bytes,
-			.time_created       = platform_file_stat.time_created,
-			.time_last_accessed = platform_file_stat.time_last_accessed,
-			.time_last_modified = platform_file_stat.time_last_modified,
+			.file_name               = Move(platform_file_stat.file_name),
+			.size_in_bytes           = platform_file_stat.size_in_bytes,
+			.unix_time_created       = platform_file_stat.unix_time_created,
+			.unix_time_last_accessed = platform_file_stat.unix_time_last_accessed,
+			.unix_time_last_modified = platform_file_stat.unix_time_last_modified,
 		};
 	}
 
@@ -144,11 +144,11 @@ namespace Orion::Engine::Platform::FileSystem
 		result.Reserve(platform_files.Size());
 		for (USize index = 0; index < platform_files.Size(); ++index) {
 			result.AddConstruct((StorageStatInfo){
-				.file_name          = Move(platform_files[index].file_name),
-				.size_in_bytes      = platform_files[index].size_in_bytes,
-				.time_created       = platform_files[index].time_created,
-				.time_last_accessed = platform_files[index].time_last_accessed,
-				.time_last_modified = platform_files[index].time_last_modified,
+				.file_name               = Move(platform_files[index].file_name),
+				.size_in_bytes           = platform_files[index].size_in_bytes,
+				.unix_time_created       = platform_files[index].unix_time_created,
+				.unix_time_last_accessed = platform_files[index].unix_time_last_accessed,
+				.unix_time_last_modified = platform_files[index].unix_time_last_modified,
 			});
 		}
 		return result;

@@ -6,6 +6,7 @@
 #include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Hash.h"
 #include "Core/Standard/Containers/Pair.h"
+#include "Core/Standard/Math/Math.h"
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/TypeTraits.h"
@@ -411,7 +412,7 @@ namespace Orion::Engine
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoInitialize(SizeType initial_capacity) noexcept
 		-> void
 	{
-		initial_capacity = ORION_MAX(initial_capacity, k_initial_bucket_count);
+		initial_capacity = Math::Max(initial_capacity, k_initial_bucket_count);
 		_data            = Memory::AllocateCount<StorageType>(_allocator, initial_capacity, alignof(StorageType));
 		_capacity        = initial_capacity;
 		_size            = 0;

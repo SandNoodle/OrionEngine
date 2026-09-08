@@ -46,10 +46,10 @@ namespace Orion::Engine::Platform
 
 		// TODO(SandNoodle): We need a reliable way to get the system name (right now its HARDCODED).
 		return (PlatformInfo){
-			.system_name             = ORION_STRINGVIEW("Windows"),
-			.page_size               = static_cast<UInt64>(system_info.dwPageSize),
-			.large_page_size         = static_cast<UInt64>(GetLargePageMinimum()),
-			.logical_processor_count = static_cast<UInt32>(system_info.dwNumberOfProcessors),
+			.system_name              = ORION_STRINGVIEW("Windows"),
+			.page_size_in_bytes       = static_cast<UInt64>(system_info.dwPageSize),
+			.large_page_size_in_bytes = static_cast<UInt64>(GetLargePageMinimum()),
+			.logical_processor_count  = static_cast<UInt32>(system_info.dwNumberOfProcessors),
 		};
 	}
 	[[nodiscard]] static constexpr DWORD ToNativeFlags(PlatformFileAccessFlags flags) noexcept
@@ -124,7 +124,7 @@ namespace Orion::Engine::Platform
 		return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	[[nodiscard]] static constexpr UInt64 ToUnixTime(DWORD low, DWORD high) noexcept
+	[[nodiscard]] static constexpr UInt64 WindowsToUnixTime(DWORD low, DWORD high) noexcept
 	{
 		ULARGE_INTEGER foo{
 			.LowPart  = low,
@@ -157,15 +157,15 @@ namespace Orion::Engine::Platform
 		FindClose(file_handle);
 
 		return (PlatformFileStat){
-			.file_name          = ORION_STRING(native_path),
-			.size_in_bytes      = size_in_bytes.QuadPart,
-			.time_created       = ToUnixTime(file_data.ftCreationTime.dwLowDateTime,  //
-                                       file_data.ftCreationTime.dwHighDateTime),
-			.time_last_modified = ToUnixTime(file_data.ftLastWriteTime.dwLowDateTime,  //
-			                                 file_data.ftLastWriteTime.dwHighDateTime),
-			.time_last_accessed = ToUnixTime(file_data.ftLastAccessTime.dwLowDateTime,  //
-			                                 file_data.ftLastAccessTime.dwHighDateTime),
-			.access_flags       = access_flags,
+			.file_name               = ORION_STRING(native_path),
+			.size_in_bytes           = size_in_bytes.QuadPart,
+			.unix_time_created       = WindowsToUnixTime(file_data.ftCreationTime.dwLowDateTime,  //
+                                                   file_data.ftCreationTime.dwHighDateTime),
+			.unix_time_last_modified = WindowsToUnixTime(file_data.ftLastWriteTime.dwLowDateTime,  //
+			                                             file_data.ftLastWriteTime.dwHighDateTime),
+			.unix_time_last_accessed = WindowsToUnixTime(file_data.ftLastAccessTime.dwLowDateTime,  //
+			                                             file_data.ftLastAccessTime.dwHighDateTime),
+			.access_flags            = access_flags,
 		};
 	}
 
@@ -214,15 +214,15 @@ namespace Orion::Engine::Platform
 				String path_buffer{};
 				StringView file_path = CombinePath(path_buffer, path, entry_name);
 				file_stats.AddConstruct((PlatformFileStat){
-					.file_name          = String(file_path.begin(), file_path.Size()),
-					.size_in_bytes      = size_in_bytes.QuadPart,
-					.time_created       = ToUnixTime(fd.ftCreationTime.dwLowDateTime,  //
-                                               fd.ftCreationTime.dwHighDateTime),
-					.time_last_modified = ToUnixTime(fd.ftLastWriteTime.dwLowDateTime,  //
-				                                     fd.ftLastWriteTime.dwHighDateTime),
-					.time_last_accessed = ToUnixTime(fd.ftLastAccessTime.dwLowDateTime,  //
-				                                     fd.ftLastAccessTime.dwHighDateTime),
-					.access_flags       = access_flags,
+					.file_name               = String(file_path.begin(), file_path.Size()),
+					.size_in_bytes           = size_in_bytes.QuadPart,
+					.unix_time_created       = WindowsToUnixTime(fd.ftCreationTime.dwLowDateTime,  //
+                                                           fd.ftCreationTime.dwHighDateTime),
+					.unix_time_last_modified = WindowsToUnixTime(fd.ftLastWriteTime.dwLowDateTime,  //
+				                                                 fd.ftLastWriteTime.dwHighDateTime),
+					.unix_time_last_accessed = WindowsToUnixTime(fd.ftLastAccessTime.dwLowDateTime,  //
+				                                                 fd.ftLastAccessTime.dwHighDateTime),
+					.access_flags            = access_flags,
 				});
 			}
 		} while (FindNextFile(file_handle, &fd) != 0);

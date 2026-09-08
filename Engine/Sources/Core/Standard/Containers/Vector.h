@@ -5,6 +5,7 @@
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Sort.h"
+#include "Core/Standard/Math/Math.h"
 #include "Core/Standard/Memory/Allocators/Allocator.h"
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Memory/Lifetime.h"
@@ -202,7 +203,7 @@ namespace Orion::Engine
 		                                               const AllocatorType& allocator) noexcept
 			: _allocator(allocator), _data(nullptr), _capacity(0UL), _size(0UL)
 		{
-			_capacity = ORION_MAX(initial_capacity, k_initial_capacity);
+			_capacity = Math::Max(initial_capacity, k_initial_capacity);
 			_data     = Memory::AllocateCount<ValueType>(_allocator, _capacity);
 		}
 

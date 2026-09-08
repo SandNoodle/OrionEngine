@@ -4,16 +4,10 @@
 
 #include "Core/Assert.h"
 
-#if !defined(ORION_COMPILER_CLANG) && !defined(ORION_COMPILER_GCC)
-#include <string.h>
-#endif
-
 namespace Orion::Engine::Platform
 {
-	/**
-	 * @brief Allocates \p size_in_bytes sized block of contiguous memory.
-	 * @return Returns pointer to the allocated block of memory on success, nullptr otherwise.
-	 */
+	/// @brief Allocates \p size_in_bytes sized block of contiguous memory.
+	/// @return Returns pointer to the allocated block of memory on success, nullptr otherwise.
 	[[nodiscard]] ORION_FORCE_INLINE constexpr void* MemoryAllocate(USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryAllocate, because size_in_bytes is 0.");
@@ -24,10 +18,8 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
-	/**
-	 * @brief Frees previously allocated block of memory.
-	 * @warning \p ptr must NOT be null!
-	 */
+	/// @brief Frees previously allocated block of memory.
+	/// @warning \p ptr must NOT be null!
 	ORION_FORCE_INLINE constexpr void MemoryFree(void* ptr) noexcept
 	{
 		ORION_ASSERT_DEBUG(ptr, "Cannot perform MemoryFree, because ptr is null.");
@@ -38,10 +30,8 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
-	/**
-	 * @brief Reallocates previously allocated block of memory with new \p size_in_bytes size.
-	 * @return Returns pointer to \p size_in_bytes sized reallocated block of memory on success, nullptr otherwise.
-	 */
+	/// @brief Reallocates previously allocated block of memory with new \p size_in_bytes size.
+	/// @return Returns pointer to \p size_in_bytes sized reallocated block of memory on success, nullptr otherwise.
 	[[nodiscard]] ORION_FORCE_INLINE constexpr void* MemoryReallocate(void* ptr, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(ptr, "Cannot perform MemoryReallocate, because ptr is null.");
@@ -49,9 +39,7 @@ namespace Orion::Engine::Platform
 		return ::realloc(ptr, size_in_bytes);
 	}
 
-	/**
-	 * @brief Copies \p size_in_bytes sized region of memory from \p src to \p dst.
-	 */
+	/// @brief Copies \p size_in_bytes sized region of memory from \p src to \p dst.
 	ORION_FORCE_INLINE constexpr void MemoryCopy(void* dst, const void* src, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryCopy, because dst is null.");
@@ -64,9 +52,7 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
-	/**
-	 * @brief Moves \p size_in_bytes sized region of memory from \p src to \p dst.
-	 */
+	/// @brief Moves \p size_in_bytes sized region of memory from \p src to \p dst.
 	ORION_FORCE_INLINE constexpr void MemoryMove(void* dst, const void* src, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryMove, because dst is null.");
@@ -79,9 +65,7 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
-	/**
-	 * @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a given \p value.
-	 */
+	/// @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a given \p value.
 	ORION_FORCE_INLINE constexpr void MemorySet(void* dst, Int32 value, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemorySet, because dst is null.");
@@ -93,9 +77,7 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
-	/**
-	 * @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a 0.
-	 */
+	/// @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a 0.
 	ORION_FORCE_INLINE constexpr void MemoryZero(void* dst, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryZero, because dst is null.");
@@ -107,10 +89,10 @@ namespace Orion::Engine::Platform
 #endif
 	}
 
-	/// @brief TODO
+	/// @brief Compares two regions of memery pointed by \p lhs and \p rhs.
 	/// @param[IN, REQUIRED] lhs TODO
 	/// @param[IN, REQUIRED] rhs TODO
-	/// @param[IN, REQUIRED] size_in_bytes TODO
+	/// @param[IN, REQUIRED] size_in_bytes
 	ORION_FORCE_INLINE constexpr int MemoryCompare(const void* lhs, const void* rhs, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(lhs, "Cannot perform MemoryCompare, because lhs is null.");

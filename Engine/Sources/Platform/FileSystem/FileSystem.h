@@ -44,50 +44,50 @@ namespace Orion::Engine::Platform::FileSystem
 		constexpr FileSystem& operator=(const ThisType&) noexcept = delete;
 		constexpr FileSystem& operator=(ThisType&&) noexcept      = delete;
 
-		/// @brief TODO
+		/// @brief Initializes the filesystem and prepares it for further use. Initializes StorageProviders and their
+		/// protocols.
+		/// @warning Must be called exactly once!
 		[[nodiscard]] constexpr Bool8 Initialize() noexcept;
 
-		/// @brief TODO
+		/// @brief Shutdowns the filesystem. Deinitializes all StorageProviders.
+		/// @warning Must be called exactly once!
 		[[nodiscard]] constexpr Bool8 Shutdown() noexcept;
 
 		/// @brief Attempts to create a file under a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to create.
+		/// @param[IN, REQUIRED] path Path to the file to create.
 		[[nodiscard]] constexpr Optional<IOError> Create(StringView path) noexcept;
 
 		/// @brief Attempts to remove a file under a given \p path.
 		/// @warning Removing non-existent file doesn't result in an Error.
 		/// @warning \p path MUST contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to remove.
+		/// @param[IN, REQUIRED] path Path to the file to remove.
 		[[nodiscard]] constexpr Optional<IOError> Remove(StringView path) noexcept;
 
 		/// @brief Attempts to provide a writer to a file at a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to write.
+		/// @param[IN, REQUIRED] path Path to the file to write.
 		[[nodiscard]] constexpr IOResult<IStorageFileWriter*> Write(StringView path) noexcept;
 
 		/// @brief Attempts to provide a reader of a file at a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to read.
+		/// @param[IN, REQUIRED] path Path to the file to read.
 		[[nodiscard]] constexpr IOResult<IStorageFileReader*> Read(StringView path) noexcept;
 
 		/// @brief Queries the filesystem to check that the file exists under a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the file to stat.
+		/// @param[IN, REQUIRED] path Path to the file to stat.
 		[[nodiscard]] constexpr IOResult<StorageStatInfo> Stat(StringView path) noexcept;
 
 		/// @brief Queries the filesystem to list every file under a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
-		/// @param [IN, REQUIRED] path Path to the 'directory' under which to query the files.
-		/// @param [IN, REQUIRED] recursive Should files in sub-directories also be listed.
+		/// @param[IN, REQUIRED] path Path to the 'directory' under which to query the files.
+		/// @param[IN, REQUIRED] recursive Should files in sub-directories also be listed.
 		[[nodiscard]] constexpr Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept;
 
 		private:
-		/// @brief TODO
 		[[nodiscard]] constexpr Bool8 RegisterStorageProvider(StorageProviderProtocol protocol,
 		                                                      IStorageProvider* storage_provider) noexcept;
-
-		/// @brief TODO
 		[[nodiscard]] constexpr IOResult<Pair<IStorageProvider*, StringView>> GetProviderAndPath(
 			StringView path) noexcept;
 	};

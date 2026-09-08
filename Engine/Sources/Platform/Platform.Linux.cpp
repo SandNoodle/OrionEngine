@@ -41,10 +41,10 @@ namespace Orion::Engine::Platform
 	{
 		// TODO(SandNoodle): We need a reliable way to get the system name (right now its HARDCODED).
 		return (PlatformInfo){
-			.system_name             = ORION_STRINGVIEW("Linux"),
-			.page_size               = static_cast<UInt64>(getpagesize()),
-			.large_page_size         = ORION_MEGABYTES(2),
-			.logical_processor_count = static_cast<UInt32>(get_nprocs()),
+			.system_name              = ORION_STRINGVIEW("Linux"),
+			.page_size_in_bytes       = static_cast<UInt64>(getpagesize()),
+			.large_page_size_in_bytes = ORION_MEGABYTES(2),
+			.logical_processor_count  = static_cast<UInt32>(get_nprocs()),
 		};
 	}
 
@@ -112,12 +112,12 @@ namespace Orion::Engine::Platform
 		access_flags |= file_stat.st_mode & S_IWUSR ? PlatformFileAccessFlags::Write : PlatformFileAccessFlags::None;
 
 		return (PlatformFileStat){
-			.file_name          = ORION_STRING(native_path),
-			.size_in_bytes      = static_cast<UInt64>(file_stat.st_size),
-			.time_created       = static_cast<UInt64>(file_stat.st_ctim.tv_sec),
-			.time_last_modified = static_cast<UInt64>(file_stat.st_mtim.tv_sec),
-			.time_last_accessed = static_cast<UInt64>(file_stat.st_atim.tv_sec),
-			.access_flags       = access_flags,
+			.file_name               = ORION_STRING(native_path),
+			.size_in_bytes           = static_cast<UInt64>(file_stat.st_size),
+			.unix_time_created       = static_cast<UInt64>(file_stat.st_ctim.tv_sec),
+			.unix_time_last_modified = static_cast<UInt64>(file_stat.st_mtim.tv_sec),
+			.unix_time_last_accessed = static_cast<UInt64>(file_stat.st_atim.tv_sec),
+			.access_flags            = access_flags,
 		};
 	}
 

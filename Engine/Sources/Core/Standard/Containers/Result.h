@@ -8,7 +8,7 @@
 
 namespace Orion::Engine
 {
-	/// @brief TODO
+	/// @brief Represents generic Error type.
 	class Error final
 	{
 		private:
@@ -18,15 +18,17 @@ namespace Orion::Engine
 		constexpr explicit Error(const String& message) noexcept : _message(message) {}
 		constexpr explicit Error(String&& message) noexcept : _message(Move(message)) {}
 
-		[[nodiscard]] ORION_FORCE_INLINE constexpr StringView Message() const noexcept
-		{
-			return StringView(_message.Data(), _message.Size());
-		}
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 HasMessage() const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr StringView Message() const noexcept;
 	};
 
-	/// @brief TODO
+	/// @brief Represents type-safe container over two \tparam T and \tparam E types.
+	/// In reality, it's just a thin wrapper around C-styled union, with additional member for differentiation which
+	/// value type is present.
+	/// @tparam T Expected type to be stored.
+	/// @tparam E Error type to be stored, if expected type is not present.
 	template <typename T, typename E = Error>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	class Result final
 	{
 		public:
@@ -63,33 +65,35 @@ namespace Orion::Engine
 		ORION_FORCE_INLINE constexpr ValueType* operator->() noexcept;
 		ORION_FORCE_INLINE constexpr const ValueType* operator->() const noexcept;
 
-		/// @brief TODO
+		/// @brief Checks if Result contains a value type at this given moment.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsValue() const noexcept;
 
-		/// @brief TODO
+		/// @brief Checks if Result contains an error type at this given moment.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsError() const noexcept;
 
-		/// @brief TODO
+		/// @brief Returns value contained by this Result.
+		/// @warning Assumes that IsValue() has returned true - otherwise the behavior is not defined.
 		/// @{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& Value() const noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& Value() noexcept;
 		/// @}
 
-		/// @brief TODO
+		/// @brief Returns value contained by this Result if it is present, or \p value otherwise.
 		/// @{
-		[[nodiscard]] constexpr ValueType& ValueOr(const ValueType&) noexcept;
-		[[nodiscard]] constexpr ValueType& ValueOr(ValueType&&) noexcept;
-		[[nodiscard]] constexpr const ValueType& ValueOr(const ValueType&) const noexcept;
-		[[nodiscard]] constexpr const ValueType& ValueOr(ValueType&&) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& ValueOr(const ValueType& value) noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& ValueOr(ValueType&& value) noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& ValueOr(const ValueType& value) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& ValueOr(ValueType&& value) const noexcept;
 		/// @}
 
-		/// @brief TODO
+		/// @brief Returns value contained by this Result if it is present, or default value for type otherwise.
 		/// @{
-		[[nodiscard]] constexpr ValueType& ValueOrDefault() noexcept;
-		[[nodiscard]] constexpr const ValueType& ValueOrDefault() const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& ValueOrDefault() noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& ValueOrDefault() const noexcept;
 		/// @}
 
-		/// @brief TODO
+		/// @brief Returns error value contained by this Result.
+		/// @warning Assumes that IsError() has returned true - otherwise the behavior is not defined.
 		/// @{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr const ErrorType& Error() const noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ErrorType& Error() noexcept;
@@ -97,40 +101,48 @@ namespace Orion::Engine
 	};
 
 	// -- Implementation.
+	ORION_FORCE_INLINE constexpr auto Error::HasMessage() const noexcept -> Bool8
+	{
+		return _message.IsEmpty();
+	}
+	ORION_FORCE_INLINE constexpr auto Error::Message() const noexcept -> StringView
+	{
+		return StringView(_message.Data(), _message.Size());
+	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr Result<T, E>::Result(const ValueType& value) noexcept : _value(value), _has_value(true)
 	{
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr Result<T, E>::Result(ValueType&& value) noexcept : _value(Move(value)), _has_value(true)
 	{
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr Result<T, E>::Result(const ErrorType& error) noexcept : _error(error), _has_value(false)
 	{
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr Result<T, E>::Result(ErrorType&& error) noexcept : _error(Move(error)), _has_value(false)
 	{
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr Result<T, E>::~Result() noexcept
 	{
 		_has_value ? _value.~ValueType() : _error.~ErrorType();
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(ValueType&& value) noexcept -> Result&
 	{
 		ORION_IGNORE_PARAM(value);
@@ -138,7 +150,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(const ValueType& value) noexcept -> Result&
 	{
 		ORION_IGNORE_PARAM(value);
@@ -146,7 +158,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(ErrorType&& error) noexcept -> Result&
 	{
 		ORION_IGNORE_PARAM(error);
@@ -154,7 +166,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(const ErrorType& error) noexcept -> Result&
 	{
 		ORION_IGNORE_PARAM(error);
@@ -162,7 +174,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() & noexcept -> ValueType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -170,7 +182,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() const& noexcept -> const ValueType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -178,7 +190,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() && noexcept -> ValueType&&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -186,7 +198,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator*() const&& noexcept -> const ValueType&&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -194,7 +206,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator->() noexcept -> ValueType*
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -202,7 +214,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	ORION_FORCE_INLINE constexpr auto Result<T, E>::operator->() const noexcept -> const ValueType*
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -210,21 +222,21 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::IsValue() const noexcept -> Bool8
 	{
 		return _has_value;
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::IsError() const noexcept -> Bool8
 	{
 		return !_has_value;
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Value() const noexcept -> const ValueType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -232,7 +244,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Value() noexcept -> ValueType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -240,49 +252,51 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
-	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(const ValueType&) noexcept -> ValueType&
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::ValueOr(const ValueType& value) noexcept -> ValueType&
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _has_value ? _value : value;
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
-	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(ValueType&&) noexcept -> ValueType&
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::ValueOr(ValueType&& value) noexcept -> ValueType&
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _has_value ? _value : value;
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
-	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(const ValueType&) const noexcept -> const ValueType&
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::ValueOr(const ValueType& value) const noexcept
+		-> const ValueType&
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _has_value ? _value : value;
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
-	[[nodiscard]] constexpr auto Result<T, E>::ValueOr(ValueType&&) const noexcept -> const ValueType&
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::ValueOr(ValueType&& value) const noexcept
+		-> const ValueType&
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _has_value ? _value : value;
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
-	[[nodiscard]] constexpr auto Result<T, E>::ValueOrDefault() noexcept -> ValueType&
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::ValueOrDefault() noexcept -> ValueType&
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _has_value ? _value : ValueType();
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
-	[[nodiscard]] constexpr auto Result<T, E>::ValueOrDefault() const noexcept -> const ValueType&
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::ValueOrDefault() const noexcept -> const ValueType&
 	{
-		ORION_NOT_IMPLEMENTED();
+		return _has_value ? _value : ValueType();
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Error() const noexcept -> const ErrorType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(!_has_value);
@@ -290,7 +304,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T, typename E>
-		requires(!IsLValueReference<T> && !IsLValueReference<E>)
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	[[nodiscard]] ORION_FORCE_INLINE constexpr auto Result<T, E>::Error() noexcept -> ErrorType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(!_has_value);

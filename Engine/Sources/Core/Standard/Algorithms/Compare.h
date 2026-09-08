@@ -2,6 +2,7 @@
 
 #include "OrionEngine.h"
 
+#include "Core/Standard/Math/Math.h"
 #include "Core/Standard/TypeTraits.h"
 #include "Platform/Memory.h"
 
@@ -46,10 +47,10 @@ namespace Orion::Engine::Algorithm
 	/// @brief TODO
 	/// @tparam T TODO
 	/// @tparam SizeType TODO
-	/// @param lhs TODO
-	/// @param rhs TODO
-	/// @param lhs_count TODO
-	/// @param rhs_count TODO
+	/// @param[IN, REQUIRED] lhs TODO
+	/// @param[IN, REQUIRED] rhs TODO
+	/// @param[IN, REQUIRED] lhs_count TODO
+	/// @param[IN, REQUIRED] rhs_count TODO
 	template <typename T, typename SizeType = USize>
 	[[nodiscard]] constexpr Int32 Compare(const T* lhs, const T* rhs, SizeType lhs_count, SizeType rhs_count) noexcept
 	{
@@ -60,7 +61,7 @@ namespace Orion::Engine::Algorithm
 			return 0;
 		}
 
-		SizeType count = ORION_MIN(lhs_count, rhs_count);
+		SizeType count = Math::Min(lhs_count, rhs_count);
 		if constexpr (IsTriviallyConstructible<T>) {
 			SizeType size_in_bytes = sizeof(T) * count;
 			Int32 result           = Platform::MemoryCompare(lhs, rhs, size_in_bytes);

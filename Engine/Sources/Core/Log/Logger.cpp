@@ -20,11 +20,7 @@ namespace Orion::Engine::Logger
 		return logger;
 	}
 
-	void LoggerSystem::Initialize() noexcept
-	{
-	}
+	void LoggerSystem::Initialize() noexcept {}
 
-	void LoggerSystem::Shutdown() noexcept
-	{
-	}
-}  // namespace Orion::Engine::Log
+	void LoggerSystem::Shutdown() noexcept {}
+}  // namespace Orion::Engine::Logger

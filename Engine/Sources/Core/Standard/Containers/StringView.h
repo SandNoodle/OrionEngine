@@ -6,6 +6,7 @@
 #include "Core/Standard/Algorithms/Hash.h"
 #include "Core/Standard/Containers/Detail/StringFwd.h"
 #include "Core/Standard/Limits.h"
+#include "Core/Standard/Math/Math.h"
 #include "Core/Standard/Utility/StringUtils.h"
 #include "Platform/Memory.h"
 
@@ -52,9 +53,9 @@ namespace Orion::Engine
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<(const ThisType& other) const noexcept;
 
-			/// @brief TODO
-			/// @param [IN, REQUIRED] begin TODO
-			/// @param [IN, REQUIRED] end TODO
+			/// @brief Creates new StringView of some range [\p begin, \p end] from this one.
+			/// @param[IN, REQUIRED] begin Start index of the subview (inclusive).
+			/// @param[IN, REQUIRED] end End index of the subview (inclusive).
 			/// @{
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ThisType SubView(SizeType begin, SizeType end) noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ThisType SubView(SizeType begin, SizeType end) const noexcept;
@@ -340,7 +341,7 @@ namespace Orion::Engine
 				return !other._data;
 			}
 
-			SizeType size_in_bytes = ORION_MIN(_size, other._size) * sizeof(CharType);
+			SizeType size_in_bytes = Math::Min(_size, other._size) * sizeof(CharType);
 			return Platform::MemoryCompare(_data, other._data, size_in_bytes) < 0;
 		}
 

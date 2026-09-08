@@ -2,7 +2,7 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/Concepts.h"
+#include "Core/Standard/TypeTraits.h"
 
 namespace Orion::Engine
 {

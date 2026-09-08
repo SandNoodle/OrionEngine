@@ -98,10 +98,6 @@ static constexpr bool k_orion_build_distribution = true;
 #define ORION_BYTES(x) ((x))
 
 // ---- [ Miscellaneous ] ----
-#define ORION_MIN(x, y) ((x) < (y) ? (x) : (y))
-#define ORION_MAX(x, y) ((x) > (y) ? (x) : (y))
-#define ORION_CLAMP(v, min, max) (((v) <= (min)) ? (min) : ((v) >= (max)) ? (max) : (v))
-
 #define ORION_IGNORE_PARAM(x, ...) (void)(x)
 
 #define ORION_EXIT_SUCCESS 0

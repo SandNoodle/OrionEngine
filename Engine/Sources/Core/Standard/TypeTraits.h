@@ -160,6 +160,7 @@ namespace Orion::Engine
 #endif
 
 #if defined(ORION_COMPILER_CLANG)
+	/// @brief Verifies if a given type is a floating point type.
 	template <typename T>
 	inline constexpr bool IsFloatingPoint = __is_floating_point(T);
 #else
@@ -191,23 +192,44 @@ namespace Orion::Engine
 	template <typename T>
 	inline constexpr bool IsPointer = Detail::IsPointer<T>;
 
+	/// @brief Verifies if a given type is an integer type.
+	template <typename T>
+	inline constexpr bool IsInteger = false;
+
+	// clang-format off
+	template <> inline constexpr bool IsInteger<UInt8> = true;
+	template <> inline constexpr bool IsInteger<UInt16> = true;
+	template <> inline constexpr bool IsInteger<UInt32> = true;
+	template <> inline constexpr bool IsInteger<UInt64> = true;
+	template <> inline constexpr bool IsInteger<Int8> = true;
+	template <> inline constexpr bool IsInteger<Int16> = true;
+	template <> inline constexpr bool IsInteger<Int32> = true;
+	template <> inline constexpr bool IsInteger<Int64> = true;
+	template <> inline constexpr bool IsInteger<UInt128> = true;
+	template <> inline constexpr bool IsInteger<Int128> = true;
+
+	template <typename T> inline constexpr bool IsInteger<const T> = IsInteger<T>;
+	template <typename T> inline constexpr bool IsInteger<volatile T> = IsInteger<T>;
+	template <typename T> inline constexpr bool IsInteger<const volatile T> = IsInteger<T>;
+	// clang-format on
+
 	template <typename T>
 	inline constexpr bool IsArithmetic = false;
 
 	// clang-format off
-	template <> inline constexpr bool IsArithmetic<bool>  = true;
-	template <> inline constexpr bool IsArithmetic<UInt8>  = true;
-	template <> inline constexpr bool IsArithmetic<UInt16>  = true;
-	template <> inline constexpr bool IsArithmetic<UInt32>  = true;
-	template <> inline constexpr bool IsArithmetic<UInt64>  = true;
-	template <> inline constexpr bool IsArithmetic<Int8>  = true;
-	template <> inline constexpr bool IsArithmetic<Int16>  = true;
-	template <> inline constexpr bool IsArithmetic<Int32>  = true;
-	template <> inline constexpr bool IsArithmetic<Int64>  = true;
-	template <> inline constexpr bool IsArithmetic<Float32>  = true;
-	template <> inline constexpr bool IsArithmetic<Float64>  = true;
-	template <> inline constexpr bool IsArithmetic<UInt128>  = true;
-	template <> inline constexpr bool IsArithmetic<Int128>  = true;
+	template <> inline constexpr bool IsArithmetic<bool> = true;
+	template <> inline constexpr bool IsArithmetic<UInt8> = true;
+	template <> inline constexpr bool IsArithmetic<UInt16> = true;
+	template <> inline constexpr bool IsArithmetic<UInt32> = true;
+	template <> inline constexpr bool IsArithmetic<UInt64> = true;
+	template <> inline constexpr bool IsArithmetic<Int8> = true;
+	template <> inline constexpr bool IsArithmetic<Int16> = true;
+	template <> inline constexpr bool IsArithmetic<Int32> = true;
+	template <> inline constexpr bool IsArithmetic<Int64> = true;
+	template <> inline constexpr bool IsArithmetic<Float32> = true;
+	template <> inline constexpr bool IsArithmetic<Float64> = true;
+	template <> inline constexpr bool IsArithmetic<UInt128> = true;
+	template <> inline constexpr bool IsArithmetic<Int128> = true;
 
 	template <typename T> inline constexpr bool IsArithmetic<const T> = IsArithmetic<T>;
 	template <typename T> inline constexpr bool IsArithmetic<volatile T> = IsArithmetic<T>;

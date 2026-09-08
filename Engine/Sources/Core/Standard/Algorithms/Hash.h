@@ -7,10 +7,8 @@
 
 namespace Orion::Engine::Algorithm
 {
-	/**
-	 * @brief TODO
-	 * @tparam T Type to be hashed.
-	 */
+	/// @brief TODO
+	/// @tparam T Type to be hashed.
 	template <typename T>
 	struct Hash
 	{

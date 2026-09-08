@@ -8,13 +8,11 @@
 
 namespace Orion::Engine
 {
-	/**
-	 * @brief Represents type-safe linear container of a fixed type.
-	 * In reality, it's just a thin wrapper around C-styled arrays that does not decay to a pointer and contains some
-	 * generic methods for convenience.
-	 * @tparam T Type to be stored.
-	 * @tparam N Maximum amount of elements that can be stored.
-	 */
+	/// @brief Represents type-safe linear container of a fixed type.
+	/// In reality, it's just a thin wrapper around C-styled arrays that does not decay to a pointer and contains some
+	/// generic methods for convenience.
+	/// @tparam T Type to be stored.
+	/// @tparam N Maximum amount of elements that can be stored.
 	template <typename T, USize N>
 	struct Array
 	{
