@@ -10,15 +10,14 @@ namespace Orion::Engine::UT
 {
 	using StringTestTypes = ::testing::Types<String, StringUTF8, StringUTF16, StringUTF32>;
 
+	static constexpr CString k_cstring_literal    = "Some C-styled string literal.";
+	static constexpr USize k_cstring_literal_size = StringLength<Detail::StringEncoding::ANSI>(k_cstring_literal);
+
 	namespace
 	{
 		template <typename T>
 		class StringTest : public ::testing::Test
 		{
-			protected:
-			static constexpr CString k_cstring_literal = "Some C-styled string literal.";
-			static constexpr USize k_cstring_literal_size
-				= StringLength<Detail::StringEncoding::ANSI>(k_cstring_literal);
 		};
 	}  // namespace
 	TYPED_TEST_SUITE(StringTest, StringTestTypes);
@@ -33,40 +32,55 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST(StringTest, Constructor_FromStringLiteral)
 	{
-		TypeParam s{ this->k_cstring_literal };
+		TypeParam s{ k_cstring_literal };
 		EXPECT_FALSE(s.IsEmpty());
-		EXPECT_EQ(s.Size(), this->k_cstring_literal_size);
-		EXPECT_EQ(s.ByteSize(), this->k_cstring_literal_size * sizeof(typename TypeParam::CharType));
+		EXPECT_EQ(s.Size(), k_cstring_literal_size);
+		EXPECT_EQ(s.ByteSize(), k_cstring_literal_size * sizeof(typename TypeParam::CharType));
 
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s[index], this->k_cstring_literal[index]);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s[index], k_cstring_literal[index]);
 		}
 	}
 
 	TYPED_TEST(StringTest, Constructor_WithPointerAndSize)
 	{
-		typename TypeParam::ValueType character_buffer[128] = {};
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			character_buffer[index] = static_cast<TypeParam::ValueType>(this->k_cstring_literal[index]);
+		Array<typename TypeParam::CharType, k_cstring_literal_size> character_buffer = {};
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			character_buffer[index] = static_cast<TypeParam::ValueType>(k_cstring_literal[index]);
 		}
 
-		TypeParam s(character_buffer, this->k_cstring_literal_size);
+		TypeParam s(character_buffer.Data(), k_cstring_literal_size);
 		EXPECT_FALSE(s.IsEmpty());
-		EXPECT_EQ(s.Size(), this->k_cstring_literal_size);
-		EXPECT_EQ(s.ByteSize(), this->k_cstring_literal_size * sizeof(typename TypeParam::CharType));
+		EXPECT_EQ(s.Size(), k_cstring_literal_size);
+		EXPECT_EQ(s.ByteSize(), k_cstring_literal_size * sizeof(typename TypeParam::CharType));
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s[index], character_buffer[index]);
+		}
+	}
 
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
+	TYPED_TEST(StringTest, Constructor_FromRange)
+	{
+		Array<typename TypeParam::CharType, k_cstring_literal_size> character_buffer = {};
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			character_buffer[index] = static_cast<TypeParam::ValueType>(k_cstring_literal[index]);
+		}
+
+		TypeParam s(character_buffer.begin(), character_buffer.end());
+		EXPECT_FALSE(s.IsEmpty());
+		EXPECT_EQ(s.Size(), k_cstring_literal_size);
+		EXPECT_EQ(s.ByteSize(), k_cstring_literal_size * sizeof(typename TypeParam::CharType));
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
 			EXPECT_EQ(s[index], character_buffer[index]);
 		}
 	}
 
 	TYPED_TEST(StringTest, Constructor_Copy)
 	{
-		TypeParam s1(this->k_cstring_literal);
+		TypeParam s1(k_cstring_literal);
 		EXPECT_FALSE(s1.IsEmpty());
-		ASSERT_EQ(s1.Size(), this->k_cstring_literal_size);
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s1[index], this->k_cstring_literal[index]);
+		ASSERT_EQ(s1.Size(), k_cstring_literal_size);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s1[index], k_cstring_literal[index]);
 		}
 
 		TypeParam s2(s1);
@@ -79,28 +93,28 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST(StringTest, Constructor_Move)
 	{
-		TypeParam s1(this->k_cstring_literal);
+		TypeParam s1(k_cstring_literal);
 		EXPECT_FALSE(s1.IsEmpty());
-		ASSERT_EQ(s1.Size(), this->k_cstring_literal_size);
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s1[index], this->k_cstring_literal[index]);
+		ASSERT_EQ(s1.Size(), k_cstring_literal_size);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s1[index], k_cstring_literal[index]);
 		}
 
 		TypeParam s2(Move(s1));
 		EXPECT_FALSE(s2.IsEmpty());
-		ASSERT_EQ(s2.Size(), this->k_cstring_literal_size);
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s2[index], this->k_cstring_literal[index]);
+		ASSERT_EQ(s2.Size(), k_cstring_literal_size);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s2[index], k_cstring_literal[index]);
 		}
 	}
 
 	TYPED_TEST(StringTest, Operator_Copy)
 	{
-		TypeParam s1(this->k_cstring_literal);
+		TypeParam s1(k_cstring_literal);
 		EXPECT_FALSE(s1.IsEmpty());
-		ASSERT_EQ(s1.Size(), this->k_cstring_literal_size);
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s1[index], this->k_cstring_literal[index]);
+		ASSERT_EQ(s1.Size(), k_cstring_literal_size);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s1[index], k_cstring_literal[index]);
 		}
 
 		TypeParam s2;
@@ -118,11 +132,11 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST(StringTest, Operator_Move)
 	{
-		TypeParam s1(this->k_cstring_literal);
+		TypeParam s1(k_cstring_literal);
 		EXPECT_FALSE(s1.IsEmpty());
-		ASSERT_EQ(s1.Size(), this->k_cstring_literal_size);
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s1[index], this->k_cstring_literal[index]);
+		ASSERT_EQ(s1.Size(), k_cstring_literal_size);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s1[index], k_cstring_literal[index]);
 		}
 
 		TypeParam s2;
@@ -132,9 +146,9 @@ namespace Orion::Engine::UT
 
 		s2 = Move(s1);
 		EXPECT_FALSE(s2.IsEmpty());
-		ASSERT_EQ(s2.Size(), this->k_cstring_literal_size);
-		for (USize index = 0; index < this->k_cstring_literal_size; ++index) {
-			EXPECT_EQ(s2[index], this->k_cstring_literal[index]);
+		ASSERT_EQ(s2.Size(), k_cstring_literal_size);
+		for (USize index = 0; index < k_cstring_literal_size; ++index) {
+			EXPECT_EQ(s2[index], k_cstring_literal[index]);
 		}
 	}
 
@@ -179,8 +193,8 @@ namespace Orion::Engine::UT
 		verify(&character, 1);
 
 		// C-styled string literal
-		s.Append(this->k_cstring_literal);
-		verify(this->k_cstring_literal, this->k_cstring_literal_size);
+		s.Append(k_cstring_literal);
+		verify(k_cstring_literal, k_cstring_literal_size);
 
 		// StringView
 		Detail::StringViewBase<TypeParam::TraitType::k_encoding> view(buffer, k_buffer_size);

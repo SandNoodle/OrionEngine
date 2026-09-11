@@ -27,10 +27,6 @@ namespace Orion::Engine::Platform::FileSystem
 		constexpr explicit LocalStorageProvider(const AllocatorType& allocator = AllocatorType()) noexcept;
 		constexpr ~LocalStorageProvider() override = default;
 
-		/// @brief TODO
-		/// @param[IN, REQUIRED] allocator TODO
-		[[nodiscard]] static constexpr ThisType* Create(AllocatorType& allocator = AllocatorType()) noexcept;
-
 		[[nodiscard]] StorageProviderProtocol Protocol() noexcept override;
 		[[nodiscard]] Optional<IOError> Create(StringView path) noexcept override;
 		[[nodiscard]] Optional<IOError> Remove(StringView path) noexcept override;
@@ -48,7 +44,10 @@ namespace Orion::Engine::Platform::FileSystem
 	class LocalStorageFileWriter final : public IStorageFileWriter
 	{
 		public:
+		constexpr LocalStorageFileWriter(StringView path);
 		~LocalStorageFileWriter() override = default;
+
+		private:
 	};
 
 	/// @brief TODO
@@ -61,19 +60,14 @@ namespace Orion::Engine::Platform::FileSystem
 
 	// -- Implementation.
 	template <Memory::AllocatorKind Allocator>
-	constexpr LocalStorageProvider<Allocator>::LocalStorageProvider(const AllocatorType& allocator) noexcept
-		: _allocator(allocator)
+	constexpr LocalStorageFileWriter<Allocator>::LocalStorageFileWriter(StringView path)
 	{
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	constexpr auto LocalStorageProvider<Allocator>::Create(AllocatorType& allocator) noexcept -> ThisType*
+	constexpr LocalStorageProvider<Allocator>::LocalStorageProvider(const AllocatorType& allocator) noexcept
+		: _allocator(allocator)
 	{
-		ThisType* provider = Memory::Allocate<ThisType>(allocator);
-		if (provider) {
-			Memory::ConstructItem(provider, allocator);
-		}
-		return provider;
 	}
 
 	template <Memory::AllocatorKind Allocator>
@@ -108,8 +102,7 @@ namespace Orion::Engine::Platform::FileSystem
 	template <Memory::AllocatorKind Allocator>
 	auto LocalStorageProvider<Allocator>::Write(StringView path) noexcept -> IOResult<IStorageFileWriter*>
 	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
+		return Memory::AllocateConstruct<LocalStorageFileWriter<AllocatorType>>(_allocator, path);
 	}
 
 	template <Memory::AllocatorKind Allocator>

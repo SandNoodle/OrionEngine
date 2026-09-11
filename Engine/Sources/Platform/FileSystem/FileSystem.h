@@ -86,6 +86,9 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] constexpr Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept;
 
 		private:
+		template <typename Provider>
+		[[nodiscard]] constexpr IStorageProvider* CreateProvider() noexcept;
+		constexpr void DestroyProvider(IStorageProvider* storage_provider) noexcept;
 		[[nodiscard]] constexpr Bool8 RegisterStorageProvider(StorageProviderProtocol protocol,
 		                                                      IStorageProvider* storage_provider) noexcept;
 		[[nodiscard]] constexpr IOResult<Pair<IStorageProvider*, StringView>> GetProviderAndPath(
@@ -99,10 +102,8 @@ namespace Orion::Engine::Platform::FileSystem
 		ORION_LOG_DEBUG("[FileSystem] Initializing...");
 		Bool8 is_initialized = true;
 
-		LocalStorageProvider<AllocatorType>* local_storage_provider
-			= LocalStorageProvider<AllocatorType>::Create(_allocator);
-		MemoryStorageProvider<AllocatorType>* memory_storage_provider
-			= MemoryStorageProvider<AllocatorType>::Create(_allocator);
+		IStorageProvider* local_storage_provider  = CreateProvider<LocalStorageProvider<AllocatorType>>();
+		IStorageProvider* memory_storage_provider = CreateProvider<MemoryStorageProvider<AllocatorType>>();
 
 		is_initialized &= RegisterStorageProvider(StorageProviderProtocol::Local, local_storage_provider);
 		is_initialized &= RegisterStorageProvider(StorageProviderProtocol::Memory, memory_storage_provider);
@@ -115,7 +116,10 @@ namespace Orion::Engine::Platform::FileSystem
 	constexpr auto FileSystem<Allocator>::Shutdown() noexcept -> Bool8
 	{
 		ORION_LOG_DEBUG("[FileSystem] Shutting down.");
+		DestroyProvider(_storage_providers[StorageProviderProtocol::Local]);
+		DestroyProvider(_storage_providers[StorageProviderProtocol::Memory]);
 		_storage_providers.Clear();
+		ORION_LOG_DEBUG("[FileSystem] Shut down.");
 		return true;
 	}
 
@@ -192,11 +196,35 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
+	template <typename Provider>
+	constexpr auto FileSystem<Allocator>::CreateProvider() noexcept -> IStorageProvider*
+	{
+		Provider* storage_provider = Memory::Allocate<Provider>(_allocator);
+		if (storage_provider) {
+			Memory::ConstructItem(storage_provider, _allocator);
+		}
+		return storage_provider;
+	}
+
+	template <Memory::AllocatorKind Allocator>
+	constexpr auto FileSystem<Allocator>::DestroyProvider(IStorageProvider* storage_provider) noexcept -> void
+	{
+		if (!storage_provider) {
+			ORION_LOG_WARN("[FileSystem] Attempting to destroy invalid provider (nullptr).");
+			return;
+		}
+		Memory::DestructItems(storage_provider, 1);
+		Memory::Free(_allocator, storage_provider);
+		storage_provider = nullptr;
+	}
+
+	template <Memory::AllocatorKind Allocator>
 	constexpr auto FileSystem<Allocator>::RegisterStorageProvider(StorageProviderProtocol protocol,
 	                                                              IStorageProvider* storage_provider) noexcept -> Bool8
 	{
 		if (!storage_provider) {
-			ORION_LOG_ERROR("[FileSystem] Failed to initialize StorageProvider (nullptr).");
+			ORION_LOG_ERROR("[FileSystem] Failed to initialize StorageProvider for protocol '{}' (nullptr).",
+			                ProtocolName(protocol));
 			return false;
 		}
 

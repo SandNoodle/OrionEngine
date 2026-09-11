@@ -4,6 +4,7 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Utility/MoveAndForward.h"
 #include "Platform/Memory.h"
 
 namespace Orion::Engine::Memory

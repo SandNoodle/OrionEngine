@@ -236,6 +236,26 @@ namespace Orion::Engine
 	template <typename T> inline constexpr bool IsArithmetic<const volatile T> = IsArithmetic<T>;
 	// clang-format on
 
+	template <typename T>
+	inline constexpr bool IsBitwiseComparable = false;
+	// clang-format off
+	template <> inline constexpr bool IsBitwiseComparable<bool> = true;
+	template <> inline constexpr bool IsBitwiseComparable<UInt8> = true;
+	template <> inline constexpr bool IsBitwiseComparable<UInt16> = true;
+	template <> inline constexpr bool IsBitwiseComparable<UInt32> = true;
+	template <> inline constexpr bool IsBitwiseComparable<UInt64> = true;
+	template <> inline constexpr bool IsBitwiseComparable<Int8> = true;
+	template <> inline constexpr bool IsBitwiseComparable<Int16> = true;
+	template <> inline constexpr bool IsBitwiseComparable<Int32> = true;
+	template <> inline constexpr bool IsBitwiseComparable<Int64> = true;
+	template <> inline constexpr bool IsBitwiseComparable<UInt128> = true;
+	template <> inline constexpr bool IsBitwiseComparable<Int128> = true;
+
+	template <typename T> inline constexpr bool IsBitwiseComparable<const T> = IsBitwiseComparable<T>;
+	template <typename T> inline constexpr bool IsBitwiseComparable<volatile T> = IsBitwiseComparable<T>;
+	template <typename T> inline constexpr bool IsBitwiseComparable<const volatile T> = IsBitwiseComparable<T>;
+	// clang-format on
+
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
 	template <typename T>
 	inline constexpr bool IsEnum = __is_enum(T);

@@ -1,11 +1,18 @@
 #include "TestCommon.h"
 
-#include "Core/Standard/Memory/Allocators/DummyAllocator.h"
-#include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Containers/HashMap.h"
+#include "Core/Standard/Memory/Allocators/DummyAllocator.h"
 
 namespace Orion::Engine::UT
 {
+	// TODO(SandNoodle): Add missing test cases:
+	//                   - operator[]
+	//                   - Insert()
+	//                   - Remove()
+	//                   - Find()
+	//                   - LoadFactor/MaxLoadFactor()
+	//                   - begin() && end()
+
 	namespace
 	{
 		template <typename T>

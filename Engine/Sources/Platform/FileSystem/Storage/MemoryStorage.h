@@ -19,10 +19,6 @@ namespace Orion::Engine::Platform::FileSystem
 		constexpr explicit MemoryStorageProvider(const AllocatorType& allocator = AllocatorType()) noexcept;
 		~MemoryStorageProvider() override = default;
 
-		/// @brief TODO
-		/// @param[IN, REQUIRED] allocator TODO
-		[[nodiscard]] static constexpr ThisType* Create(AllocatorType& allocator = AllocatorType()) noexcept;
-
 		[[nodiscard]] StorageProviderProtocol Protocol() noexcept override;
 		[[nodiscard]] Optional<IOError> Create(StringView path) noexcept override;
 		[[nodiscard]] Optional<IOError> Remove(StringView path) noexcept override;
@@ -61,16 +57,6 @@ namespace Orion::Engine::Platform::FileSystem
 	constexpr MemoryStorageProvider<Allocator>::MemoryStorageProvider(const AllocatorType& allocator) noexcept
 		: _allocator(allocator)
 	{
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	constexpr auto MemoryStorageProvider<Allocator>::Create(AllocatorType& allocator) noexcept -> ThisType*
-	{
-		ThisType* provider = Memory::Allocate<ThisType>(allocator);
-		if (provider) {
-			Memory::ConstructItem(provider, allocator);
-		}
-		return provider;
 	}
 
 	template <Memory::AllocatorKind Allocator>

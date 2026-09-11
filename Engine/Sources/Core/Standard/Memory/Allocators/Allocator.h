@@ -2,7 +2,10 @@
 
 #include "OrionEngine.h"
 
+#include "Core/Assert.h"
 #include "Core/Standard/Concepts.h"
+#include "Core/Standard/Memory/Lifetime.h"
+#include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine::Memory
 {
@@ -25,6 +28,16 @@ namespace Orion::Engine::Memory
 		return static_cast<T*>(allocator.Allocate(sizeof(T), alignment));
 	}
 
+	template <typename T, typename... Args>
+	[[nodiscard]] ORION_FORCE_INLINE constexpr T* AllocateConstruct(AllocatorKind auto& allocator, Args&&... args)
+	{
+		T* ptr = Allocate<T>(allocator);
+		if (ptr) [[likely]] {
+			Memory::ConstructItem(ptr, Forward<Args>(args)...);
+		}
+		return ptr;
+	}
+
 	/// @brief Helper function that performs type-sized allocation of \p count elements.
 	/// @tparam T (sizeof) Type to be allocated.
 	/// @param[IN, REQUIRED] allocator Allocator which will perform the allocation.
@@ -40,12 +53,24 @@ namespace Orion::Engine::Memory
 
 	/// @brief Helper function that performs type-sized free of an allocated memory region.
 	/// @tparam T (sizeof) Type to be freed.
-	/// @param[IN, REQUIRED] allocator Allocator which will perform the allocation.
+	/// @param[IN, REQUIRED] allocator Allocator which will perform the deallocation.
 	/// @param[IN, REQUIRED] ptr Pointer to a memory region to be freed.
 	template <typename T>
 	ORION_FORCE_INLINE constexpr void Free(AllocatorKind auto& allocator, T* ptr)
 	{
 		allocator.Free(ptr);
+	}
+
+	/// @brief Helper function that calls type's destructor and frees type-sized allocated memory region.
+	/// @tparam T (sizeof) Type to be freed.
+	/// @param[IN, REQUIRED] allocator Allocator which will perform the deallocation.
+	/// @param[IN, REQUIRED] ptr Pointer to a memory region to be freed.
+	template <typename T>
+	ORION_FORCE_INLINE constexpr void FreeDestruct(AllocatorKind auto& allocator, T* ptr)
+	{
+		ORION_ASSERT_DEBUG(ptr);
+		Memory::DestructItems(ptr, 1);
+		Free(allocator, ptr);
 	}
 
 }  // namespace Orion::Engine::Memory

@@ -63,6 +63,10 @@ namespace Orion::Engine
 		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> stat_result = file_system.Stat(file);
 		ORION_ASSERT(stat_result.IsValue(), "Failed to stat a file.");
 
+		Platform::FileSystem::IOResult<Platform::FileSystem::IStorageFileWriter*> storage_file_write
+			= file_system.Write(file);
+		ORION_ASSERT(stat_result.IsValue(), "Failed to open file for writing.");
+
 		Optional<Platform::FileSystem::IOError> remove_result = file_system.Remove(file);
 		ORION_ASSERT(!remove_result.IsValue(), "Failed to remove a file.");
 

@@ -15,14 +15,18 @@ namespace Orion::Engine
 		String _message{};
 
 		public:
-		constexpr explicit Error(const String& message) noexcept : _message(message) {}
-		constexpr explicit Error(String&& message) noexcept : _message(Move(message)) {}
+		constexpr explicit Error() noexcept;
+		constexpr explicit Error(const String& message) noexcept;
+		constexpr explicit Error(String&& message) noexcept;
+
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const Error& other) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const Error& other) const noexcept;
 
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 HasMessage() const noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr StringView Message() const noexcept;
 	};
 
-	/// @brief Represents type-safe container over two \tparam T and \tparam E types.
+	/// @brief Represents a type-safe union of two types; a value type and an error type.
 	/// In reality, it's just a thin wrapper around C-styled union, with additional member for differentiation which
 	/// value type is present.
 	/// @tparam T Expected type to be stored.
@@ -44,20 +48,21 @@ namespace Orion::Engine
 		Bool8 _has_value;
 
 		public:
+		constexpr Result() noexcept;
 		constexpr Result(const ValueType&) noexcept;
 		constexpr Result(ValueType&&) noexcept;
 		constexpr Result(const ErrorType&) noexcept;
 		constexpr Result(ErrorType&&) noexcept;
-		constexpr Result(const Result&) noexcept = default;
-		constexpr Result(Result&&) noexcept      = default;
+		constexpr Result(const Result&) noexcept;
+		constexpr Result(Result&&) noexcept;
 		constexpr ~Result() noexcept;
 
 		constexpr Result& operator=(ValueType&&) noexcept;
 		constexpr Result& operator=(const ValueType&) noexcept;
 		constexpr Result& operator=(ErrorType&&) noexcept;
 		constexpr Result& operator=(const ErrorType&) noexcept;
-		constexpr Result& operator=(const Result&) noexcept = default;
-		constexpr Result& operator=(Result&&) noexcept      = default;
+		constexpr Result& operator=(const Result&) noexcept;
+		constexpr Result& operator=(Result&&) noexcept;
 		ORION_FORCE_INLINE constexpr ValueType& operator*() & noexcept;
 		ORION_FORCE_INLINE constexpr const ValueType& operator*() const& noexcept;
 		ORION_FORCE_INLINE constexpr ValueType&& operator*() && noexcept;
@@ -101,6 +106,21 @@ namespace Orion::Engine
 	};
 
 	// -- Implementation.
+	constexpr Error::Error() noexcept : _message() {}
+
+	constexpr Error::Error(const String& message) noexcept : _message(message) {}
+
+	constexpr Error::Error(String&& message) noexcept : _message(Move(message)) {}
+
+	ORION_FORCE_INLINE constexpr auto Error::operator==(const Error& other) const noexcept -> Bool8
+	{
+		return _message == other._message;
+	}
+	ORION_FORCE_INLINE constexpr auto Error::operator!=(const Error& other) const noexcept -> Bool8
+	{
+		return !(*this == other);
+	}
+
 	ORION_FORCE_INLINE constexpr auto Error::HasMessage() const noexcept -> Bool8
 	{
 		return _message.IsEmpty();
@@ -108,6 +128,12 @@ namespace Orion::Engine
 	ORION_FORCE_INLINE constexpr auto Error::Message() const noexcept -> StringView
 	{
 		return StringView(_message.Data(), _message.Size());
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	constexpr Result<T, E>::Result() noexcept : _value(ValueType()), _has_value(true)
+	{
 	}
 
 	template <typename T, typename E>
@@ -136,6 +162,28 @@ namespace Orion::Engine
 
 	template <typename T, typename E>
 		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	constexpr Result<T, E>::Result(const Result& other) noexcept : _has_value(other._has_value)
+	{
+		if (_has_value) {
+			_value = other._value;
+		} else {
+			_error = other._error;
+		}
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	constexpr Result<T, E>::Result(Result&& other) noexcept : _has_value(other._has_value)
+	{
+		if (_has_value) {
+			_value = Move(other._value);
+		} else {
+			_error = Move(other._error);
+		}
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr Result<T, E>::~Result() noexcept
 	{
 		_has_value ? _value.~ValueType() : _error.~ErrorType();
@@ -145,32 +193,96 @@ namespace Orion::Engine
 		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(ValueType&& value) noexcept -> Result&
 	{
-		ORION_IGNORE_PARAM(value);
-		ORION_NOT_IMPLEMENTED();
+		if (_has_value) {
+			Memory::DestructItems(&_value, 1);
+		} else {
+			Memory::DestructItems(&_error, 1);
+		}
+		_value     = Move(value);
+		_has_value = true;
+		return *this;
 	}
 
 	template <typename T, typename E>
 		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(const ValueType& value) noexcept -> Result&
 	{
-		ORION_IGNORE_PARAM(value);
-		ORION_NOT_IMPLEMENTED();
+		if (_has_value) {
+			Memory::DestructItems(&_value, 1);
+		} else {
+			Memory::DestructItems(&_error, 1);
+		}
+		_value     = value;
+		_has_value = true;
+		return *this;
 	}
 
 	template <typename T, typename E>
 		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(ErrorType&& error) noexcept -> Result&
 	{
-		ORION_IGNORE_PARAM(error);
-		ORION_NOT_IMPLEMENTED();
+		if (_has_value) {
+			Memory::DestructItems(&_value, 1);
+		} else {
+			Memory::DestructItems(&_error, 1);
+		}
+		_error     = Move(error);
+		_has_value = false;
+		return *this;
 	}
 
 	template <typename T, typename E>
 		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
 	constexpr auto Result<T, E>::operator=(const ErrorType& error) noexcept -> Result&
 	{
-		ORION_IGNORE_PARAM(error);
-		ORION_NOT_IMPLEMENTED();
+		if (_has_value) {
+			Memory::DestructItems(&_value, 1);
+		} else {
+			Memory::DestructItems(&_error, 1);
+		}
+		_error     = error;
+		_has_value = false;
+		return *this;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	constexpr auto Result<T, E>::operator=(const Result& other) noexcept -> Result&
+	{
+		if (this != &other) {
+			if (_has_value) {
+				Memory::DestructItems(&_value, 1);
+			} else {
+				Memory::DestructItems(&_error, 1);
+			}
+			_has_value = other._has_value;
+			if (_has_value) {
+				_value = other._value;
+			} else {
+				_error = other._error;
+			}
+		}
+		return *this;
+	}
+
+	template <typename T, typename E>
+		requires(!IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>)
+	constexpr auto Result<T, E>::operator=(Result&& other) noexcept -> Result&
+	{
+		if (this != &other) {
+			if (_has_value) {
+				Memory::DestructItems(&_value, 1);
+			} else {
+				Memory::DestructItems(&_error, 1);
+			}
+			_has_value = other._has_value;
+			if (_has_value) {
+				_value = Move(other._value);
+			} else {
+				_error = Move(other._error);
+			}
+		}
+		return *this;
 	}
 
 	template <typename T, typename E>

@@ -30,17 +30,13 @@ namespace Orion::Engine
 		};
 	}  // namespace Detail
 
-	/**
-	 * @brief Represents a type-safe container capable of holding key-value pairs with unique keys.
-	 *
-	 * @warning
-	 *
-	 * @tparam Key Type of the key in the key-value pair.
-	 * @tparam Value Type of the value in the key-value pair.
-	 * @tparam Hash TODO
-	 * @tparam Predicate TODO
-	 * @tparam Allocator Allocator to be used with the HashMap that will perform all the allocations.
-	 */
+	/// @brief Represents a type-safe container capable of holding key-value pairs with unique keys.
+	/// @warning TODO
+	/// @tparam Key Type of the key in the key-value pair.
+	/// @tparam Value Type of the value in the key-value pair.
+	/// @tparam Hash TODO
+	/// @tparam Predicate TODO
+	/// @tparam Allocator Allocator to be used with the HashMap that will perform all the allocations.
 	template <typename Key,
 	          typename Value,
 	          typename Hash                   = Algorithm::Hash<Key>,

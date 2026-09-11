@@ -22,10 +22,16 @@ enable_testing()
 
 # --- [ Sources ] ---
 set(OrionEngine_UT_SOURCES
-        Core/Standard/Algorithms/SortTest.cpp
+        Core/Standard/Algorithms/CompareTests.cpp
+        Core/Standard/Algorithms/HashTests.cpp
+        Core/Standard/Algorithms/SortTests.cpp
         Core/Standard/Containers/ArrayTests.cpp
         Core/Standard/Containers/HashMapTests.cpp
+        Core/Standard/Containers/OptionalTests.cpp
+        Core/Standard/Containers/PairTests.cpp
+        Core/Standard/Containers/ResultTests.cpp
         Core/Standard/Containers/SpanTests.cpp
+        Core/Standard/Containers/StringViewTests.cpp
         Core/Standard/Containers/StringTests.cpp
         Core/Standard/Containers/VectorTests.cpp
         Platform/FileSystem/Storage/LocalStorageTest.cpp

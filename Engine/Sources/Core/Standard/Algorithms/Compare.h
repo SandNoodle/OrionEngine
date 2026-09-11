@@ -62,7 +62,7 @@ namespace Orion::Engine::Algorithm
 		}
 
 		SizeType count = Math::Min(lhs_count, rhs_count);
-		if constexpr (IsTriviallyConstructible<T>) {
+		if constexpr (IsBitwiseComparable<T>) {
 			SizeType size_in_bytes = sizeof(T) * count;
 			Int32 result           = Platform::MemoryCompare(lhs, rhs, size_in_bytes);
 			if (result == 0) {

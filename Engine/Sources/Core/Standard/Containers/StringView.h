@@ -52,6 +52,9 @@ namespace Orion::Engine
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator<=(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>=(const ThisType& other) const noexcept;
 
 			/// @brief Creates new StringView of some range [\p begin, \p end] from this one.
 			/// @param[IN, REQUIRED] begin Start index of the subview (inclusive).
@@ -94,6 +97,9 @@ namespace Orion::Engine
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType end() const noexcept;
 			///@}
 			// NOLINTEND(readability-identifier-naming)
+
+			private:
+			[[nodiscard]] constexpr Int32 DoCompare(const ThisType& other) const noexcept;
 		};
 	}  // namespace Detail
 
@@ -313,15 +319,7 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator==(const ThisType& other) const noexcept -> Bool8
 		{
-			if (_size != other._size) {
-				return false;
-			}
-
-			if (!_data) {
-				return !other._data;
-			}
-
-			return Platform::MemoryCompare(_data, other._data, ByteSize()) == 0;
+			return DoCompare(other) == 0;
 		}
 
 		template <StringEncoding T>
@@ -333,16 +331,25 @@ namespace Orion::Engine
 		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator<(const ThisType& other) const noexcept -> Bool8
 		{
-			if (_size < other._size) {
-				return true;
-			}
+			return DoCompare(other) < 0;
+		}
 
-			if (!_data) {
-				return !other._data;
-			}
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator<=(const ThisType& other) const noexcept -> Bool8
+		{
+			return DoCompare(other) <= 0;
+		}
 
-			SizeType size_in_bytes = Math::Min(_size, other._size) * sizeof(CharType);
-			return Platform::MemoryCompare(_data, other._data, size_in_bytes) < 0;
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator>(const ThisType& other) const noexcept -> Bool8
+		{
+			return DoCompare(other) > 0;
+		}
+
+		template <StringEncoding T>
+		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::operator>=(const ThisType& other) const noexcept -> Bool8
+		{
+			return DoCompare(other) >= 0;
 		}
 
 		template <StringEncoding T>
@@ -373,6 +380,21 @@ namespace Orion::Engine
 		{
 			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			return _data + _size;
+		}
+
+		template <StringEncoding T>
+		constexpr auto StringViewBase<T>::DoCompare(const ThisType& other) const noexcept -> Int32
+		{
+			if (Size() < other.Size()) {
+				return true;
+			}
+
+			if (!Data()) {
+				return !other.Data();
+			}
+
+			SizeType size_in_bytes = Math::Min(Size(), other.Size()) * sizeof(CharType);
+			return Platform::MemoryCompare(Data(), other.Data(), size_in_bytes);
 		}
 	}  // namespace Detail
 }  // namespace Orion::Engine

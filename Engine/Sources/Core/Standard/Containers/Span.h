@@ -10,14 +10,19 @@
 
 namespace Orion::Engine
 {
+	/// @brief TODO
 	template <typename ContainerT>
 	concept SpannableKind = requires(ContainerT container) {
 		{ container.Size() } -> SameAs<typename ContainerT::SizeType>;
 		{ container.Data() } -> SameAs<typename ContainerT::PointerType>;
 	};
 
+	/// @brief TODO
 	static constexpr USize k_dynamic_extent = NumericLimits<USize>::Max();
 
+	/// @brief TODO
+	/// @tparam T TODO
+	/// @tparam Extent TODO
 	template <typename T, USize Extent = k_dynamic_extent>
 	class Span
 	{
@@ -61,15 +66,15 @@ namespace Orion::Engine
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Data() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Data() const noexcept;
 
-		/// Verifies if the container is empty, i.e. points to 0 elements.
+		/// @brief Verifies if the container is empty, i.e. points to 0 elements.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 IsEmpty() const noexcept;
 
-		/// Returns the amount of elements that this container points to.
+		/// @brief Returns the amount of elements that this container points to.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr SizeType Size() const noexcept;
 
 		public:
 		// NOLINTBEGIN(readability-identifier-naming)
-		/** Required overload for the C++'s for range loops. */
+		/// @brief Required overload for the C++'s for range loops.
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType begin() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType begin() const noexcept;
