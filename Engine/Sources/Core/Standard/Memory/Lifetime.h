@@ -16,7 +16,7 @@ namespace Orion::Engine::Memory
 	 */
 	///@{
 	template <typename ItemType, typename SizeType = USize>
-		requires(sizeof(ItemType) > 0 && !!IsZeroConstructible<ItemType>)
+		requires(sizeof(ItemType) > 0 && IsZeroConstructible<ItemType>)
 	ORION_FORCE_INLINE void DefaultConstructItems(ItemType* dst, SizeType count) noexcept
 	{
 		if (count) {
@@ -55,7 +55,7 @@ namespace Orion::Engine::Memory
 	}
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 		requires(sizeof(SourceItemType) > 0 && sizeof(DestinationItemType) > 0
-	             && !!IsTriviallyConstructible<DestinationItemType>)
+	             && IsTriviallyConstructible<DestinationItemType>)
 	ORION_FORCE_INLINE void ConstructItems(DestinationItemType* dst, const SourceItemType* src, SizeType count) noexcept
 	{
 		if (count) {

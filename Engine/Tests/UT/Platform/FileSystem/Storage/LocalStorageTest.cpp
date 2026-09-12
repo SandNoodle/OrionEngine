@@ -4,6 +4,7 @@
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Platform/FileSystem/Storage/LocalStorage.h"
+#include "Platform/Platform.h"
 
 namespace Orion::Engine::Platform::FileSystem
 {
@@ -14,7 +15,23 @@ namespace Orion::Engine::Platform::FileSystem
 			protected:
 			Memory::PlatformAllocator _allocator{};
 			LocalStorageProvider<Memory::PlatformAllocator> _storage_provider{ _allocator };
+
+			protected:
+			void SetUp() override;
 		};
+
+		void LocalStorageTest::SetUp()
+		{
+			static const StringView k_base_test_path = ORION_STRINGVIEW("./LocalStorageTestFiles");
+			if (DirectoryExists(k_base_test_path)) {
+				Vector<PlatformFileStat> files = ListFiles(k_base_test_path, true);
+				for (const PlatformFileStat& file_stat : files) {
+					if (!FileRemove(StringView(file_stat.file_name.begin(), file_stat.file_name.end()))) {
+						GTEST_FAIL() << "Failed to remove a file: " << file_stat.file_name;
+					}
+				}
+			}
+		}
 	}  // namespace
 
 	TEST_F(LocalStorageTest, Protocol)

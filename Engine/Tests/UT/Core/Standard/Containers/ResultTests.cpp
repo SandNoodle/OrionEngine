@@ -61,9 +61,9 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(ResultTest, Constructor_Error_ByCopy)
 	{
-		Error error(k_error_message);
+		Error e(k_error_message);
 
-		Result<TypeParam> r{ error };
+		Result<TypeParam> r{ e };
 		EXPECT_FALSE(r.IsValue());
 		EXPECT_TRUE(r.IsError());
 		EXPECT_EQ(r.Error(), Error(k_error_message));
@@ -71,9 +71,9 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(ResultTest, Constructor_Error_ByMove)
 	{
-		Error error(k_error_message);
+		Error e(k_error_message);
 
-		Result<TypeParam> r{ Move(error) };
+		Result<TypeParam> r{ Move(e) };
 		EXPECT_FALSE(r.IsValue());
 		EXPECT_TRUE(r.IsError());
 		EXPECT_EQ(r.Error(), Error(k_error_message));
@@ -90,6 +90,12 @@ namespace Orion::Engine::UT
 		EXPECT_EQ(*r1, Value<TypeParam>(1));
 
 		Result<TypeParam> r2(r1);
+
+		EXPECT_TRUE(r1.IsValue());
+		EXPECT_FALSE(r1.IsError());
+		EXPECT_EQ(r1.Value(), Value<TypeParam>(1));
+		EXPECT_EQ(*r1, Value<TypeParam>(1));
+
 		EXPECT_TRUE(r2.IsValue());
 		EXPECT_FALSE(r2.IsError());
 		EXPECT_EQ(r2.Value(), Value<TypeParam>(1));
@@ -115,9 +121,9 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(ResultTest, Operator_Value_ByCopy)
 	{
-		Error error(k_error_message);
+		Error e(k_error_message);
 
-		Result<TypeParam> r{ error };
+		Result<TypeParam> r{ e };
 		EXPECT_FALSE(r.IsValue());
 		EXPECT_TRUE(r.IsError());
 		EXPECT_EQ(r.Error(), Error(k_error_message));
@@ -133,9 +139,9 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(ResultTest, Operator_Value_ByMove)
 	{
-		Error error(k_error_message);
+		Error e(k_error_message);
 
-		Result<TypeParam> r{ error };
+		Result<TypeParam> r{ e };
 		EXPECT_FALSE(r.IsValue());
 		EXPECT_TRUE(r.IsError());
 		EXPECT_EQ(r.Error(), Error(k_error_message));
@@ -159,9 +165,9 @@ namespace Orion::Engine::UT
 		EXPECT_EQ(r.Value(), Value<TypeParam>(1));
 		EXPECT_EQ(*r, Value<TypeParam>(1));
 
-		Error error(k_error_message);
+		Error e(k_error_message);
 
-		r = error;
+		r = e;
 		EXPECT_FALSE(r.IsValue());
 		EXPECT_TRUE(r.IsError());
 		EXPECT_EQ(r.Error(), Error(k_error_message));
@@ -177,9 +183,9 @@ namespace Orion::Engine::UT
 		EXPECT_EQ(r.Value(), Value<TypeParam>(1));
 		EXPECT_EQ(*r, Value<TypeParam>(1));
 
-		Error error(k_error_message);
+		Error e(k_error_message);
 
-		r = Move(error);
+		r = Move(e);
 		EXPECT_FALSE(r.IsValue());
 		EXPECT_TRUE(r.IsError());
 		EXPECT_EQ(r.Error(), Error(k_error_message));
@@ -188,14 +194,24 @@ namespace Orion::Engine::UT
 	TYPED_TEST_P(ResultTest, Operator_Copy)
 	{
 		TypeParam v = Value<TypeParam>(1);
-
 		Result<TypeParam> r1{ v };
 		EXPECT_TRUE(r1.IsValue());
 		EXPECT_FALSE(r1.IsError());
 		EXPECT_EQ(r1.Value(), Value<TypeParam>(1));
 		EXPECT_EQ(*r1, Value<TypeParam>(1));
 
-		Result<TypeParam> r2 = r1;
+		Error e{ k_error_message };
+		Result<TypeParam> r2{ e };
+		EXPECT_FALSE(r2.IsValue());
+		EXPECT_TRUE(r2.IsError());
+		EXPECT_EQ(r2.Error(), Error(k_error_message));
+
+		r2 = r1;
+		EXPECT_TRUE(r1.IsValue());
+		EXPECT_FALSE(r1.IsError());
+		EXPECT_EQ(r1.Value(), Value<TypeParam>(1));
+		EXPECT_EQ(*r1, Value<TypeParam>(1));
+
 		EXPECT_TRUE(r2.IsValue());
 		EXPECT_FALSE(r2.IsError());
 		EXPECT_EQ(r2.Value(), Value<TypeParam>(1));
@@ -205,14 +221,19 @@ namespace Orion::Engine::UT
 	TYPED_TEST_P(ResultTest, Operator_Move)
 	{
 		TypeParam v = Value<TypeParam>(1);
-
 		Result<TypeParam> r1{ v };
 		EXPECT_TRUE(r1.IsValue());
 		EXPECT_FALSE(r1.IsError());
 		EXPECT_EQ(r1.Value(), Value<TypeParam>(1));
 		EXPECT_EQ(*r1, Value<TypeParam>(1));
 
-		Result<TypeParam> r2 = Move(r1);
+		Error e{ k_error_message };
+		Result<TypeParam> r2{ e };
+		EXPECT_FALSE(r2.IsValue());
+		EXPECT_TRUE(r2.IsError());
+		EXPECT_EQ(r2.Error(), Error(k_error_message));
+
+		r2 = Move(r1);
 		EXPECT_TRUE(r2.IsValue());
 		EXPECT_FALSE(r2.IsError());
 		EXPECT_EQ(r2.Value(), Value<TypeParam>(1));
@@ -237,22 +258,39 @@ namespace Orion::Engine::UT
 
 	TYPED_TEST_P(ResultTest, Get_Value)
 	{
-		GTEST_FAIL();
+		Result<TypeParam> r{ Value<TypeParam>(1) };
+		EXPECT_TRUE(r.IsValue());
+		EXPECT_FALSE(r.IsError());
+		EXPECT_EQ(r.Value(), Value<TypeParam>(1));
 	}
 
 	TYPED_TEST_P(ResultTest, Get_ValueOr)
 	{
-		GTEST_FAIL();
+		Error e{ k_error_message };
+		Result<TypeParam> r{ e };
+		EXPECT_FALSE(r.IsValue());
+		EXPECT_TRUE(r.IsError());
+		EXPECT_EQ(r.Error(), Error{ k_error_message });
+		EXPECT_EQ(r.ValueOr(Value<TypeParam>(2)), Value<TypeParam>(2));
 	}
 
 	TYPED_TEST_P(ResultTest, Get_ValueOrDefault)
 	{
-		GTEST_FAIL();
+		Error e{ k_error_message };
+		Result<TypeParam> r{ e };
+		EXPECT_FALSE(r.IsValue());
+		EXPECT_TRUE(r.IsError());
+		EXPECT_EQ(r.Error(), Error{ k_error_message });
+		EXPECT_EQ(r.ValueOrDefault(), Value<TypeParam>(0));
 	}
 
 	TYPED_TEST_P(ResultTest, Get_Error)
 	{
-		GTEST_FAIL();
+		Error e{ k_error_message };
+		Result<TypeParam> r{ e };
+		EXPECT_FALSE(r.IsValue());
+		EXPECT_TRUE(r.IsError());
+		EXPECT_EQ(r.Error(), Error{ k_error_message });
 	}
 
 	REGISTER_TYPED_TEST_SUITE_P(ResultTest,

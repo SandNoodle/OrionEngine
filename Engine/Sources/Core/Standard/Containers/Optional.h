@@ -3,6 +3,7 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
+#include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/TypeTraits.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 
@@ -10,6 +11,9 @@ namespace Orion::Engine
 {
 	namespace Detail
 	{
+		template <typename T>
+		concept OptionalKind = !IsLValueReference<T> && !IsSame<T, void>;
+
 		/// @brief Represents a no-value type.
 		struct OptionalNull
 		{
@@ -24,25 +28,26 @@ namespace Orion::Engine
 	/// value type is present.
 	/// @tparam T Type to be stored.
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	class Optional final
 	{
 		public:
 		using ValueType          = T;
 		using ReferenceType      = ValueType&;
 		using ConstReferenceType = const ValueType&;
-		using PointerType        = ValueType&;
-		using ConstPointerType   = const ValueType&;
+		using PointerType        = ValueType*;
+		using ConstPointerType   = const ValueType*;
 
 		private:
 		union
 		{
-			RemoveConst<Detail::OptionalNull> _null_value;
-			RemoveConst<ValueType> _value;
+			Detail::OptionalNull _null_value;
+			ValueType _value;
 		};
 		Bool8 _has_value;
 
 		public:
+		constexpr Optional() noexcept;
 		constexpr Optional(const ValueType& value) noexcept;
 		constexpr Optional(ValueType&& value) noexcept;
 		constexpr Optional(Detail::OptionalNull);
@@ -76,97 +81,101 @@ namespace Orion::Engine
 
 		/// @brief Returns value contained by this Optional if it is present, or \p value otherwise.
 		/// @{
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& ValueOr(const ValueType& value) noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& ValueOr(ValueType&& value) noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& ValueOr(const ValueType& value) const noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& ValueOr(ValueType&& value) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType ValueOr(const ValueType& value) noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType ValueOr(ValueType&& value) noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType ValueOr(const ValueType& value) const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType ValueOr(ValueType&& value) const noexcept;
 		/// @}
 
 		/// @brief Returns value contained by this Optional if it is present, or default value for type otherwise.
 		/// @{
-		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType& ValueOrDefault() noexcept;
-		[[nodiscard]] ORION_FORCE_INLINE constexpr const ValueType& ValueOrDefault() const noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType ValueOrDefault() noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr ValueType ValueOrDefault() const noexcept;
 		/// @}
 	};
 
 	// -- Implementation.
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
+	constexpr Optional<T>::Optional() noexcept : _value(ValueType()), _has_value(true)
+	{
+	}
+
+	template <typename T>
+		requires(Detail::OptionalKind<T>)
 	constexpr Optional<T>::Optional(const ValueType& value) noexcept : _value(value), _has_value(true)
 	{
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr Optional<T>::Optional(ValueType&& value) noexcept : _value(Move(value)), _has_value(true)
 	{
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr Optional<T>::Optional(Detail::OptionalNull) : _null_value(k_null_option), _has_value(false)
 	{
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr Optional<T>::Optional(const Optional& other) noexcept : _has_value(other._has_value)
 	{
 		if (_has_value) {
-			_value = other._value;
+			Memory::ConstructItem(&_value, other._value);
 		} else {
-			_null_value = k_null_option;
+			Memory::ConstructItem(&_null_value, k_null_option);
 		}
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr Optional<T>::Optional(Optional&& other) noexcept : _has_value(other._has_value)
 	{
 		if (_has_value) {
-			_value = Move(other._value);
+			Memory::ConstructItem(&_value, Move(other._value));
 		} else {
-			_null_value = k_null_option;
+			Memory::ConstructItem(&_null_value, k_null_option);
 		}
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr Optional<T>::~Optional()
 	{
-		if constexpr (!IsTriviallyDestructible<ValueType>) {
-			if (_has_value) {
-				ValueType::~ValueType();
-			}
+		if (_has_value) {
+			Memory::DestructItems(&_value, 1);
 		}
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr auto Optional<T>::operator=(ValueType&& value) noexcept -> Optional&
 	{
 		if (_has_value) {
 			Memory::DestructItems(&_value, 1);
 		}
-		_value     = Move(value);
+		Memory::ConstructItem(&_value, Move(value));
 		_has_value = true;
 		return *this;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr auto Optional<T>::operator=(const ValueType& value) noexcept -> Optional&
 	{
 		if (_has_value) {
 			Memory::DestructItems(&_value, 1);
 		}
-		_value     = value;
+		Memory::ConstructItem(&_value, value);
 		_has_value = true;
 		return *this;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr auto Optional<T>::operator=(const Optional& other) noexcept -> Optional&
 	{
 		if (this != &other) {
@@ -175,16 +184,16 @@ namespace Orion::Engine
 			}
 			_has_value = other._has_value;
 			if (_has_value) {
-				_value = other._value;
+				Memory::ConstructItem(&_value, other._value);
 			} else {
-				_null_value = k_null_option;
+				Memory::ConstructItem(&_null_value, k_null_option);
 			}
 		}
 		return *this;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	constexpr auto Optional<T>::operator=(Optional&& other) noexcept -> Optional&
 	{
 		if (this != &other) {
@@ -193,16 +202,16 @@ namespace Orion::Engine
 			}
 			_has_value = other._has_value;
 			if (_has_value) {
-				_value = Move(other._value);
+				Memory::ConstructItem(&_value, Move(other._value));
 			} else {
-				_null_value = k_null_option;
+				Memory::ConstructItem(&_null_value, k_null_option);
 			}
 		}
 		return *this;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() & noexcept -> ReferenceType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -210,7 +219,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() const& noexcept -> ConstReferenceType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -218,7 +227,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() && noexcept -> ValueType&&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -226,7 +235,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::operator*() const&& noexcept -> const ValueType&&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -234,7 +243,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::operator->() noexcept -> PointerType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -242,7 +251,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::operator->() const noexcept -> ConstPointerType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -250,21 +259,21 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::IsValue() const noexcept -> Bool8
 	{
 		return _has_value;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::IsNull() const noexcept -> Bool8
 	{
 		return !_has_value;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::Value() const noexcept -> const ValueType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -272,7 +281,7 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
+		requires(Detail::OptionalKind<T>)
 	ORION_FORCE_INLINE constexpr auto Optional<T>::Value() noexcept -> ValueType&
 	{
 		ORION_ASSERT_DEBUG_SLOW(_has_value);
@@ -280,43 +289,43 @@ namespace Orion::Engine
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(const ValueType& value) noexcept -> ValueType&
+		requires(Detail::OptionalKind<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(const ValueType& value) noexcept -> ValueType
 	{
 		return _has_value ? _value : value;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(ValueType&& value) noexcept -> ValueType&
+		requires(Detail::OptionalKind<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(ValueType&& value) noexcept -> ValueType
 	{
 		return _has_value ? _value : value;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(const ValueType& value) const noexcept -> const ValueType&
+		requires(Detail::OptionalKind<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(const ValueType& value) const noexcept -> ValueType
 	{
 		return _has_value ? _value : value;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(ValueType&& value) const noexcept -> const ValueType&
+		requires(Detail::OptionalKind<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOr(ValueType&& value) const noexcept -> ValueType
 	{
 		return _has_value ? _value : value;
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOrDefault() noexcept -> ValueType&
+		requires(Detail::OptionalKind<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOrDefault() noexcept -> ValueType
 	{
 		return _has_value ? _value : ValueType();
 	}
 
 	template <typename T>
-		requires(!IsLValueReference<T>)
-	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOrDefault() const noexcept -> const ValueType&
+		requires(Detail::OptionalKind<T>)
+	ORION_FORCE_INLINE constexpr auto Optional<T>::ValueOrDefault() const noexcept -> ValueType
 	{
 		return _has_value ? _value : ValueType();
 	}

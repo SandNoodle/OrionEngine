@@ -238,7 +238,7 @@ namespace Orion::Engine
 			}
 
 			SizeType new_capacity = ToNextPowerOfTwo(requested_capacity);
-			PointerType new_data  = Memory::AllocateCount<ValueType>(this->_allocator, new_capacity);
+			PointerType new_data  = Memory::AllocateCount<ValueType>(_allocator, new_capacity);
 
 			Memory::ConstructItems(new_data, _data, _size);
 			Memory::DestructItems(_data, _size);
