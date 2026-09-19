@@ -11,16 +11,26 @@ namespace Orion::Engine::Logger
 	{
 		// NOTE: Must match the order of Severity.
 		static constexpr Array k_severity_name = { "Fatal", "Error", "Warn", "Info", "Debug", "Trace" };
-		return ORION_STRINGVIEW(k_severity_name[ToUnderlyingType(level)]);
+		return StringView(k_severity_name[ToUnderlyingType(level)]);
 	}
 
-	LoggerSystem& LoggerSystem::Get() noexcept
+	Bool8 LoggerSystem_Initialize() noexcept
 	{
-		static LoggerSystem logger;
-		return logger;
+		return true;
 	}
 
-	void LoggerSystem::Initialize() noexcept {}
+	Bool8 LoggerSystem_Shutdown() noexcept
+	{
+		return true;
+	}
 
-	void LoggerSystem::Shutdown() noexcept {}
+	void LogMessage(Severity severity, CString file, CString function, Int32 line, CString format_message, ...) noexcept
+	{
+		ORION_IGNORE_PARAM(severity);
+		ORION_IGNORE_PARAM(file);
+		ORION_IGNORE_PARAM(function);
+		ORION_IGNORE_PARAM(line);
+		ORION_IGNORE_PARAM(format_message);
+		// TODO(SandNoodle): Format the message and pass it to the LoggerSystem.
+	}
 }  // namespace Orion::Engine::Logger

@@ -247,7 +247,7 @@ namespace Orion::Engine::Platform::FileSystem
 	constexpr auto FileSystem<Allocator>::GetProviderAndPath(StringView path) noexcept
 		-> IOResult<Pair<IStorageProvider*, StringView>>
 	{
-		USize split_index = path.Find(ORION_STRINGVIEW("://"));
+		USize split_index = path.Find(StringView("://"));
 		if (split_index == StringView::k_invalid_index) {
 			ORION_LOG_ERROR("[FileSystem] Failed to stat file ('{}'), protocol is not present.", path);
 			return IOError::ProtocolNotPresent;

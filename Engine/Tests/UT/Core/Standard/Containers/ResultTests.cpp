@@ -5,7 +5,7 @@
 
 namespace Orion::Engine::UT
 {
-	static String k_error_message = ORION_STRING("Some error message");
+	static String k_error_message = String("Some error message");
 
 	namespace
 	{

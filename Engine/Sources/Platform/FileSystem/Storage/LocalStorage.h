@@ -157,7 +157,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		StringView::SizeType directory_index_end = 0UL;
 		while (true) {
-			directory_index_end = path.Find(ORION_STRINGVIEW("/"), directory_index_end);
+			directory_index_end = path.Find(StringView("/"), directory_index_end);
 			if (directory_index_end == StringView::k_invalid_index) {
 				return k_null_option;
 			}

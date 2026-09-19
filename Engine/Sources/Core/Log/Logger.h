@@ -2,9 +2,6 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/Containers/StringView.h"
-#include "Core/Standard/Containers/Vector.h"
-
 namespace Orion::Engine::Logger
 {
 	/// @brief Represents the categorized 'level' of logging.
@@ -36,51 +33,21 @@ namespace Orion::Engine::Logger
 		Trace,
 	};
 
+	// NOLINTBEGIN(readability-identifier-naming)
 	/// @brief TODO
-	class ILogger
-	{
-		public:
-		virtual ~ILogger() = default;
-
-		/**
-		 * @brief TODO
-		 * @param severity
-		 * @param formated_message
-		 */
-		virtual void LogMessage(Severity severity, StringView formated_message) noexcept = 0;
-	};
+	Bool8 LoggerSystem_Initialize() noexcept;
 
 	/// @brief TODO
-	class LoggerSystem
-	{
-		private:
-		Vector<ILogger*> _loggers;
-		Bool8 _is_initialized{ false };
+	Bool8 LoggerSystem_Shutdown() noexcept;
+	// NOLINTEND(readability-identifier-naming)
 
-		public:
-		[[nodiscard]] static LoggerSystem& Get() noexcept;
-
-		static void Initialize() noexcept;
-		static void Shutdown() noexcept;
-
-		private:
-		LoggerSystem() = default;
-	};
-
-	constexpr void LogMessage(Severity severity,
-	                          CString file,
-	                          CString function,
-	                          Int32 line,
-	                          CString format_message,
-	                          ...) noexcept
-	{
-		ORION_IGNORE_PARAM(severity);
-		ORION_IGNORE_PARAM(file);
-		ORION_IGNORE_PARAM(function);
-		ORION_IGNORE_PARAM(line);
-		ORION_IGNORE_PARAM(format_message);
-		// TODO(SandNoodle): Format the message and pass it to the LoggerSystem.
-	}
+	/// @brief TODO
+	void LogMessage(Severity severity,
+	                CString file,
+	                CString function,
+	                Int32 line,
+	                CString format_message,
+	                ...) noexcept;
 }  // namespace Orion::Engine::Logger
 
 // --------------------------------------------------------------------------------

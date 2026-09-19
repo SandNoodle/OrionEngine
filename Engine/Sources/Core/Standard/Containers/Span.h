@@ -6,23 +6,23 @@
 #include "Core/Standard/Concepts.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Limits.h"
-#include "Core/Standard/TypeTraits.h"
 
 namespace Orion::Engine
 {
-	/// @brief TODO
+	/// @brief Concept that is satisfied by types that allow continuous access to their underlying data.
 	template <typename ContainerT>
 	concept SpannableKind = requires(ContainerT container) {
 		{ container.Size() } -> SameAs<typename ContainerT::SizeType>;
 		{ container.Data() } -> SameAs<typename ContainerT::PointerType>;
 	};
 
-	/// @brief TODO
+	/// @brief Describes that the amount of elements covered by a given Span is only known at runtime.
 	static constexpr USize k_dynamic_extent = NumericLimits<USize>::Max();
 
-	/// @brief TODO
-	/// @tparam T TODO
-	/// @tparam Extent TODO
+	/// @brief Represents type-safe linear access to a sequence of elements.
+	/// @tparam T Type to be accessed.
+	/// @tparam Extent Describes the amount of elements known at compile time; this parameter is set to k_dynamic_extent
+	/// if they are only known at runtime.
 	template <typename T, USize Extent = k_dynamic_extent>
 	class Span
 	{
@@ -34,9 +34,12 @@ namespace Orion::Engine
 		using ReferenceType      = T&;
 		using ConstReferenceType = const T&;
 
+		static constexpr Bool8 k_is_dynamic = Extent == k_dynamic_extent;
+		static constexpr Bool8 k_is_static  = Extent != k_dynamic_extent;
+
 		private:
 		PointerType _data{ nullptr };
-		SizeType _size{ 0 };
+		SizeType _size{ 0UL };
 
 		public:
 		constexpr Span() noexcept = default;

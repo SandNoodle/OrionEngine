@@ -122,12 +122,6 @@ namespace Orion::Engine
 	using StringUTF16 = Detail::StringBase<Detail::StringEncoding::UTF16>;
 	using StringUTF32 = Detail::StringBase<Detail::StringEncoding::UTF32>;
 
-	// -- Helper macros.
-	/// @brief Constructs String from a C-Styled literal (\p str).
-#define ORION_STRING(str)                                                                 \
-	Orion::Engine::String(reinterpret_cast<Orion::Engine::String::ConstPointerType>(str), \
-	                      Orion::Engine::StringLength<Orion::Engine::Detail::StringEncoding::ANSI>(str))
-
 	// -- Hash.
 	namespace Algorithm
 	{
@@ -160,7 +154,7 @@ namespace Orion::Engine
 		SizeType size = StringLength<T>(str);
 		BaseType::AddZeroed(size);
 		for (SizeType index = 0; index < size; ++index) {
-			Data()[index] = str[index];
+			Data()[index] = static_cast<CharType>(str[index]);
 		}
 	}
 

@@ -5,28 +5,88 @@
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Hash.h"
-#include "Core/Standard/Containers/Pair.h"
 #include "Core/Standard/Math/Math.h"
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/TypeTraits.h"
 #include "Core/Standard/Utility/MathUtils.h"
+#include "Core/Standard/Utility/Swap.h"
 
 namespace Orion::Engine
 {
 	namespace Detail
 	{
-		/// @brief Actual storage type for a single HashMap's key-value pair.
+		/// @brief Type which stores HashMap's key-value pair.
+		/// Essentially it's just Pair<T1, T2>, but defined here too so we won't pull yet another header unnecessarily.
 		template <typename T1, typename T2>
 		struct HashMapElement
 		{
 			T1 key;
 			T2 value;
+		};
+
+		/// @brief Actual storage type for a single HashMap's key-value pair.
+		template <typename T1, typename T2>
+		struct HashMapElementStorage : HashMapElement<T1, T2>
+		{
 			enum class State : UInt8
 			{
 				Free,
 				Allocated,
 			} state;
+		};
+
+		/// @brief TODO
+		template <Bool8 IsConst, typename T>
+		struct HashMapElementTraits
+		{
+		};
+
+		template <typename T>
+		struct HashMapElementTraits<true, T>
+		{
+			using PointerType   = const T*;
+			using ReferenceType = const T&;
+		};
+
+		template <typename T>
+		struct HashMapElementTraits<false, T>
+		{
+			using PointerType   = T*;
+			using ReferenceType = T&;
+		};
+
+		/// @brief TODO
+		template <Bool8 IsConst, typename Key, typename Value>
+		class HashMapIterator
+		{
+			public:
+			using ThisType      = HashMapIterator;
+			using ValueType     = HashMapElement<Key, Value>;
+			using StorageType   = HashMapElementStorage<Key, Value>;
+			using PointerType   = HashMapElementTraits<IsConst, ValueType>::PointerType;
+			using ReferenceType = HashMapElementTraits<IsConst, ValueType>::ReferenceType;
+			using SizeType      = USize;
+
+			private:
+			StorageType* _data;
+			StorageType* _data_end;
+
+			public:
+			explicit constexpr HashMapIterator(StorageType* data, StorageType* data_end);
+
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
+			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
+			ORION_FORCE_INLINE constexpr ReferenceType operator*() noexcept;
+			ORION_FORCE_INLINE constexpr PointerType operator->() noexcept;
+			ORION_FORCE_INLINE constexpr ThisType& operator++() noexcept;
+			ORION_FORCE_INLINE constexpr ThisType operator++(int) noexcept;
+			ORION_FORCE_INLINE constexpr ThisType& operator--() noexcept;
+			ORION_FORCE_INLINE constexpr ThisType operator--(int) noexcept;
+
+			private:
+			constexpr void NextElement() noexcept;
+			constexpr void PreviousElement() noexcept;
 		};
 	}  // namespace Detail
 
@@ -45,13 +105,13 @@ namespace Orion::Engine
 	class HashMap
 	{
 		private:
-		using StorageType = Detail::HashMapElement<Key, Value>;
+		using StorageType = Detail::HashMapElementStorage<Key, Value>;
 
 		public:
 		using ThisType           = HashMap;
 		using KeyType            = Key;
 		using ValueType          = Value;
-		using KeyValueType       = Pair<Key, Value>;
+		using KeyValueType       = Detail::HashMapElement<Key, Value>;
 		using SizeType           = USize;
 		using HashType           = Hash;
 		using AllocatorType      = Allocator;
@@ -59,9 +119,8 @@ namespace Orion::Engine
 		using ConstPointerType   = const ValueType*;
 		using ReferenceType      = ValueType&;
 		using ConstReferenceType = const ValueType&;
-
-		using IteratorType      = PointerType;       // TODO Iterators
-		using ConstIteratorType = ConstPointerType;  // TODO Iterators
+		using IteratorType       = Detail::HashMapIterator<false, KeyType, ValueType>;
+		using ConstIteratorType  = Detail::HashMapIterator<true, KeyType, ValueType>;
 
 		static constexpr SizeType k_initial_bucket_count = 16UL;
 		static constexpr Float64 k_desired_load_factor   = 0.8;
@@ -100,7 +159,7 @@ namespace Orion::Engine
 		constexpr void Remove(KeyType&& key) noexcept;
 		///@}
 
-		/** Finds the value associated with a specific key - returns nullptr if the value was not found.. */
+		/** Finds the value associated with a specific key - returns nullptr if the value was not found. */
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Find(const KeyType& key) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Find(const KeyType& key) const noexcept;
@@ -118,7 +177,8 @@ namespace Orion::Engine
 		/// @brief Returns the amount of elements that can be stored in this container.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr SizeType Size() const noexcept;
 
-		/// @brief Returns the amount of bytes that this container stores.
+		/// @brief Returns the amount of bytes that this container stores for Key-Value pairs.
+		/// @warning May not equal the true bytesize used by the container.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr SizeType ByteSize() const noexcept;
 
 		/// @brief Returns the maximum amount of elements that can be currently stored in this container.
@@ -150,6 +210,94 @@ namespace Orion::Engine
 		constexpr void DoSwap(ThisType& other) noexcept;
 	};
 
+	// -- Implementation.
+	namespace Detail
+	{
+		template <Bool8 IsConst, typename Key, typename Value>
+		constexpr HashMapIterator<IsConst, Key, Value>::HashMapIterator(StorageType* data, StorageType* data_end)
+			: _data(data), _data_end(data_end)
+		{
+			ORION_ASSERT_DEBUG_SLOW(_data);
+			ORION_ASSERT_DEBUG_SLOW(_data_end);
+			ORION_ASSERT_DEBUG_SLOW(_data <= _data_end);
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator==(
+			const ThisType& other) const noexcept -> Bool8
+		{
+			return _data == other._data && _data_end == other._data;
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator!=(
+			const ThisType& other) const noexcept -> Bool8
+		{
+			return !(*this == other);
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator*() noexcept -> ReferenceType
+		{
+			return static_cast<ReferenceType>(*_data);
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator->() noexcept -> PointerType
+		{
+			return _data;
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator++() noexcept -> ThisType&
+		{
+			NextElement();
+			return *this;
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator++(int) noexcept -> ThisType
+		{
+			ThisType tmp = *this;
+			NextElement();
+			return tmp;
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator--() noexcept -> ThisType&
+		{
+			PreviousElement();
+			return *this;
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		ORION_FORCE_INLINE constexpr auto HashMapIterator<IsConst, Key, Value>::operator--(int) noexcept -> ThisType
+		{
+			ThisType tmp = *this;
+			PreviousElement();
+			return tmp;
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		constexpr auto HashMapIterator<IsConst, Key, Value>::NextElement() noexcept -> void
+		{
+			if (_data == _data_end) {
+				return;
+			}
+
+			++_data;
+			while (_data != _data_end && _data->state != StorageType::State::Allocated) {
+				++_data;
+			}
+		}
+
+		template <Bool8 IsConst, typename Key, typename Value>
+		constexpr auto HashMapIterator<IsConst, Key, Value>::PreviousElement() noexcept -> void
+		{
+			ORION_NOT_IMPLEMENTED();
+		}
+	}  // namespace Detail
+
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr HashMap<Key, Value, Hash, Predicate, Allocator>::HashMap(SizeType initial_buckets,
 	                                                                   const AllocatorType& allocator)
@@ -165,7 +313,7 @@ namespace Orion::Engine
 	{
 		DoInitialize(list.size());
 		for (auto& it : list) {
-			DoInsert({ it.first, it.second });
+			DoInsert({ it.key, it.value });
 		}
 	}
 
@@ -239,8 +387,9 @@ namespace Orion::Engine
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator[](const KeyType& key) noexcept
 		-> ReferenceType
 	{
-		ORION_ASSERT_DEBUG(_data);
+		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index = DoFindSlot(key);
+		ORION_ASSERT_DEBUG_SLOW(_data[slot_index].state == StorageType::State::Allocated);
 		return _data[slot_index].value;
 	}
 
@@ -248,8 +397,9 @@ namespace Orion::Engine
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::operator[](const KeyType& key) const noexcept
 		-> ConstReferenceType
 	{
-		ORION_ASSERT_DEBUG(_data);
+		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index = DoFindSlot(key);
+		ORION_ASSERT_DEBUG_SLOW(_data[slot_index].state == StorageType::State::Allocated);
 		return _data[slot_index].value;
 	}
 
@@ -300,7 +450,7 @@ namespace Orion::Engine
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Find(const KeyType& key) noexcept
 		-> PointerType
 	{
-		ORION_ASSERT_DEBUG(_data);
+		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index  = DoFindSlot(key);
 		StorageType* element = &_data[slot_index];
 		return element->state == StorageType::State::Allocated ? &element->value : nullptr;
@@ -310,7 +460,7 @@ namespace Orion::Engine
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::Find(
 		const KeyType& key) const noexcept -> ConstPointerType
 	{
-		ORION_ASSERT_DEBUG(_data);
+		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index  = DoFindSlot(key);
 		StorageType* element = &_data[slot_index];
 		return element->state == StorageType::State::Allocated ? &element->value : nullptr;
@@ -381,27 +531,33 @@ namespace Orion::Engine
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::begin() noexcept -> IteratorType
 	{
-		ORION_NOT_IMPLEMENTED();
+		ORION_ASSERT_DEBUG_SLOW(_data);
+		return IteratorType{ _data, _data + _capacity };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::begin() const noexcept
 		-> ConstIteratorType
 	{
-		ORION_NOT_IMPLEMENTED();
+		ORION_ASSERT_DEBUG_SLOW(_data);
+		return ConstIteratorType{ _data, _data + _capacity };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::end() noexcept -> IteratorType
 	{
-		ORION_NOT_IMPLEMENTED();
+		ORION_ASSERT_DEBUG_SLOW(_data);
+		StorageType* end = _data + _capacity;
+		return IteratorType{ end, end };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::end() const noexcept
 		-> ConstIteratorType
 	{
-		ORION_NOT_IMPLEMENTED();
+		ORION_ASSERT_DEBUG_SLOW(_data);
+		StorageType* end = _data + _capacity;
+		return ConstIteratorType{ end, end };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -429,20 +585,14 @@ namespace Orion::Engine
 		}
 
 		SizeType new_capacity = ToNextPowerOfTwo(_capacity + 1);
-		StorageType* new_data = Memory::AllocateCount<StorageType>(_allocator, new_capacity, alignof(StorageType));
-		ORION_ASSERT_DEBUG(new_data);
+		StorageType* new_data = Memory::AllocateCount<StorageType>(_allocator, new_capacity);
 
-		if (_capacity > 0) {
-			if constexpr (IsTriviallyCopyable<StorageType>) {
-				SizeType previous_size_in_bytes = sizeof(StorageType) * _capacity;
-				Platform::MemoryCopy(new_data, _data, previous_size_in_bytes);
-			} else {
-				for (SizeType index = 0; index < _capacity; ++index) {
-					Memory::ConstructItem(&new_data[index], Move(_data[index]));
-					_data[index].~StorageType();
-				}
-			}
+		for (SizeType index = 0UL; index < new_capacity; ++index) {
+			new_data[index].state = StorageType::State::Free;
 		}
+
+		Memory::ConstructItems(new_data, _data, _capacity);
+		Memory::DestructItems(_data, _size);
 
 		_allocator.Free(_data);
 		_data     = new_data;
@@ -453,7 +603,7 @@ namespace Orion::Engine
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoInsert(KeyValueType&& element) noexcept
 		-> ReferenceType
 	{
-		ORION_ASSERT_DEBUG(_data);
+		ORION_ASSERT_DEBUG_SLOW(_data);
 		const auto& [key, value] = element;
 		SizeType slot_index      = DoFindSlot(key);
 		if (_data[slot_index].state == StorageType::State::Allocated) {
@@ -473,7 +623,7 @@ namespace Orion::Engine
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
 	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoRemove(KeyType&& key) noexcept -> void
 	{
-		ORION_ASSERT_DEBUG(_data);
+		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index = DoFindSlot(key);
 		if (_data[slot_index].state == StorageType::State::Free) {
 			return;

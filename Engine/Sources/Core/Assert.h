@@ -2,6 +2,10 @@
 
 #include "OrionEngine.h"
 
+#if defined(ORION_BUILD_DEBUG)
+#define ORION_ENGINE_ENABLE_SLOW_ASSERTS
+#endif
+
 /// @brief Evaluates some condition to be true. If the evaluation fails, fatal error is logged.
 #define ORION_ASSERT(condition, ...) \
 	do {                             \

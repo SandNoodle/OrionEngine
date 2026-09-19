@@ -39,9 +39,8 @@ namespace Orion::Engine::Platform
 
 	PlatformInfo GetPlatformInfo() noexcept
 	{
-		// TODO(SandNoodle): We need a reliable way to get the system name (right now its HARDCODED).
 		return (PlatformInfo){
-			.system_name              = ORION_STRINGVIEW("Linux"),
+			.system_name              = StringView("Linux"),
 			.page_size_in_bytes       = static_cast<UInt64>(getpagesize()),
 			.large_page_size_in_bytes = ORION_MEGABYTES(2),
 			.logical_processor_count  = static_cast<UInt32>(get_nprocs()),
@@ -112,7 +111,7 @@ namespace Orion::Engine::Platform
 		access_flags |= file_stat.st_mode & S_IWUSR ? PlatformFileAccessFlags::Write : PlatformFileAccessFlags::None;
 
 		return (PlatformFileStat){
-			.file_name               = ORION_STRING(native_path),
+			.file_name               = String(native_path),
 			.size_in_bytes           = static_cast<UInt64>(file_stat.st_size),
 			.unix_time_created       = static_cast<UInt64>(file_stat.st_ctim.tv_sec),
 			.unix_time_last_modified = static_cast<UInt64>(file_stat.st_mtim.tv_sec),
@@ -133,9 +132,9 @@ namespace Orion::Engine::Platform
 
 		dirent* entry = nullptr;
 		while ((entry = readdir(base_directory)) != nullptr) {
-			StringView entry_name = ORION_STRINGVIEW(entry->d_name);
+			StringView entry_name = StringView(entry->d_name);
 			if (entry->d_type == DT_DIR) {
-				if (entry_name == ORION_STRINGVIEW("..") || entry_name == ORION_STRINGVIEW(".")) {
+				if (entry_name == StringView("..") || entry_name == StringView(".")) {
 					continue;
 				}
 

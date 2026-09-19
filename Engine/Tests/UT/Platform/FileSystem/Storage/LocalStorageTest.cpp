@@ -22,7 +22,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		void LocalStorageTest::SetUp()
 		{
-			static const StringView k_base_test_path = ORION_STRINGVIEW("./LocalStorageTestFiles");
+			static const StringView k_base_test_path = StringView("./LocalStorageTestFiles");
 			if (DirectoryExists(k_base_test_path)) {
 				Vector<PlatformFileStat> files = ListFiles(k_base_test_path, true);
 				for (const PlatformFileStat& file_stat : files) {
@@ -41,7 +41,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 	TEST_F(LocalStorageTest, Create_Stat_Remove)
 	{
-		StringView file_name = ORION_STRINGVIEW("./LocalStorageTestFiles/Create_Stat_Remove/1");
+		StringView file_name = StringView("./LocalStorageTestFiles/Create_Stat_Remove/1");
 
 		IOResult<StorageStatInfo> pre_stat_result = _storage_provider.Stat(file_name);
 		ASSERT_TRUE(pre_stat_result.IsError());
@@ -68,7 +68,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 	TEST_F(LocalStorageTest, Create_TryToOverrideExistingFile)
 	{
-		StringView file_name = ORION_STRINGVIEW("./LocalStorageTestFiles/Create_TryToOverrideExistingFile/1");
+		StringView file_name = StringView("./LocalStorageTestFiles/Create_TryToOverrideExistingFile/1");
 
 		IOResult<StorageStatInfo> pre_stat_result = _storage_provider.Stat(file_name);
 		ASSERT_TRUE(pre_stat_result.IsError());
@@ -109,22 +109,22 @@ namespace Orion::Engine::Platform::FileSystem
 			                                     "./LocalStorageTestFiles/List/Sub/Sub/5" };
 
 		// Verify that the destination directory does not contain ANY files beforehand.
-		Vector<StorageStatInfo> pre_creation_files = _storage_provider.List(ORION_STRINGVIEW(k_list_path), false);
+		Vector<StorageStatInfo> pre_creation_files = _storage_provider.List(StringView(k_list_path), false);
 		ASSERT_EQ(pre_creation_files.Size(), 0UL);
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
-			IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(ORION_STRINGVIEW(k_file_names[index]));
+			IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(StringView(k_file_names[index]));
 			ASSERT_TRUE(stat_result.IsError());
 			EXPECT_EQ(stat_result.Error(), IOError::FileDoesNotExist);
 		}
 
 		// Create the directory structure.
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
-			Optional<IOError> create_result = _storage_provider.Create(ORION_STRINGVIEW(k_file_names[index]));
+			Optional<IOError> create_result = _storage_provider.Create(StringView(k_file_names[index]));
 			EXPECT_FALSE(create_result.IsValue()) << "Failed to create a file: " << k_file_names[index];
 		}
 
 		// List all files (non-recursively) in the base directory (only 3 should be visible).
-		Vector<StorageStatInfo> post_creation_files = _storage_provider.List(ORION_STRINGVIEW(k_list_path), false);
+		Vector<StorageStatInfo> post_creation_files = _storage_provider.List(StringView(k_list_path), false);
 		ASSERT_FALSE(post_creation_files.IsEmpty());
 		ASSERT_EQ(post_creation_files.Size(), 3UL);
 
@@ -134,7 +134,7 @@ namespace Orion::Engine::Platform::FileSystem
 		});
 
 		for (USize index = 0; index < post_creation_files.Size(); ++index) {
-			EXPECT_EQ(post_creation_files[index].file_name, ORION_STRING(k_file_names[index]));
+			EXPECT_EQ(post_creation_files[index].file_name, String(k_file_names[index]));
 			EXPECT_EQ(post_creation_files[index].size_in_bytes, 0UL);
 			EXPECT_NE(post_creation_files[index].unix_time_created, 0UL);
 			EXPECT_NE(post_creation_files[index].unix_time_last_accessed, 0UL);
@@ -143,7 +143,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		// Cleanup afterwards the directory.
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
-			Optional<IOError> remove_result = _storage_provider.Remove(ORION_STRINGVIEW(k_file_names[index]));
+			Optional<IOError> remove_result = _storage_provider.Remove(StringView(k_file_names[index]));
 			EXPECT_FALSE(remove_result.IsValue()) << "Failed to remove a file: " << k_file_names[index];
 		}
 	}
@@ -158,22 +158,22 @@ namespace Orion::Engine::Platform::FileSystem
 			                                     "./LocalStorageTestFiles/List_Recursive/Sub/Sub/5" };
 
 		// Verify that the destination directory does not contain ANY files beforehand.
-		Vector<StorageStatInfo> pre_creation_files = _storage_provider.List(ORION_STRINGVIEW(k_list_path), true);
+		Vector<StorageStatInfo> pre_creation_files = _storage_provider.List(StringView(k_list_path), true);
 		ASSERT_EQ(pre_creation_files.Size(), 0UL);
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
-			IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(ORION_STRINGVIEW(k_file_names[index]));
+			IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(StringView(k_file_names[index]));
 			ASSERT_TRUE(stat_result.IsError());
 			EXPECT_EQ(stat_result.Error(), IOError::FileDoesNotExist);
 		}
 
 		// Create the directory structure.
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
-			Optional<IOError> create_result = _storage_provider.Create(ORION_STRINGVIEW(k_file_names[index]));
+			Optional<IOError> create_result = _storage_provider.Create(StringView(k_file_names[index]));
 			EXPECT_FALSE(create_result.IsValue()) << "Failed to create a file: " << k_file_names[index];
 		}
 
 		// List all files (non-recursively) in the base directory (only 3 should be visible).
-		Vector<StorageStatInfo> post_creation_files = _storage_provider.List(ORION_STRINGVIEW(k_list_path), true);
+		Vector<StorageStatInfo> post_creation_files = _storage_provider.List(StringView(k_list_path), true);
 		ASSERT_FALSE(post_creation_files.IsEmpty());
 		ASSERT_EQ(post_creation_files.Size(), 5UL);
 
@@ -183,7 +183,7 @@ namespace Orion::Engine::Platform::FileSystem
 		});
 
 		for (USize index = 0; index < post_creation_files.Size(); ++index) {
-			EXPECT_EQ(post_creation_files[index].file_name, ORION_STRING(k_file_names[index]));
+			EXPECT_EQ(post_creation_files[index].file_name, String(k_file_names[index]));
 			EXPECT_EQ(post_creation_files[index].size_in_bytes, 0UL);
 			EXPECT_NE(post_creation_files[index].unix_time_created, 0UL);
 			EXPECT_NE(post_creation_files[index].unix_time_last_accessed, 0UL);
@@ -192,7 +192,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		// Cleanup afterwards the directory.
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
-			Optional<IOError> remove_result = _storage_provider.Remove(ORION_STRINGVIEW(k_file_names[index]));
+			Optional<IOError> remove_result = _storage_provider.Remove(StringView(k_file_names[index]));
 			EXPECT_FALSE(remove_result.IsValue()) << "Failed to remove a file: " << k_file_names[index];
 		}
 	}

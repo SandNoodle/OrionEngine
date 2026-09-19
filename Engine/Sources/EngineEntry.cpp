@@ -29,8 +29,8 @@ namespace Orion::Engine
 		}
 
 		for (USize argument_index = 1; argument_index < argument_count; ++argument_index) {
-			if (ORION_STRINGVIEW(argv[argument_index]) == ORION_STRINGVIEW("--config")) {
-				arguments.config_file = ORION_STRING(argv[argument_index]);
+			if (StringView(argv[argument_index]) == StringView("--config")) {
+				arguments.config_file = String(argv[argument_index]);
 			}
 		}
 		return arguments;
@@ -40,10 +40,13 @@ namespace Orion::Engine
 	{
 		CommandLineArguments command_line_arguments = ParseCommandLineArguments(argc, argv);
 
+		Console::ConsoleSystem<>::Get().RegisterConsoleVariable<Int32>(
+			"Foo", "Bar", "Baz", 0UL, Console::ConsoleVariableFlags::None);
+
 		// -------------------------------------------------------------------------------- //
 		// Pre-Initialization: Engine Critical Systems
 		// -------------------------------------------------------------------------------- //
-		Logger::LoggerSystem::Initialize();
+		Logger::LoggerSystem_Initialize();
 
 		// -------------------------------------------------------------------------------- //
 		//
@@ -55,7 +58,7 @@ namespace Orion::Engine
 		Bool8 is_filesystem_initialized = file_system.Initialize();
 		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem");
 
-		StringView file = ORION_STRINGVIEW("local://foo.txt");
+		StringView file = StringView("local://foo.txt");
 
 		Optional<Platform::FileSystem::IOError> create_result = file_system.Create(file);
 		ORION_ASSERT(!create_result.IsValue(), "Failed to create a file.");

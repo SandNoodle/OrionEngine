@@ -90,9 +90,9 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Compares two regions of memery pointed by \p lhs and \p rhs.
-	/// @param[IN, REQUIRED] lhs TODO
-	/// @param[IN, REQUIRED] rhs TODO
-	/// @param[IN, REQUIRED] size_in_bytes
+	/// @param[IN, REQUIRED] lhs First memory region to be compared.
+	/// @param[IN, REQUIRED] rhs Second memory region to be compared.
+	/// @param[IN, REQUIRED] size_in_bytes Common (minimum) size of the two memory regions.
 	ORION_FORCE_INLINE constexpr int MemoryCompare(const void* lhs, const void* rhs, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(lhs, "Cannot perform MemoryCompare, because lhs is null.");

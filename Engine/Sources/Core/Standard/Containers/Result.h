@@ -4,6 +4,7 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/Containers/String.h"
+#include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Memory/Lifetime.h"
 #include "Core/Standard/TypeTraits.h"
 #include "Core/Standard/Utility/MoveAndForward.h"

@@ -7,7 +7,8 @@
 
 namespace Orion::Engine::Algorithm
 {
-	/// @brief TODO
+	/// @brief Represents a function object that maps arbitrary type to a fixed-size value with low chance of collision
+	/// between different entries.
 	/// @tparam T Type to be hashed.
 	template <typename T>
 	struct Hash

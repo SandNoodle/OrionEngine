@@ -44,9 +44,8 @@ namespace Orion::Engine::Algorithm
 		return lhs != rhs;
 	}
 
-	/// @brief TODO
+	/// @brief Compares two \p lhs and \p rhs
 	/// @tparam T TODO
-	/// @tparam SizeType TODO
 	/// @param[IN, REQUIRED] lhs TODO
 	/// @param[IN, REQUIRED] rhs TODO
 	/// @param[IN, REQUIRED] lhs_count TODO

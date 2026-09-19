@@ -3,33 +3,31 @@
 #include "OrionEngine.h"
 
 #include "Core/Standard/Memory/Allocators/Allocator.h"
-#include "Platform/Memory.h"
 
 namespace Orion::Engine::Memory
 {
 	namespace Detail
 	{
-		struct Arena
+		/// @brief TODO
+		struct ArenaRegion
 		{
 			public:
 			using SizeType = USize;
 
 			public:
-			Arena* next{ nullptr };
-			void* data{ nullptr };
+			ArenaRegion* next;
+			Byte* data{ nullptr };
 			SizeType offset_current{ 0UL };
 			SizeType offset_previous{ 0UL };
 			SizeType capacity{ 0UL };
 		};
 	}  // namespace Detail
 
-	/**
-	 * @brief ArenaAllocator
-	 */
+	/// @brief TODO
 	class ArenaAllocator
 	{
 		public:
-		using SizeType = Detail::Arena::SizeType;
+		using SizeType = Detail::ArenaRegion::SizeType;
 
 		public:
 		[[nodiscard]] ORION_FORCE_INLINE constexpr void* Allocate(SizeType size_in_bytes, SizeType alignment) noexcept;
@@ -48,7 +46,14 @@ namespace Orion::Engine::Memory
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	ORION_FORCE_INLINE constexpr auto ArenaAllocator::Free(void* ptr) noexcept -> void {}
+	ORION_FORCE_INLINE constexpr auto ArenaAllocator::Free(void* ptr) noexcept -> void
+	{
+		ORION_IGNORE_PARAM(ptr);
+		/// NOTE: ArenaAllocator has no concept of freeing invididual allocations.
+	}
 
-	ORION_FORCE_INLINE constexpr auto ArenaAllocator::FreeAll() noexcept -> void {};
+	ORION_FORCE_INLINE constexpr auto ArenaAllocator::FreeAll() noexcept -> void
+	{
+		ORION_NOT_IMPLEMENTED();
+	};
 }  // namespace Orion::Engine::Memory

@@ -133,6 +133,9 @@ namespace Orion
 	using USize = UInt64;
 	using ISize = Int64;
 
+	using IntPtr  = ISize;
+	using UIntPtr = USize;
+
 	using CString = const char*;
 
 #if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)

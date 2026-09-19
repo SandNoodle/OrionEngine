@@ -128,9 +128,9 @@ namespace Orion::Engine::Platform::FileSystem
 	{
 		switch (protocol) {
 			case StorageProviderProtocol::Local:
-				return ORION_STRINGVIEW("local");
+				return StringView("local");
 			case StorageProviderProtocol::Memory:
-				return ORION_STRINGVIEW("memory");
+				return StringView("memory");
 			default:
 				ORION_NOT_IMPLEMENTED("unhandled protocol name");
 		}
@@ -141,9 +141,9 @@ namespace Orion::Engine::Platform::FileSystem
 	{
 		switch (protocol) {
 			case StorageProviderProtocol::Local:
-				return ORION_STRINGVIEW("local://");
+				return StringView("local://");
 			case StorageProviderProtocol::Memory:
-				return ORION_STRINGVIEW("mem://");
+				return StringView("mem://");
 			default:
 				ORION_NOT_IMPLEMENTED("unhandled protocol prefix");
 		}
@@ -152,11 +152,11 @@ namespace Orion::Engine::Platform::FileSystem
 	/// @brief Tries to match given \p prefix with its StorageProviderProtocol's counterpart.
 	[[nodiscard]] constexpr Optional<StorageProviderProtocol> FromProtocolPrefix(StringView prefix) noexcept
 	{
-		if (prefix == ORION_STRINGVIEW("local://")) {
+		if (prefix == StringView("local://")) {
 			return StorageProviderProtocol::Local;
 		}
 
-		if (prefix == ORION_STRINGVIEW("mem://")) {
+		if (prefix == StringView("mem://")) {
 			return StorageProviderProtocol::Memory;
 		}
 

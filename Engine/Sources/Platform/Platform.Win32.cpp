@@ -1,8 +1,6 @@
 #if defined(ORION_PLATFORM_WINDOWS)
 #include "Platform/Platform.h"
 
-#include "Core/Standard/Containers/Array.h"
-
 #include <fileapi.h>
 #include <handleapi.h>
 #include <memoryapi.h>
@@ -44,9 +42,8 @@ namespace Orion::Engine::Platform
 		SYSTEM_INFO system_info;
 		GetSystemInfo(&system_info);
 
-		// TODO(SandNoodle): We need a reliable way to get the system name (right now its HARDCODED).
 		return (PlatformInfo){
-			.system_name              = ORION_STRINGVIEW("Windows"),
+			.system_name              = StringView("Windows"),
 			.page_size_in_bytes       = static_cast<UInt64>(system_info.dwPageSize),
 			.large_page_size_in_bytes = static_cast<UInt64>(GetLargePageMinimum()),
 			.logical_processor_count  = static_cast<UInt32>(system_info.dwNumberOfProcessors),
@@ -144,7 +141,6 @@ namespace Orion::Engine::Platform
 		             "[Platform] Cannot stat the file ('{}'), because it does not exist.",
 		             path);
 
-		// TODO(SandNoodle): What about files we cannot read nor write?
 		PlatformFileAccessFlags access_flags = !(file_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 		                                         ? PlatformFileAccessFlags::All
 		                                         : PlatformFileAccessFlags::Read;
@@ -157,7 +153,7 @@ namespace Orion::Engine::Platform
 		FindClose(file_handle);
 
 		return (PlatformFileStat){
-			.file_name               = ORION_STRING(native_path),
+			.file_name               = String(native_path),
 			.size_in_bytes           = size_in_bytes.QuadPart,
 			.unix_time_created       = WindowsToUnixTime(file_data.ftCreationTime.dwLowDateTime,  //
                                                    file_data.ftCreationTime.dwHighDateTime),
@@ -174,7 +170,7 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT_DEBUG(path.Size() > 0);
 
 		WIN32_FIND_DATA fd{};
-		CString native_path = SanitizePath(path, ORION_STRINGVIEW("/*"));
+		CString native_path = SanitizePath(path, StringView("/*"));
 		HANDLE file_handle  = FindFirstFile(native_path, &fd);
 		if (file_handle == INVALID_HANDLE_VALUE) {
 			return;
@@ -185,9 +181,9 @@ namespace Orion::Engine::Platform
 				continue;
 			}
 
-			StringView entry_name = ORION_STRINGVIEW(fd.cFileName);
+			StringView entry_name = StringView(fd.cFileName);
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				if (entry_name == ORION_STRINGVIEW(".") || entry_name == ORION_STRINGVIEW("..")) {
+				if (entry_name == StringView(".") || entry_name == StringView("..")) {
 					continue;
 				}
 
@@ -201,7 +197,6 @@ namespace Orion::Engine::Platform
 			static constexpr DWORD k_possible_file_flags
 				= FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_REPARSE_POINT;
 			if (BitFlagHasAnyFlags(fd.dwFileAttributes, k_possible_file_flags)) {
-				// TODO(SandNoodle): What about files we cannot read nor write?
 				PlatformFileAccessFlags access_flags = !(fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 				                                         ? PlatformFileAccessFlags::All
 				                                         : PlatformFileAccessFlags::Read;

@@ -14,11 +14,9 @@ namespace Orion::Engine
 {
 	namespace Detail
 	{
-		/**
-		 * @brief StringView is a class that enables lightweight view into some sequence of the characters (in a given
-		 * encoding).
-		 * @tparam T (Assumed) encoding used by the underlying string.
-		 */
+		/// @brief StringView is a class that enables lightweight view into some sequence of the characters (in a given
+		/// encoding).
+		/// @tparam T (Assumed) encoding used by the underlying string.
 		template <StringEncoding T>
 		class StringViewBase
 		{
@@ -91,9 +89,7 @@ namespace Orion::Engine
 			// NOLINTBEGIN(readability-identifier-naming)
 			/** Required overload for the C++'s for range loops. */
 			///@{
-			[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType begin() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType begin() const noexcept;
-			[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType end() noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType end() const noexcept;
 			///@}
 			// NOLINTEND(readability-identifier-naming)
@@ -108,15 +104,6 @@ namespace Orion::Engine
 	using StringViewUTF8  = Detail::StringViewBase<Detail::StringEncoding::UTF8>;
 	using StringViewUTF16 = Detail::StringViewBase<Detail::StringEncoding::UTF16>;
 	using StringViewUTF32 = Detail::StringViewBase<Detail::StringEncoding::UTF32>;
-
-	// -- Deduction guides.
-	// TODO(SandNoodle): Deduction guides.
-
-	// -- Helper macros.
-	/// @brief Constructs StringView from a C-styled literal.
-#define ORION_STRINGVIEW(str)                                                                     \
-	Orion::Engine::StringView(reinterpret_cast<Orion::Engine::StringView::ConstPointerType>(str), \
-	                          Orion::Engine::StringLength<Orion::Engine::Detail::StringEncoding::ANSI>(str))
 
 	// -- Hash.
 	namespace Algorithm
@@ -171,11 +158,10 @@ namespace Orion::Engine
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::SubView(SizeType begin, SizeType end) noexcept -> ThisType
 		{
 			ORION_ASSERT_DEBUG_SLOW(_data);
-			ORION_ASSERT_DEBUG_SLOW(0 < begin < _size);
-			ORION_ASSERT_DEBUG_SLOW(0 < end < _size);
+			ORION_ASSERT_DEBUG_SLOW(begin < _size);
+			ORION_ASSERT_DEBUG_SLOW(end <= _size);
 			ORION_ASSERT_DEBUG_SLOW(begin <= end);
-			SizeType size = end - begin;
-			return ThisType(Data() + begin, size);
+			return ThisType{ _data + begin, _data + end };
 		}
 
 		template <StringEncoding T>
@@ -183,11 +169,10 @@ namespace Orion::Engine
 			-> ThisType
 		{
 			ORION_ASSERT_DEBUG_SLOW(_data);
-			ORION_ASSERT_DEBUG_SLOW(0 < begin < _size);
-			ORION_ASSERT_DEBUG_SLOW(0 < end < _size);
+			ORION_ASSERT_DEBUG_SLOW(begin < _size);
+			ORION_ASSERT_DEBUG_SLOW(end <= _size);
 			ORION_ASSERT_DEBUG_SLOW(begin <= end);
-			SizeType size = end - begin;
-			return ThisType(Data() + begin, size);
+			return ThisType{ _data + begin, _data + end };
 		}
 
 		template <StringEncoding T>
@@ -353,26 +338,10 @@ namespace Orion::Engine
 		}
 
 		template <StringEncoding T>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() noexcept -> PointerType
-		{
-			ORION_ASSERT_DEBUG_SLOW(_size > 0);
-			// TODO(SandNoodle): I kinda dislike the const_cast here, ideally we'd have StringViewIterator type here.
-			return const_cast<PointerType>(_data);
-		}
-
-		template <StringEncoding T>
 		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::begin() const noexcept -> ConstPointerType
 		{
 			ORION_ASSERT_DEBUG_SLOW(_size > 0);
 			return _data;
-		}
-
-		template <StringEncoding T>
-		ORION_FORCE_INLINE constexpr auto StringViewBase<T>::end() noexcept -> PointerType
-		{
-			ORION_ASSERT_DEBUG_SLOW(_size > 0);
-			// TODO(SandNoodle): I kinda dislike the const_cast here, ideally we'd have StringViewIterator type here.
-			return const_cast<PointerType>(_data) + _size;
 		}
 
 		template <StringEncoding T>

@@ -16,17 +16,12 @@
 
 namespace Orion::Engine
 {
-	/// @brief Verifies that a given element at \p address is NOT already present in the Vector.
-#define ORION_VECTOR_VERIFY_ELEMENT_ADDRESS(address)
-	ORION_ASSERT_DEBUG_SLOW(address < Data() || address >= (Data() + Size()),
-	                        "Attempting to use element (at address '{}'), which is already contained in the Vector.",
-	                        address)
-
 	namespace Detail
 	{
-		/// @brief TODO
-		/// @tparam T TODO
-		/// @tparam Allocator TODO
+		/// @brief Base class for all vector types - it's only concern is to perform memory operations (allocations;
+		/// deallocations).
+		/// @tparam T Type to be stored.
+		/// @tparam Allocator Type of the allocator to perform the memory operations.
 		template <typename T, Memory::AllocatorKind Allocator>
 		class VectorBase
 		{
@@ -178,6 +173,12 @@ namespace Orion::Engine
 	Vector(const T*, const T*, Allocator = Allocator()) -> Vector<T, Allocator>;
 
 	// -- Implementation.
+	/// @brief Verifies that a given element at \p address is NOT already present in the Vector.
+#define ORION_VECTOR_VERIFY_ELEMENT_ADDRESS(address)                                                                  \
+	ORION_ASSERT_DEBUG_SLOW((address) < Data() || (address) >= (Data() + Size()),                                     \
+	                        "Attempting to use element (at address '{}'), which is already contained in the Vector.", \
+	                        (address))
+
 	namespace Detail
 	{
 		template <typename T, Memory::AllocatorKind Allocator>
@@ -331,14 +332,14 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator[](SizeType index) noexcept -> ReferenceType
 	{
-		ORION_ASSERT_DEBUG_SLOW(index < _size);
+		ORION_ASSERT_DEBUG_SLOW(index < this->_size);
 		return this->_data[index];
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::operator[](SizeType index) const noexcept -> ConstReferenceType
 	{
-		ORION_ASSERT_DEBUG_SLOW(index < _size);
+		ORION_ASSERT_DEBUG_SLOW(index < this->_size);
 		return this->_data[index];
 	}
 
@@ -469,16 +470,16 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::RemoveBack() noexcept -> void
 	{
-		ORION_ASSERT_DEBUG_SLOW(_data);
-		ORION_ASSERT_DEBUG_SLOW(_size > 0);
+		ORION_ASSERT_DEBUG_SLOW(this->_data);
+		ORION_ASSERT_DEBUG_SLOW(this->_size > 0);
 		this->_data[--this->_size].~ValueType();
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr auto Vector<T, Allocator>::Remove(SizeType index) noexcept -> void
 	{
-		ORION_ASSERT_DEBUG_SLOW(_data);
-		ORION_ASSERT_DEBUG_SLOW(_size > 0);
+		ORION_ASSERT_DEBUG_SLOW(this->_data);
+		ORION_ASSERT_DEBUG_SLOW(this->_size > 0);
 		Swap(this->_data[index], this->_data[this->_size - 1]);
 		this->_data[--this->_size].~ValueType();
 	}
@@ -500,7 +501,7 @@ namespace Orion::Engine
 	template <typename CompareFn>
 	constexpr auto Vector<T, Allocator>::Sort(CompareFn&& compare) noexcept -> void
 	{
-		ORION_ASSERT_DEBUG_SLOW(_data != nullptr);
+		ORION_ASSERT_DEBUG_SLOW(this->_data != nullptr);
 		Algorithm::Sort(this->_data, this->_size, Forward<CompareFn>(compare));
 	}
 
@@ -560,6 +561,6 @@ namespace Orion::Engine
 		Swap(this->_capacity, other._capacity);
 		Swap(this->_size, other._size);
 	}
-}  // namespace Orion::Engine
 
 #undef ORION_VECTOR_VERIFY_ELEMENT_ADDRESS
+}  // namespace Orion::Engine
