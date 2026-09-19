@@ -205,7 +205,8 @@ namespace Orion::Engine
 		constexpr void DoInitialize(SizeType initial_capacity) noexcept;
 		constexpr void DoRebuildHashMapIfNeeded() noexcept;
 		constexpr ReferenceType DoInsert(KeyValueType&& element) noexcept;
-		constexpr void DoRemove(KeyType&& key) noexcept;
+		template <typename KeyTypeArg>
+		constexpr void DoRemove(KeyTypeArg&& key) noexcept;
 		constexpr SizeType DoFindSlot(const KeyType& key) const noexcept;
 		constexpr void DoSwap(ThisType& other) noexcept;
 	};
@@ -621,15 +622,23 @@ namespace Orion::Engine
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
-	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoRemove(KeyType&& key) noexcept -> void
+	template <typename KeyTypeArg>
+	constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::DoRemove(KeyTypeArg&& key) noexcept -> void
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
+
+		if (_size < 1UL) [[unlikely]] {
+			return;
+		}
+
 		SizeType slot_index = DoFindSlot(key);
 		if (_data[slot_index].state == StorageType::State::Free) {
 			return;
 		}
 
+		Memory::DestructItems<KeyValueType>(&_data[slot_index], 1);
 		_data[slot_index].state = StorageType::State::Free;
+		--_size;
 
 		SizeType index = slot_index;
 		while (true) {
@@ -649,12 +658,10 @@ namespace Orion::Engine
 				}
 			}
 
-			Memory::DestructItems(&_data[slot_index], 1);
 			_data[slot_index].state = StorageType::State::Allocated;
 			_data[index].state      = StorageType::State::Free;
 			_data[slot_index].key   = _data[index].key;
 			_data[slot_index].value = _data[index].value;
-			--_size;
 
 			slot_index = index;
 		}

@@ -6,12 +6,6 @@
 
 namespace Orion::Engine::UT
 {
-	// TODO(SandNoodle): Add missing test cases:
-	//                   - Remove()
-	//                   - Find()
-	//                   - Clear()
-	//                   - LoadFactor/MaxLoadFactor()
-
 	namespace
 	{
 		template <typename T>
@@ -336,17 +330,131 @@ namespace Orion::Engine::UT
 	TYPED_TEST_P(HashMapTest, Remove)
 	{
 		HashMap h{ Value<TypeParam>(0), Value<TypeParam>(1), Value<TypeParam>(2) };
-		EXPECT_TRUE(h.IsEmpty());
+		EXPECT_FALSE(h.IsEmpty());
 		EXPECT_EQ(h.Size(), 3UL);
 		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
 		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
 
 		// Remove (const KeyType&)
 		{
+			TypeParam key = TypeParam(1);
+			h.Remove(key);
+			EXPECT_EQ(h.Size(), 2UL);
+			EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+			EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+			ASSERT_FALSE(h.Contains(key));
 		}
 
 		// Remove (KeyType&&)
 		{
+			TypeParam key = TypeParam(2);
+			h.Remove(Move(key));
+			EXPECT_EQ(h.Size(), 1UL);
+			EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+			EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+			ASSERT_FALSE(h.Contains(TypeParam(2)));
+		}
+	}
+
+	TYPED_TEST_P(HashMapTest, Remove_NonExistentKey)
+	{
+		HashMap h{ Value<TypeParam>(0), Value<TypeParam>(1), Value<TypeParam>(2) };
+		EXPECT_FALSE(h.IsEmpty());
+		EXPECT_EQ(h.Size(), 3UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+
+		TypeParam non_existent_key = TypeParam(3);
+		ASSERT_FALSE(h.Contains(non_existent_key));
+
+		h.Remove(non_existent_key);
+		EXPECT_EQ(h.Size(), 3UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+	}
+
+	TYPED_TEST_P(HashMapTest, Find)
+	{
+		HashMap h{ Value<TypeParam>(0), Value<TypeParam>(1), Value<TypeParam>(2) };
+		EXPECT_FALSE(h.IsEmpty());
+		EXPECT_EQ(h.Size(), 3UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+
+		{
+			using ConstPointerType = decltype(h)::ConstPointerType;
+			TypeParam key          = TypeParam(1);
+			ASSERT_TRUE(h.Contains(key));
+			ConstPointerType result = h.Find(key);
+			ASSERT_TRUE(result);
+			EXPECT_EQ(*result, TypeParam(2));
+		}
+
+		{
+			using PointerType      = decltype(h)::PointerType;
+			TypeParam existing_key = TypeParam(2);
+			ASSERT_TRUE(h.Contains(existing_key));
+			PointerType result = h.Find(existing_key);
+			ASSERT_TRUE(result);
+			EXPECT_EQ(*result, TypeParam(3));
+		}
+	}
+
+	TYPED_TEST_P(HashMapTest, Find_NonExistentKey)
+	{
+		HashMap h{ Value<TypeParam>(0), Value<TypeParam>(1), Value<TypeParam>(2) };
+		EXPECT_FALSE(h.IsEmpty());
+		EXPECT_EQ(h.Size(), 3UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+
+		{
+			using ConstPointerType = decltype(h)::ConstPointerType;
+			TypeParam key          = TypeParam(3);
+			ASSERT_FALSE(h.Contains(key));
+			ConstPointerType result = h.Find(key);
+			ASSERT_FALSE(result);
+		}
+
+		{
+			using PointerType      = decltype(h)::PointerType;
+			TypeParam existing_key = TypeParam(4);
+			ASSERT_FALSE(h.Contains(existing_key));
+			PointerType result = h.Find(existing_key);
+			ASSERT_FALSE(result);
+		}
+	}
+
+	TYPED_TEST_P(HashMapTest, Clear)
+	{
+		HashMap h{ Value<TypeParam>(0), Value<TypeParam>(1), Value<TypeParam>(2) };
+		EXPECT_FALSE(h.IsEmpty());
+		EXPECT_EQ(h.Size(), 3UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+
+		h.Clear();
+
+		EXPECT_TRUE(h.IsEmpty());
+		EXPECT_EQ(h.Size(), 0UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+	}
+
+	TYPED_TEST_P(HashMapTest, LoadFactor)
+	{
+		static constexpr Array k_expected_load_factors = { 0.0, 0.0625, 0.125, 0.1875 };
+
+		HashMap<TypeParam, TypeParam> h{};
+		EXPECT_TRUE(h.IsEmpty());
+		EXPECT_EQ(h.Size(), 0UL);
+		EXPECT_EQ(h.ByteSize(), h.Size() * sizeof(typename decltype(h)::KeyValueType));
+		EXPECT_EQ(h.Capacity(), decltype(h)::k_initial_bucket_count);
+
+		for (USize index = 0; index < k_expected_load_factors.Size() - 1; ++index) {
+			EXPECT_EQ(h.LoadFactor(), k_expected_load_factors[index]);
+			h.Insert(TypeParam(index), TypeParam(index + 1UL));
+			EXPECT_EQ(h.LoadFactor(), k_expected_load_factors[index + 1]);
 		}
 	}
 
@@ -363,7 +471,12 @@ namespace Orion::Engine::UT
 	                            Iterator_BeginEnd_Const,
 	                            Insert,
 	                            Insert_ManyValuesCausingRehash,
-	                            Remove);
+	                            Remove,
+	                            Remove_NonExistentKey,
+	                            Find,
+	                            Find_NonExistentKey,
+	                            Clear,
+	                            LoadFactor);
 
 	INSTANTIATE_TYPED_TEST_SUITE_P(HashMapPrimitiveTypesTest, HashMapTest, PrimitiveTypes);
 	INSTANTIATE_TYPED_TEST_SUITE_P(HashMapComplexTypesTest, HashMapTest, ComplexType);
