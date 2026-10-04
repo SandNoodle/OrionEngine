@@ -1,33 +1,26 @@
 #pragma once
 
 #include "Core/Standard/Containers/Optional.h"
-#include "Core/Standard/Containers/Result.h"
-#include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Containers/Vector.h"
-#include "Core/Standard/Memory/Allocators/Allocator.h"
-#include "Core/Standard/Utility/MoveAndForward.h"
 #include "Platform/FileSystem/StorageProvider.h"
-#include "Platform/Platform.h"
 
 namespace Orion::Engine::Platform::FileSystem
 {
-	/// @brief TODO
-	template <Memory::AllocatorKind Allocator>
+	/// @brief LocalStorageProvider represents an access point into the underlying local storage of a platform the
+	/// engine runs on. In reality, it's a rather thin abstraction over bunch of Platform's IO calls.
+	/// @details Prefer it over raw Platform's IO calls.
 	class LocalStorageProvider final : public IStorageProvider
 	{
 		public:
-		using ThisType      = LocalStorageProvider;
-		using AllocatorType = Allocator;
-
-		private:
-		AllocatorType _allocator;
+		using ThisType = LocalStorageProvider;
 
 		public:
-		constexpr explicit LocalStorageProvider(const AllocatorType& allocator = AllocatorType()) noexcept;
-		constexpr ~LocalStorageProvider() override = default;
+		explicit LocalStorageProvider() noexcept = default;
+		~LocalStorageProvider() override         = default;
 
-		[[nodiscard]] StorageProviderProtocol Protocol() noexcept override;
+		[[nodiscard]] static StringView Protocol() noexcept;
+
 		[[nodiscard]] Optional<IOError> Create(StringView path) noexcept override;
 		[[nodiscard]] Optional<IOError> Remove(StringView path) noexcept override;
 		[[nodiscard]] IOResult<IStorageFileWriter*> Write(StringView path) noexcept override;
@@ -36,151 +29,24 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept override;
 
 		private:
-		[[nodiscard]] static constexpr Optional<IOError> EnsureDirectoryStructure(StringView path) noexcept;
+		[[nodiscard]] static Optional<IOError> EnsureDirectoryStructure(StringView path) noexcept;
 	};
 
 	/// @brief TODO
-	template <Memory::AllocatorKind Allocator>
 	class LocalStorageFileWriter final : public IStorageFileWriter
 	{
 		public:
-		constexpr LocalStorageFileWriter(StringView path);
+		explicit LocalStorageFileWriter(StringView path);
 		~LocalStorageFileWriter() override = default;
 
 		private:
 	};
 
 	/// @brief TODO
-	template <Memory::AllocatorKind Allocator>
 	class LocalStorageFileReader final : public IStorageFileReader
 	{
 		public:
 		~LocalStorageFileReader() override = default;
 	};
 
-	// -- Implementation.
-	template <Memory::AllocatorKind Allocator>
-	constexpr LocalStorageFileWriter<Allocator>::LocalStorageFileWriter(StringView path)
-	{
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	constexpr LocalStorageProvider<Allocator>::LocalStorageProvider(const AllocatorType& allocator) noexcept
-		: _allocator(allocator)
-	{
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Protocol() noexcept -> StorageProviderProtocol
-	{
-		return StorageProviderProtocol::Local;
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<IOError>
-	{
-		if (Optional<IOError> ensure_directory_structure_result = EnsureDirectoryStructure(path);
-		    ensure_directory_structure_result.IsValue()) {
-			return ensure_directory_structure_result;
-		}
-
-		if (!FileCreate(path, PlatformFileAccessFlags::All)) {
-			return IOError::FileCreationFailed;
-		}
-		return k_null_option;
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<IOError>
-	{
-		if (!FileRemove(path)) {
-			return IOError::FileDeletionFailed;
-		}
-		return k_null_option;
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Write(StringView path) noexcept -> IOResult<IStorageFileWriter*>
-	{
-		return Memory::AllocateConstruct<LocalStorageFileWriter<AllocatorType>>(_allocator, path);
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Read(StringView path) noexcept -> IOResult<IStorageFileReader*>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
-	{
-		if (!FileExists(path)) {
-			return IOError::FileDoesNotExist;
-		}
-
-		PlatformFileStat platform_file_stat = StatFile(path);
-		return (StorageStatInfo){
-			.file_name               = Move(platform_file_stat.file_name),
-			.size_in_bytes           = platform_file_stat.size_in_bytes,
-			.unix_time_created       = platform_file_stat.unix_time_created,
-			.unix_time_last_accessed = platform_file_stat.unix_time_last_accessed,
-			.unix_time_last_modified = platform_file_stat.unix_time_last_modified,
-		};
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::List(StringView path, StorageListOption list_option) noexcept
-		-> Vector<StorageStatInfo>
-	{
-		PlatformListOption platform_list_option = [list_option]() -> PlatformListOption {
-			switch (list_option) {
-				case StorageListOption::NonRecursive:
-					return PlatformListOption::NonRecursive;
-				case StorageListOption::Recursive:
-					return PlatformListOption::Recursive;
-				default:
-					ORION_NOT_IMPLEMENTED("unhandled StorageListOption case.");
-					return PlatformListOption::NonRecursive;
-			}
-		}();
-
-		Vector<PlatformFileStat> platform_files = ListFiles(path, platform_list_option);
-		Vector<StorageStatInfo> result{};
-		result.Reserve(platform_files.Size());
-		for (USize index = 0; index < platform_files.Size(); ++index) {
-			result.AddConstruct((StorageStatInfo){
-				.file_name               = Move(platform_files[index].file_name),
-				.size_in_bytes           = platform_files[index].size_in_bytes,
-				.unix_time_created       = platform_files[index].unix_time_created,
-				.unix_time_last_accessed = platform_files[index].unix_time_last_accessed,
-				.unix_time_last_modified = platform_files[index].unix_time_last_modified,
-			});
-		}
-		return result;
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	constexpr auto LocalStorageProvider<Allocator>::EnsureDirectoryStructure(const StringView path) noexcept
-		-> Optional<IOError>
-	{
-		if (path.IsEmpty()) [[unlikely]] {
-			return k_null_option;
-		}
-
-		StringView::SizeType directory_index_end = 0UL;
-		while (true) {
-			directory_index_end = path.Find(StringView("/"), directory_index_end);
-			if (directory_index_end == StringView::k_invalid_index) {
-				return k_null_option;
-			}
-
-			const StringView directory_path = path.SubView(0UL, ++directory_index_end);
-			if (!DirectoryExists(directory_path)) {
-				if (!DirectoryCreate(directory_path)) {
-					return IOError::DirectoryCreationFailed;
-				}
-			}
-		}
-	}
 }  // namespace Orion::Engine::Platform::FileSystem

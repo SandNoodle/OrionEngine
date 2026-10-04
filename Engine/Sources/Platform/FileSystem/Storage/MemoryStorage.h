@@ -1,25 +1,26 @@
 #pragma once
 
+#include "Core/Standard/Containers/Optional.h"
+#include "Core/Standard/Containers/StringView.h"
+#include "Core/Standard/Containers/Vector.h"
 #include "Platform/FileSystem/StorageProvider.h"
 
 namespace Orion::Engine::Platform::FileSystem
 {
-	/// @brief TODO
-	template <Memory::AllocatorKind Allocator>
+	/// @brief MemoryStorageProvider represents an access point into storage made entirely in the engine's runtime
+	/// memory. In reality, it's just an allocated chunk of memory where 'files' live.
+	/// @details Prefer it for short-lived temporary files.
 	class MemoryStorageProvider final : public IStorageProvider
 	{
 		public:
-		using ThisType      = MemoryStorageProvider;
-		using AllocatorType = Allocator;
-
-		private:
-		AllocatorType _allocator;
+		using ThisType = MemoryStorageProvider;
 
 		public:
-		constexpr explicit MemoryStorageProvider(const AllocatorType& allocator = AllocatorType()) noexcept;
-		~MemoryStorageProvider() override = default;
+		explicit MemoryStorageProvider() noexcept = default;
+		~MemoryStorageProvider() override         = default;
 
-		[[nodiscard]] StorageProviderProtocol Protocol() noexcept override;
+		[[nodiscard]] static StringView Protocol() noexcept;
+
 		[[nodiscard]] Optional<IOError> Create(StringView path) noexcept override;
 		[[nodiscard]] Optional<IOError> Remove(StringView path) noexcept override;
 		[[nodiscard]] IOResult<IStorageFileWriter*> Write(StringView path) noexcept override;
@@ -29,83 +30,16 @@ namespace Orion::Engine::Platform::FileSystem
 	};
 
 	/// @brief TODO
-	template <Memory::AllocatorKind Allocator>
 	class MemoryStorageFileWriter : public IStorageFileWriter
 	{
-		public:
-		using ThisType      = MemoryStorageFileWriter;
-		using AllocatorType = Allocator;
-
 		public:
 		~MemoryStorageFileWriter() override = default;
 	};
 
 	/// @brief TODO
-	template <Memory::AllocatorKind Allocator>
 	class MemoryStorageFileReader final : public IStorageFileReader
 	{
 		public:
-		using ThisType      = MemoryStorageFileReader;
-		using AllocatorType = Allocator;
-
-		public:
 		~MemoryStorageFileReader() override = default;
 	};
-
-	// -- Implementation.
-	template <Memory::AllocatorKind Allocator>
-	constexpr MemoryStorageProvider<Allocator>::MemoryStorageProvider(const AllocatorType& allocator) noexcept
-		: _allocator(allocator)
-	{
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Protocol() noexcept -> StorageProviderProtocol
-	{
-		return StorageProviderProtocol::Memory;
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Create(StringView path) noexcept -> Optional<IOError>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Remove(StringView path) noexcept -> Optional<IOError>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Write(StringView path) noexcept -> IOResult<IStorageFileWriter*>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Read(StringView path) noexcept -> IOResult<IStorageFileReader*>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::Stat(StringView path) noexcept -> IOResult<StorageStatInfo>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_NOT_IMPLEMENTED();
-	}
-
-	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::List(StringView path, StorageListOption list_option) noexcept
-		-> Vector<StorageStatInfo>
-	{
-		ORION_IGNORE_PARAM(path);
-		ORION_IGNORE_PARAM(list_option);
-		ORION_NOT_IMPLEMENTED();
-	}
 }  // namespace Orion::Engine::Platform::FileSystem

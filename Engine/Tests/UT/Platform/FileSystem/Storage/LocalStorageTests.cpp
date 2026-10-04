@@ -13,8 +13,7 @@ namespace Orion::Engine::Platform::FileSystem
 		class LocalStorageTest : public ::testing::Test
 		{
 			protected:
-			Memory::PlatformAllocator _allocator{};
-			LocalStorageProvider<Memory::PlatformAllocator> _storage_provider{ _allocator };
+			LocalStorageProvider _storage_provider{};
 
 			protected:
 			void SetUp() override;
@@ -36,7 +35,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 	TEST_F(LocalStorageTest, Protocol)
 	{
-		EXPECT_EQ(_storage_provider.Protocol(), StorageProviderProtocol::Local);
+		EXPECT_EQ(_storage_provider.Protocol(), StringView("local://"));
 	}
 
 	TEST_F(LocalStorageTest, Create_Stat_Remove)

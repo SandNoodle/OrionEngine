@@ -4,14 +4,13 @@
 
 #include "Core/Standard/Containers/Optional.h"
 #include "Core/Standard/Containers/Result.h"
-#include "Core/Standard/Containers/Span.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Containers/Vector.h"
 
 namespace Orion::Engine::Platform::FileSystem
 {
-	/// @brief TODO
+	/// @brief Enumeration describing type of an error encountered when performing Storage's IO operations.
 	enum class IOError : UInt8
 	{
 		FileCreationFailed,
@@ -27,16 +26,10 @@ namespace Orion::Engine::Platform::FileSystem
 		InternalError,
 	};
 
-	/// @brief TODO
+	/// @brief Result type for IO operations.
+	/// @tparam T Expected type to be stored.
 	template <typename T>
 	using IOResult = Result<T, IOError>;
-
-	/// @brief Represents
-	enum class StorageProviderProtocol : UInt8
-	{
-		Local,
-		Memory,
-	};
 
 	/// @brief Structure tha holds metadata of a given file in the storage.
 	struct StorageStatInfo
@@ -62,19 +55,6 @@ namespace Orion::Engine::Platform::FileSystem
 	{
 		public:
 		virtual ~IStorageFileWriter() = default;
-
-#if 0
-		/// @brief TODO
-		/// @param[IN, REQUIRED] data TODO
-		[[nodiscard]] virtual Optional<IOError> Write(ReadonlySpan<Byte> data) = 0;
-
-		/// @brief TODO
-		/// @param[IN, REQUIRED] offset TODO
-		[[nodiscard]] virtual Optional<IOError> Seek(USize offset);
-
-		/// @brief TODO
-		[[nodiscard]] virtual Optional<IOError> Close() = 0;
-#endif
 	};
 
 	/// @brief Represents reading access point to the underlying file, be it local, in-memory, etc.
@@ -93,9 +73,6 @@ namespace Orion::Engine::Platform::FileSystem
 	{
 		public:
 		virtual ~IStorageProvider() = default;
-
-		/// @brief Returns the underlying protocol, i.e. storage type for this StorageProvider.
-		[[nodiscard]] virtual StorageProviderProtocol Protocol() noexcept = 0;
 
 		/// @brief Attempts to create a file under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
@@ -129,58 +106,4 @@ namespace Orion::Engine::Platform::FileSystem
 		/// @param[IN, REQUIRED] list_option What kind of behavior should be used when iterating over \p path.
 		[[nodiscard]] virtual Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept = 0;
 	};
-
-	/// @brief Returns human-readable name of a given StorageProvider's \p protocol.
-	[[nodiscard]] constexpr StringView ProtocolName(StorageProviderProtocol protocol) noexcept
-	{
-		switch (protocol) {
-			case StorageProviderProtocol::Local:
-				return StringView("local");
-			case StorageProviderProtocol::Memory:
-				return StringView("memory");
-			default:
-				ORION_NOT_IMPLEMENTED("unhandled protocol name");
-		}
-	}
-
-	/// @brief Returns (path) prefix for a given StorageProvider's \p protocol.
-	[[nodiscard]] constexpr StringView ProtocolPrefix(StorageProviderProtocol protocol) noexcept
-	{
-		switch (protocol) {
-			case StorageProviderProtocol::Local:
-				return StringView("local://");
-			case StorageProviderProtocol::Memory:
-				return StringView("mem://");
-			default:
-				ORION_NOT_IMPLEMENTED("unhandled protocol prefix");
-		}
-	}
-
-	/// @brief Tries to match given \p prefix with its StorageProviderProtocol's counterpart.
-	[[nodiscard]] constexpr Optional<StorageProviderProtocol> FromProtocolPrefix(StringView prefix) noexcept
-	{
-		if (prefix == StringView("local://")) {
-			return StorageProviderProtocol::Local;
-		}
-
-		if (prefix == StringView("mem://")) {
-			return StorageProviderProtocol::Memory;
-		}
-
-		return k_null_option;
-	}
 }  // namespace Orion::Engine::Platform::FileSystem
-
-template <>
-struct Orion::Engine::Algorithm::Hash<Orion::Engine::Platform::FileSystem::StorageProviderProtocol>
-{
-	public:
-	using ValueType = Platform::FileSystem::StorageProviderProtocol;
-	using SizeType  = USize;
-
-	public:
-	SizeType operator()(const ValueType& v) const
-	{
-		return static_cast<SizeType>(v);
-	}
-};  // namespace Orion::Engine::Algorithm
