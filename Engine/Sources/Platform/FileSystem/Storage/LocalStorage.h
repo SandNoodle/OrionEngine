@@ -33,7 +33,7 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] IOResult<IStorageFileWriter*> Write(StringView path) noexcept override;
 		[[nodiscard]] IOResult<IStorageFileReader*> Read(StringView path) noexcept override;
 		[[nodiscard]] IOResult<StorageStatInfo> Stat(StringView path) noexcept override;
-		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept override;
+		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept override;
 
 		private:
 		[[nodiscard]] static constexpr Optional<IOError> EnsureDirectoryStructure(StringView path) noexcept;
@@ -130,9 +130,22 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto LocalStorageProvider<Allocator>::List(StringView path, Bool8 recursive) noexcept -> Vector<StorageStatInfo>
+	auto LocalStorageProvider<Allocator>::List(StringView path, StorageListOption list_option) noexcept
+		-> Vector<StorageStatInfo>
 	{
-		Vector<PlatformFileStat> platform_files = ListFiles(path, recursive);
+		PlatformListOption platform_list_option = [list_option]() -> PlatformListOption {
+			switch (list_option) {
+				case StorageListOption::NonRecursive:
+					return PlatformListOption::NonRecursive;
+				case StorageListOption::Recursive:
+					return PlatformListOption::Recursive;
+				default:
+					ORION_NOT_IMPLEMENTED("unhandled StorageListOption case.");
+					return PlatformListOption::NonRecursive;
+			}
+		}();
+
+		Vector<PlatformFileStat> platform_files = ListFiles(path, platform_list_option);
 		Vector<StorageStatInfo> result{};
 		result.Reserve(platform_files.Size());
 		for (USize index = 0; index < platform_files.Size(); ++index) {

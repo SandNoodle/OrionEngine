@@ -25,7 +25,7 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] IOResult<IStorageFileWriter*> Write(StringView path) noexcept override;
 		[[nodiscard]] IOResult<IStorageFileReader*> Read(StringView path) noexcept override;
 		[[nodiscard]] IOResult<StorageStatInfo> Stat(StringView path) noexcept override;
-		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept override;
+		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept override;
 	};
 
 	/// @brief TODO
@@ -101,10 +101,11 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	auto MemoryStorageProvider<Allocator>::List(StringView path, Bool8 recursive) noexcept -> Vector<StorageStatInfo>
+	auto MemoryStorageProvider<Allocator>::List(StringView path, StorageListOption list_option) noexcept
+		-> Vector<StorageStatInfo>
 	{
 		ORION_IGNORE_PARAM(path);
-		ORION_IGNORE_PARAM(recursive);
+		ORION_IGNORE_PARAM(list_option);
 		ORION_NOT_IMPLEMENTED();
 	}
 }  // namespace Orion::Engine::Platform::FileSystem

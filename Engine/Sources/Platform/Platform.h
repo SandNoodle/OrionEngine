@@ -29,6 +29,13 @@ namespace Orion::Engine::Platform
 	};
 	ORION_ENUM_FLAG(PlatformFileAccessFlags);
 
+	/// @brief Enumeration describing what kind of behavior should be used when listing files from a given path.
+	enum class PlatformListOption : Bool8
+	{
+		NonRecursive = false,
+		Recursive    = true,
+	};
+
 	/// @brief Structure holding metadata of the platform's file.
 	struct PlatformFileStat
 	{
@@ -68,9 +75,9 @@ namespace Orion::Engine::Platform
 
 	/// @brief Queries the underlying platform and stats the list of file under a given \p path.
 	/// @param[IN, REQUIRED] path Path to the directory.
-	/// @param[IN, REQUIRED] recursive Should sub-directories be traversed?
+	/// @param[IN, REQUIRED] list_option What kind of behavior should be used when iterating over \p path.
 	/// @warning DO NOT USE DIRECTLY! All filesystem calls should be handled through the Platform::FileSystem module.
-	[[nodiscard]] Vector<PlatformFileStat> ListFiles(StringView path, Bool8 recursive) noexcept;
+	[[nodiscard]] Vector<PlatformFileStat> ListFiles(StringView path, PlatformListOption list_option) noexcept;
 
 	/// @brief Queries the underlying platform and creates a new directory under a given \p path.
 	/// @param[IN, REQUIRED] path Path to the directory to be created.

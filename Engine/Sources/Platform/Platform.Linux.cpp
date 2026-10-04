@@ -120,7 +120,9 @@ namespace Orion::Engine::Platform
 		};
 	}
 
-	static constexpr void DoListFiles(Vector<PlatformFileStat>& file_stats, StringView path, Bool8 recursive) noexcept
+	static constexpr void DoListFiles(Vector<PlatformFileStat>& file_stats,
+	                                  StringView path,
+	                                  PlatformListOption list_option) noexcept
 	{
 		ORION_ASSERT_DEBUG(path.Size() > 0);
 
@@ -138,10 +140,10 @@ namespace Orion::Engine::Platform
 					continue;
 				}
 
-				if (recursive) {
+				if (list_option == PlatformListOption::Recursive) {
 					String path_buffer{};
 					StringView sub_path = CombinePath(path_buffer, path, entry_name);
-					DoListFiles(file_stats, sub_path, recursive);
+					DoListFiles(file_stats, sub_path, list_option);
 				}
 			}
 
@@ -155,10 +157,10 @@ namespace Orion::Engine::Platform
 		closedir(base_directory);
 	}
 
-	Vector<PlatformFileStat> ListFiles(StringView path, Bool8 recursive) noexcept
+	Vector<PlatformFileStat> ListFiles(StringView path, PlatformListOption list_option) noexcept
 	{
 		Vector<PlatformFileStat> result{};
-		DoListFiles(result, path, recursive);
+		DoListFiles(result, path, list_option);
 		return result;
 	}
 

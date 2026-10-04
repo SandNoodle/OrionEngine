@@ -24,7 +24,7 @@ namespace Orion::Engine::Platform::FileSystem
 		{
 			static const StringView k_base_test_path = StringView("./LocalStorageTestFiles");
 			if (DirectoryExists(k_base_test_path)) {
-				Vector<PlatformFileStat> files = ListFiles(k_base_test_path, true);
+				Vector<PlatformFileStat> files = ListFiles(k_base_test_path, PlatformListOption::Recursive);
 				for (const PlatformFileStat& file_stat : files) {
 					if (!FileRemove(StringView(file_stat.file_name.begin(), file_stat.file_name.end()))) {
 						GTEST_FAIL() << "Failed to remove a file: " << file_stat.file_name;
@@ -109,7 +109,8 @@ namespace Orion::Engine::Platform::FileSystem
 			                                     "./LocalStorageTestFiles/List/Sub/Sub/5" };
 
 		// Verify that the destination directory does not contain ANY files beforehand.
-		Vector<StorageStatInfo> pre_creation_files = _storage_provider.List(StringView(k_list_path), false);
+		Vector<StorageStatInfo> pre_creation_files
+			= _storage_provider.List(StringView(k_list_path), StorageListOption::NonRecursive);
 		ASSERT_EQ(pre_creation_files.Size(), 0UL);
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
 			IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(StringView(k_file_names[index]));
@@ -124,7 +125,8 @@ namespace Orion::Engine::Platform::FileSystem
 		}
 
 		// List all files (non-recursively) in the base directory (only 3 should be visible).
-		Vector<StorageStatInfo> post_creation_files = _storage_provider.List(StringView(k_list_path), false);
+		Vector<StorageStatInfo> post_creation_files
+			= _storage_provider.List(StringView(k_list_path), StorageListOption::NonRecursive);
 		ASSERT_FALSE(post_creation_files.IsEmpty());
 		ASSERT_EQ(post_creation_files.Size(), 3UL);
 
@@ -158,7 +160,8 @@ namespace Orion::Engine::Platform::FileSystem
 			                                     "./LocalStorageTestFiles/List_Recursive/Sub/Sub/5" };
 
 		// Verify that the destination directory does not contain ANY files beforehand.
-		Vector<StorageStatInfo> pre_creation_files = _storage_provider.List(StringView(k_list_path), true);
+		Vector<StorageStatInfo> pre_creation_files
+			= _storage_provider.List(StringView(k_list_path), StorageListOption::Recursive);
 		ASSERT_EQ(pre_creation_files.Size(), 0UL);
 		for (USize index = 0; index < k_file_names.Size(); ++index) {
 			IOResult<StorageStatInfo> stat_result = _storage_provider.Stat(StringView(k_file_names[index]));
@@ -173,7 +176,8 @@ namespace Orion::Engine::Platform::FileSystem
 		}
 
 		// List all files (non-recursively) in the base directory (only 3 should be visible).
-		Vector<StorageStatInfo> post_creation_files = _storage_provider.List(StringView(k_list_path), true);
+		Vector<StorageStatInfo> post_creation_files
+			= _storage_provider.List(StringView(k_list_path), StorageListOption::Recursive);
 		ASSERT_FALSE(post_creation_files.IsEmpty());
 		ASSERT_EQ(post_creation_files.Size(), 5UL);
 

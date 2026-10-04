@@ -11,6 +11,7 @@
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Platform/FileSystem/Storage/LocalStorage.h"
 #include "Platform/FileSystem/Storage/MemoryStorage.h"
+#include "Platform/FileSystem/StorageProvider.h"
 #include "StorageProvider.h"
 
 namespace Orion::Engine::Platform::FileSystem
@@ -82,8 +83,8 @@ namespace Orion::Engine::Platform::FileSystem
 		/// @brief Queries the filesystem to list every file under a given \p path.
 		/// @warning \p path MUST contain the protocol's prefix.
 		/// @param[IN, REQUIRED] path Path to the 'directory' under which to query the files.
-		/// @param[IN, REQUIRED] recursive Should files in sub-directories also be listed.
-		[[nodiscard]] constexpr Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept;
+		/// @param[IN, REQUIRED] list_option What kind of behavior should be used when iterating over \p path.
+		[[nodiscard]] constexpr Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept;
 
 		private:
 		template <typename Provider>
@@ -116,8 +117,9 @@ namespace Orion::Engine::Platform::FileSystem
 	constexpr auto FileSystem<Allocator>::Shutdown() noexcept -> Bool8
 	{
 		ORION_LOG_DEBUG("[FileSystem] Shutting down.");
-		DestroyProvider(_storage_providers[StorageProviderProtocol::Local]);
-		DestroyProvider(_storage_providers[StorageProviderProtocol::Memory]);
+		for (auto&& [_, provider] : _storage_providers) {
+			DestroyProvider(provider);
+		}
 		_storage_providers.Clear();
 		ORION_LOG_DEBUG("[FileSystem] Shut down.");
 		return true;
@@ -184,7 +186,8 @@ namespace Orion::Engine::Platform::FileSystem
 	}
 
 	template <Memory::AllocatorKind Allocator>
-	constexpr auto FileSystem<Allocator>::List(StringView path, Bool8 recursive) noexcept -> Vector<StorageStatInfo>
+	constexpr auto FileSystem<Allocator>::List(StringView path, StorageListOption list_option) noexcept
+		-> Vector<StorageStatInfo>
 	{
 		IOResult<Pair<IStorageProvider*, StringView>> result = GetProviderAndPath(path);
 		if (result.IsError()) {
@@ -192,7 +195,7 @@ namespace Orion::Engine::Platform::FileSystem
 		}
 		IStorageProvider* storage_provider = result.Value().first;
 		StringView path_without_prefix     = result.Value().second;
-		return storage_provider->List(path_without_prefix, recursive);
+		return storage_provider->List(path_without_prefix, list_option);
 	}
 
 	template <Memory::AllocatorKind Allocator>

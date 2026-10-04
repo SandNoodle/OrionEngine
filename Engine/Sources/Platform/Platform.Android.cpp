@@ -33,10 +33,10 @@ namespace Orion::Engine::Platform
 		ORION_NOT_IMPLEMENTED();
 	}
 
-	Vector<PlatformFileStat> ListFiles(StringView path, Bool8 recursive) noexcept
+	Vector<PlatformFileStat> ListFiles(StringView path, PlatformListOption list_option) noexcept
 	{
 		ORION_IGNORE_PARAM(path);
-		ORION_IGNORE_PARAM(recursive);
+		ORION_IGNORE_PARAM(list_option);
 		ORION_NOT_IMPLEMENTED();
 	}
 

@@ -48,6 +48,13 @@ namespace Orion::Engine::Platform::FileSystem
 		UInt64 unix_time_last_modified;
 	};
 
+	/// @brief Enumeration describing what kind of behavior should be used when listing files from a given path.
+	enum class StorageListOption : Bool8
+	{
+		NonRecursive = false,
+		Recursive    = true,
+	};
+
 	/// @brief Represents writing access point to the underlying file, be it local, in-memory, etc.
 	/// @warning Only one access operation can be active for a given file. If the file is locked for reading then no
 	/// writing can take place. However, multiple writers CANNOT access the same file concurrently.
@@ -119,8 +126,8 @@ namespace Orion::Engine::Platform::FileSystem
 		/// @brief Queries the underlying storage to list every file under a given \p path.
 		/// @warning \p path must NOT contain the protocol's prefix.
 		/// @param[IN, REQUIRED] path Path to the 'directory' under which to query the files.
-		/// @param[IN, REQUIRED] recursive Should files in sub-directories also be listed.
-		[[nodiscard]] virtual Vector<StorageStatInfo> List(StringView path, Bool8 recursive) noexcept = 0;
+		/// @param[IN, REQUIRED] list_option What kind of behavior should be used when iterating over \p path.
+		[[nodiscard]] virtual Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept = 0;
 	};
 
 	/// @brief Returns human-readable name of a given StorageProvider's \p protocol.
