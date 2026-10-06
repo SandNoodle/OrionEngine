@@ -11,11 +11,7 @@ namespace Orion::Engine::Platform
 	[[nodiscard]] ORION_FORCE_INLINE constexpr void* MemoryAllocate(USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryAllocate, because size_in_bytes is 0.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		return __builtin_malloc(size_in_bytes);
-#else
-		return ::malloc(size_in_bytes);
-#endif
+		return Compiler::Memory::MemoryAllocate(size_in_bytes);
 	}
 
 	/// @brief Frees previously allocated block of memory.
@@ -23,11 +19,7 @@ namespace Orion::Engine::Platform
 	ORION_FORCE_INLINE constexpr void MemoryFree(void* ptr) noexcept
 	{
 		ORION_ASSERT_DEBUG(ptr, "Cannot perform MemoryFree, because ptr is null.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		return __builtin_free(ptr);
-#else
-		return ::free(ptr);
-#endif
+		return Compiler::Memory::MemoryFree(ptr);
 	}
 
 	/// @brief Reallocates previously allocated block of memory with new \p size_in_bytes size.
@@ -45,11 +37,7 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryCopy, because dst is null.");
 		ORION_ASSERT_DEBUG(src, "Cannot perform MemoryCopy, because src is null.");
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryCopy, because size_in_bytes is 0.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		__builtin_memcpy(dst, src, size_in_bytes);
-#else
-		::memcpy(dst, src, size_in_bytes);
-#endif
+		Compiler::Memory::MemoryCopy(dst, src, size_in_bytes);
 	}
 
 	/// @brief Moves \p size_in_bytes sized region of memory from \p src to \p dst.
@@ -58,11 +46,7 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryMove, because dst is null.");
 		ORION_ASSERT_DEBUG(src, "Cannot perform MemoryMove, because src is null.");
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryMove, because size_in_bytes is 0.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		__builtin_memmove(dst, src, size_in_bytes);
-#else
-		::memmove(dst, src, size_in_bytes);
-#endif
+		Compiler::Memory::MemoryMove(dst, src, size_in_bytes);
 	}
 
 	/// @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a given \p value.
@@ -70,11 +54,7 @@ namespace Orion::Engine::Platform
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemorySet, because dst is null.");
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemorySet, because size_in_bytes is 0.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		__builtin_memset(dst, value, size_in_bytes);
-#else
-		::memset(dst, value, size_in_bytes);
-#endif
+		Compiler::Memory::MemorySet(dst, value, size_in_bytes);
 	}
 
 	/// @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a 0.
@@ -82,11 +62,7 @@ namespace Orion::Engine::Platform
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryZero, because dst is null.");
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryZero, because size_in_bytes is 0.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		__builtin_memset(dst, 0, size_in_bytes);
-#else
-		::memset(dst, 0, size_in_bytes);
-#endif
+		Compiler::Memory::MemoryZero(dst, size_in_bytes);
 	}
 
 	/// @brief Compares two regions of memery pointed by \p lhs and \p rhs.
@@ -98,10 +74,6 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT_DEBUG(lhs, "Cannot perform MemoryCompare, because lhs is null.");
 		ORION_ASSERT_DEBUG(rhs, "Cannot perform MemoryCompare, because rhs is null.");
 		ORION_ASSERT_DEBUG(size_in_bytes > 0, "Cannot perform MemoryCompare, because size_in_bytes is 0.");
-#if defined(ORION_COMPILER_CLANG) || defined(ORION_COMPILER_GCC)
-		return __builtin_memcmp(lhs, rhs, size_in_bytes);
-#else
-		return ::memcmp(lhs, rhs, size_in_bytes);
-#endif
+		return Compiler::Memory::MemoryCompare(lhs, rhs, size_in_bytes);
 	}
 }  // namespace Orion::Engine::Platform
