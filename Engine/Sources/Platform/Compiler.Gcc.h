@@ -21,6 +21,12 @@ namespace Orion::Engine::Platform::Compiler
 #error "__is_trivially_destructible nor __has_trivial_destructor is available for this version of the GCC compiler."
 #endif
 
+	template <typename T, typename... Args>
+	inline constexpr bool IsConstructible = __is_constructible(T, Args...);
+
+	template <typename T, typename U>
+	inline constexpr bool IsAssignable = __is_assignable(T, U);
+
 	template <typename T>
 	inline constexpr bool IsEnum = __is_enum(T);
 

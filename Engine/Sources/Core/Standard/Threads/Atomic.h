@@ -49,15 +49,13 @@ namespace Orion::Engine
 	template <typename T>
 	class Atomic
 	{
-#if 0
 		static_assert(IsTriviallyCopyable<T>                     //
 		                  && IsCopyConstructible<T>              //
 		                  && IsMoveConstructible<T>              //
 		                  && IsCopyAssignable<T>                 //
 		                  && IsMoveAssignable<T>                 //
 		                  && IsSame<T, RemoveConstVolatile<T>>,  //
-		              "");
-#endif
+		              "Atomic<T> must be trivially copyable, and copy & move constructible and assignable.");
 
 		public:
 		using ValueType = T;

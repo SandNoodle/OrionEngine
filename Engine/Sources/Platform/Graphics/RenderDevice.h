@@ -14,7 +14,7 @@
 
 namespace Orion::Engine::Platform::Graphics
 {
-	/// @brief TODO
+	/// @brief Concept that is satisfied by a types that abstract a graphic API under a Render Hardware Interface (RHI).
 	template <typename RenderDeviceT>
 	concept RenderDeviceKind = requires(RenderDeviceT render_device) {
 		{ RenderDeviceT::Create() } -> SameAs<RenderDeviceT*>;

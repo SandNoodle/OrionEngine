@@ -14,6 +14,12 @@ namespace Orion::Engine::Platform::Compiler
 	template <class T>
 	inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
 
+	template <typename T, typename... Args>
+	inline constexpr bool IsConstructible = __is_constructible(T, Args...);
+
+	template <typename T, typename U>
+	inline constexpr bool IsAssignable = __is_assignable(T, U);
+
 	template <typename T>
 	inline constexpr bool IsEnum = __is_enum(T);
 

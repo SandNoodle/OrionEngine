@@ -7,6 +7,7 @@ namespace Orion::Engine::Platform::Compiler
 #error "IsTriviallyConstructible is not implemented for the MSVC compiler."
 #error "IsTriviallyCopyable is not implemented for the MSVC compiler."
 #error "IsTriviallyDestructible is not implemented for the MSVC compiler."
+#error "IsConstructible is not implemented for the MSVC compiler."
 #error "IsEnum is not implemented for the MSVC compiler."
 #error "IsScopedEnum is not implemented for the MSVC compiler."
 #error "UnderlyingType is not implemented for the MSVC compiler."

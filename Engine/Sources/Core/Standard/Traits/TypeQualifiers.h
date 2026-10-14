@@ -41,6 +41,18 @@ namespace Orion::Engine
 		template <typename T> struct AddConstVolatile { using Type = const volatile T; };
 		// clang-format on
 
+		// clang-format off
+		// NOLINTBEGIN(readability-identifier-naming)
+		template <typename T> struct TypeIdentity { using Type = T; };
+		template <typename T> auto TryAddLValueReference(int) -> TypeIdentity<T&>;
+		template <typename T> auto TryAddLValueReference(...) -> TypeIdentity<T>;
+		template <typename T> auto TryAddRValueReference(int) -> TypeIdentity<T&&>;
+		template <typename T> auto TryAddRValueReference(...) -> TypeIdentity<T>;
+		// NOLINTEND(readability-identifier-naming)
+		template <typename T> struct AddLValueReference : decltype(TryAddLValueReference<T>(0)) {};
+		template <typename T> struct AddRValueReference : decltype(TryAddRValueReference<T>(0)) {};
+		// clang-format on
+
 		// NOLINTBEGIN(readability-identifier-naming)
 		// clang-format off
 		template <class T> inline constexpr bool IsLValueReference     = false;
@@ -94,6 +106,10 @@ namespace Orion::Engine
 	template <typename T>
 	using RemoveConstVolatileReference = RemoveConstVolatile<RemoveReference<T>>;
 
+	/// @brief Attempts to remove a pointer from a type (if present).
+	template <typename T>
+	using RemovePointer = Detail::RemovePointer<T>::Type;
+
 	/// @brief Attempts to add const qualifier to a type (if possible).
 	template <typename T>
 	using AddConst = Detail::AddConst<T>::Type;
@@ -106,9 +122,13 @@ namespace Orion::Engine
 	template <typename T>
 	using AddConstVolatile = Detail::AddConstVolatile<T>::Type;
 
-	/// @brief Attempts to remove a pointer from a type (if present).
+	/// @brief Attempts to convert type to a L-Value reference (if possible).
 	template <typename T>
-	using RemovePointer = Detail::RemovePointer<T>::Type;
+	using AddLValueReference = Detail::AddLValueReference<T>::Type;
+
+	/// @brief Attempts to convert type to a R-Value reference (if possible).
+	template <typename T>
+	using AddRValueReference = Detail::AddRValueReference<T>::Type;
 
 	// NOLINTBEGIN(readability-identifier-naming)
 	/// @brief Checks if a given type is an L-Value reference, evaluating to `true` if it is.
