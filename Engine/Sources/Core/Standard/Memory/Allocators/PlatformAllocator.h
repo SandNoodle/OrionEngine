@@ -7,13 +7,11 @@
 
 namespace Orion::Engine::Memory
 {
-	/**
-	 * @brief PlatformAllocator is a stateless allocator, which allocates and deallocates memory by requesting it from
-	 * the underlying platform.
-	 *
-	 * @important Underlying platform APIs calls make this allocator a *very* expensive in terms of performance
-	 * (compared to the other ones). Realistically, this allocator should be used sparingly.
-	 */
+	/// @brief PlatformAllocator is a stateless allocator, which allocates and deallocates memory by requesting it from
+	/// the underlying platform.
+	///
+	/// @important Underlying platform APIs calls make this allocator a *very* expensive in terms of performance
+	/// (compared to the other ones). Realistically, this allocator should be used sparingly.
 	class PlatformAllocator
 	{
 		public:

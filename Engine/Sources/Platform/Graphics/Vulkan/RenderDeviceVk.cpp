@@ -16,7 +16,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace Orion::Engine::Platform
+namespace Orion::Engine::Platform::Graphics::Vulkan
 {
 	static constexpr UInt32 k_vulkan_api_version = VK_API_VERSION_1_3;
 
@@ -375,6 +375,6 @@ namespace Orion::Engine::Platform
 		}
 		delete render_device;
 	}
-}  // namespace Orion::Engine::Platform
+}  // namespace Orion::Engine::Platform::Graphics::Vulkan
 
 #endif  // ORION_GRAPHICS_VULKAN

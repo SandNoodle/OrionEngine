@@ -4,9 +4,10 @@
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
+#include "Core/Standard/Threads/Atomic.h"
 #include "Platform/FileSystem/FileSystem.h"
 
-#include "Platform/Graphics/Vulkan/RenderDeviceVk.h"
+#include "Platform/Graphics/RenderDevice.h"
 
 namespace Orion::Engine
 {
@@ -16,7 +17,17 @@ namespace Orion::Engine
 		{
 			String config_file;
 		};
+
+		class Engine
+		{
+			public:
+			Logger::LoggerSystem logger_system;
+			Platform::FileSystem::FileSystem file_system;
+			Platform::Graphics::RenderDevice* render_device;
+		};
 	}  // namespace
+
+	static Engine* k_engine = nullptr;
 
 	/// @brief Parses CLI arguments while skipping the first argument (Application's executable).
 	static constexpr CommandLineArguments ParseCommandLineArguments(int argc, char** argv) noexcept
@@ -24,6 +35,7 @@ namespace Orion::Engine
 		USize argument_count = static_cast<USize>(argc);
 
 		CommandLineArguments arguments;
+		arguments.config_file = String("OrionEngine.ini");
 		if (argument_count < 2) {
 			return arguments;
 		}
@@ -38,55 +50,37 @@ namespace Orion::Engine
 
 	void Initialize(int argc, char** argv) noexcept
 	{
+		// -------------------------------------------------------------------------------- //
+		// Pre-Initialization: Process command line arguments
+		// -------------------------------------------------------------------------------- //
 		CommandLineArguments command_line_arguments = ParseCommandLineArguments(argc, argv);
-
-		Console::ConsoleSystem<>::Get().RegisterConsoleVariable<Int32>(
-			"Foo", "Bar", "Baz", 0UL, Console::ConsoleVariableFlags::None);
 
 		// -------------------------------------------------------------------------------- //
 		// Pre-Initialization: Engine Critical Systems
 		// -------------------------------------------------------------------------------- //
-		Logger::LoggerSystem_Initialize();
+		k_engine = new Engine();  // TODO(SandNoodle): @nocheckin
+
+		Bool8 is_logger_initialized = k_engine->logger_system.Initialize();
+		ORION_ASSERT(is_logger_initialized, "Failed to initialize the LoggerSystem.");
+
+		Bool8 is_filesystem_initialized = k_engine->file_system.Initialize();
+		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem.");
 
 		// -------------------------------------------------------------------------------- //
-		//
+		// Initialization:
 		// -------------------------------------------------------------------------------- //
-		//
-		// Console::ConsoleSystem::Initialize();
-
-		Platform::FileSystem::FileSystem file_system{};
-		Bool8 is_filesystem_initialized = file_system.Initialize();
-		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem");
-
-		StringView file = StringView("local://foo.txt");
-
-		Optional<Platform::FileSystem::IOError> create_result = file_system.Create(file);
-		ORION_ASSERT(!create_result.IsValue(), "Failed to create a file.");
-
-		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> stat_result = file_system.Stat(file);
-		ORION_ASSERT(stat_result.IsValue(), "Failed to stat a file.");
-
-		Platform::FileSystem::IOResult<Platform::FileSystem::IStorageFileWriter*> storage_file_write
-			= file_system.Write(file);
-		ORION_ASSERT(stat_result.IsValue(), "Failed to open file for writing.");
-
-		Optional<Platform::FileSystem::IOError> remove_result = file_system.Remove(file);
-		ORION_ASSERT(!remove_result.IsValue(), "Failed to remove a file.");
-
-		Platform::FileSystem::IOResult<Platform::FileSystem::StorageStatInfo> post_stat_result = file_system.Stat(file);
-		ORION_ASSERT(!post_stat_result.IsValue(), "Failed to stat a file.");
-
-		Bool8 is_filesystem_deinitialized = file_system.Shutdown();
-		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem");
-
-		// -------------------------------------------------------------------------------- //
-		//
-		// -------------------------------------------------------------------------------- //
-		Platform::RenderDeviceVk* render_device = Platform::RenderDeviceVk::Create();
-		ORION_ASSERT(render_device, "Failed to initialize RenderDevice");
-
-		Platform::RenderDeviceVk::Destroy(render_device);
+		k_engine->render_device = Platform::Graphics::RenderDevice::Create();
+		ORION_ASSERT(k_engine->render_device, "Failed to initialize RenderDevice.");
 	}
 
-	void Shutdown() noexcept {}
+	void Shutdown() noexcept
+	{
+		Bool8 is_filesystem_deinitialized = k_engine->file_system.Shutdown();
+		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem.");
+
+		Bool8 is_logger_initialized = k_engine->logger_system.Shutdown();
+		ORION_ASSERT(is_logger_initialized, "Failed to shutdown the LoggerSystem.");
+
+		Platform::Graphics::RenderDevice::Destroy(k_engine->render_device);
+	}
 }  // namespace Orion::Engine

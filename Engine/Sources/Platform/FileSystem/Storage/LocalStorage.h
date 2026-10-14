@@ -32,17 +32,21 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] static Optional<IOError> EnsureDirectoryStructure(StringView path) noexcept;
 	};
 
-	/// @brief TODO
+	/// @brief LocalStorageFileWriter represents writing access point to the underlying platform's file.
+	/// @warning Only one access operation can be active for a given file. If the file is locked for reading then no
+	/// writing can take place. Multiple writers CANNOT access the same file concurrently.
+	/// @details Prefer it over raw Platform's IO calls.
 	class LocalStorageFileWriter final : public IStorageFileWriter
 	{
 		public:
 		explicit LocalStorageFileWriter(StringView path);
 		~LocalStorageFileWriter() override = default;
-
-		private:
 	};
 
-	/// @brief TODO
+	/// @brief LocalStorageFileWriter represents reading access point to the underlying platform's file.
+	/// @warning Only one access operation can be active for a given file. If the file is locked for reading
+	/// then no writing can take place. Multiple multiple readers CAN access the same file concurrently.
+	/// @details Prefer it over raw Platform's IO calls.
 	class LocalStorageFileReader final : public IStorageFileReader
 	{
 		public:

@@ -66,6 +66,8 @@ static constexpr bool k_orion_build_distribution = true;
 #define ORION_BUILTIN_TRAP() __debugbreak()
 
 #else
+#define ORION_COMPILER_NONE 1
+
 #error "Unknown compiler detected."
 #endif
 

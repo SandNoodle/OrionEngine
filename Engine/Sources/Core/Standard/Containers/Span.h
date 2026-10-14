@@ -3,9 +3,9 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Standard/Concepts.h"
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Limits.h"
+#include "Core/Standard/Traits/TypeComparison.h"
 
 namespace Orion::Engine
 {

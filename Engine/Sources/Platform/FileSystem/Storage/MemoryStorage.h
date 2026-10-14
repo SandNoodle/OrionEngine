@@ -29,14 +29,18 @@ namespace Orion::Engine::Platform::FileSystem
 		[[nodiscard]] Vector<StorageStatInfo> List(StringView path, StorageListOption list_option) noexcept override;
 	};
 
-	/// @brief TODO
+	/// @brief MemoryStorageFileWriter represents writing access point into MemoryFile.
+	/// @warning Only one access operation can be active for a given file. If the file is locked for reading then no
+	/// writing can take place. Multiple writers CANNOT access the same file concurrently.
 	class MemoryStorageFileWriter : public IStorageFileWriter
 	{
 		public:
 		~MemoryStorageFileWriter() override = default;
 	};
 
-	/// @brief TODO
+	/// @brief MemoryStorageFileReader represents reading access point to into MemoryFile.
+	/// @warning Only one access operation can be active for a given file. If the file is locked for reading
+	/// then no writing can take place. Multiple multiple readers CAN access the same file concurrently.
 	class MemoryStorageFileReader final : public IStorageFileReader
 	{
 		public:

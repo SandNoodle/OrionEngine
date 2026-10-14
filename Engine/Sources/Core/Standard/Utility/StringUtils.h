@@ -8,13 +8,11 @@
 
 namespace Orion::Engine
 {
-	/**
-	 * @brief Calculates the number of codepoints (bytes) required to store given UTF-8 encoded character.
-	 * @warning Returns 0 if the character cannot be represented (i.e. an error occurred).
-	 * @tparam SizeType Return type.
-	 * @tparam CharType Type of the UTF-8 character.
-	 * @param c Character for which calculate the number of codepoints required.
-	 */
+	/// @brief Calculates the number of codepoints (bytes) required to store given UTF-8 encoded character.
+	/// @warning Returns 0 if the character cannot be represented (i.e. an error occurred).
+	/// @tparam SizeType Return type.
+	/// @tparam CharType Type of the UTF-8 character.
+	/// @param[IN, REQUIRED] c Character for which calculate the number of codepoints required.
 	template <typename SizeType = USize,
 	          typename CharType = Detail::StringTraits<Detail::StringEncoding::UTF8>::CharType>
 	[[nodiscard]] constexpr SizeType UTF8CodepointsForCharacter(CharType c) noexcept
@@ -38,16 +36,14 @@ namespace Orion::Engine
 		return 0;
 	}
 
-	/**
-	 * @brief Calculates the (character) length of null terminated (`\0`) string literal.
-	 * @warning Returns 0, if an error occurs.
-	 * @tparam Encoding (Assumed) encoding of the string literal.
-	 * @tparam SizeType Return type.
-	 * @tparam CharType Type of a single character.
-	 * @param str String literal for which the number of characters will be calculated.
-	 * @param max_length Count of characters to end the iteration on if null terminator is not present.
-	 * @return Return the number of characters present in a given string literal.
-	 */
+	/// @brief Calculates the (character) length of null terminated (`\0`) string literal.
+	/// @warning Returns 0, if an error occurs.
+	/// @tparam Encoding (Assumed) encoding of the string literal.
+	/// @tparam SizeType Return type.
+	/// @tparam CharType Type of a single character.
+	/// @param[IN, REQUIRED] str String literal for which the number of characters will be calculated.
+	/// @param[IN, OPTIONAL] max_length Count of characters to end the iteration on if null terminator is not present.
+	/// @return Return the number of characters present in a given string literal.
 	template <Detail::StringEncoding Encoding,
 	          typename SizeType = USize,
 	          typename CharType = Detail::StringTraits<Encoding>::CharType>
@@ -77,14 +73,12 @@ namespace Orion::Engine
 		}
 	}
 
-	/**
-	 * @brief Calculates the (character) length of a given string (from a range).
-	 * @tparam Encoding (Assumed) encoding of the string.
-	 * @tparam SizeType Return type.
-	 * @tparam CharType Type of a single character.
-	 * @param begin Start of the string range.
-	 * @param end End of the string range.
-	 */
+	/// @brief Calculates the (character) length of a given string (from a range).
+	/// @tparam Encoding (Assumed) encoding of the string.
+	/// @tparam SizeType Return type.
+	/// @tparam CharType Type of a single character.
+	/// @param[IN, REQUIRED] begin Start of the string range.
+	/// @param[IN, REQUIRED] end End of the string range.
 	template <Detail::StringEncoding Encoding,
 	          typename SizeType = USize,
 	          typename CharType = Detail::StringTraits<Encoding>::CharType>
@@ -108,7 +102,9 @@ namespace Orion::Engine
 		}
 	}
 
-	/// @brief Hashes given sized-string into a FNV-1a Hash
+	/// @brief Hashes given sized-string into a FNV-1a based hash.
+	/// @param[IN, REQUIRED] data Pointer to the start of the string.
+	/// @param[IN, REQUIRED] size Count of characters to iterate.
 	template <typename CharT, typename SizeType = USize>
 	[[nodiscard]] constexpr SizeType FNV1AHash(const CharT* data, SizeType size) noexcept
 	{

@@ -50,7 +50,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 	/// @brief Represents writing access point to the underlying file, be it local, in-memory, etc.
 	/// @warning Only one access operation can be active for a given file. If the file is locked for reading then no
-	/// writing can take place. However, multiple writers CANNOT access the same file concurrently.
+	/// writing can take place. Multiple writers CANNOT access the same file concurrently.
 	class IStorageFileWriter
 	{
 		public:
@@ -59,7 +59,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 	/// @brief Represents reading access point to the underlying file, be it local, in-memory, etc.
 	/// @warning Only one access operation can be active for a given file. If the file is locked for reading
-	/// then no writing can take place. However, multiple multiple readers CAN access the same file concurrently.
+	/// then no writing can take place. Multiple multiple readers CAN access the same file concurrently.
 	class IStorageFileReader
 	{
 		public:

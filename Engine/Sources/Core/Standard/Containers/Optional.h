@@ -4,7 +4,8 @@
 
 #include "Core/Assert.h"
 #include "Core/Standard/Memory/Lifetime.h"
-#include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Traits/TypeComparison.h"
+#include "Core/Standard/Traits/TypeQualifiers.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine

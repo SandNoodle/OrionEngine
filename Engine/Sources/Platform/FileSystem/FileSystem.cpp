@@ -1,6 +1,5 @@
 #include "Platform/FileSystem/FileSystem.h"
 
-#include "Core/Assert.h"
 #include "Core/Log/Logger.h"
 #include "Platform/FileSystem/Storage/LocalStorage.h"
 #include "Platform/FileSystem/Storage/MemoryStorage.h"
@@ -25,8 +24,8 @@ namespace Orion::Engine::Platform::FileSystem
 	Bool8 FileSystem::Shutdown() noexcept
 	{
 		ORION_LOG_DEBUG("[FileSystem] Shutting down.");
-		for (auto&& [_, provider] : _storage_providers) {
-			DestroyProvider(provider);
+		for (Pair<StringView, IStorageProvider*>& provider_mapping : _storage_providers) {
+			DestroyProvider(provider_mapping.second);
 		}
 		_storage_providers.Clear();
 		ORION_LOG_DEBUG("[FileSystem] Shut down.");

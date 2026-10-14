@@ -13,12 +13,10 @@ namespace Orion::Engine
 {
 	namespace Detail
 	{
-		/**
-		 * @brief String is a class that stores and allows manipulation of continuous sequence of characters in a given
-		 * encoding.
-		 * @tparam T Encoding used for storing the characters.
-		 * @tparam Allocator Allocator to be used with the string that will perform all the allocations.
-		 */
+		/// @brief String is a class that stores and allows manipulation of continuous sequence of characters in a given
+		/// encoding.
+		/// @tparam T Encoding used for storing the characters.
+		/// @tparam Allocator Allocator to be used with the string that will perform all the allocations.
 		template <StringEncoding T, Memory::AllocatorKind Allocator = Memory::PlatformAllocator>
 		class StringBase : Vector<typename StringTraits<T>::CharType, Allocator>
 		{
@@ -53,44 +51,42 @@ namespace Orion::Engine
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator>=(const ThisType& other) const noexcept;
 
 			/// @brief Appends single \p character to the end of the string.
+			/// @param[IN, REQUIRED] character Character to be appended.
 			constexpr ThisType& Append(WideCharType character) noexcept;
 
-			/**
-			 * @brief Appends C-styled string literal to the end of the string.
-			 * @warning Assumes that the C-String is in the correct encoding.
-			 */
+			/// @brief Appends C-styled string literal to the end of the string.
+			/// @warning Assumes that the C-String is in the correct encoding.
+			/// @param[IN, REQUIRED] str C-styled string literal to be appended.
 			constexpr ThisType& Append(CString str) noexcept;
 
 			/// @brief Appends Span of a given characters to the end of the string.
+			/// @param[IN, REQUIRED] view Span of characters to be appended.
 			constexpr ThisType& Append(ReadonlySpan<CharType> view) noexcept;
 
 			/// @brief Appends StringView of a given encoding to the end of the string.
+			/// @param[IN, REQUIRED] view StringView of the same encoding to be appended.
 			constexpr ThisType& Append(StringViewBase<T> view) noexcept;
 
 			/// @brief Appends some string range between \p begin and \p to end of the string.
+			/// @param[IN, REQUIRED] begin Pointer pointing at the start of a given continuous character sequence.
+			/// @param[IN, REQUIRED] end Pointer pointing at a element past a given continuous character sequence.
 			constexpr ThisType& AppendRange(ConstPointerType begin, ConstPointerType end) noexcept;
 
-			/**
-			 * @brief Returns character from the string at a given index.
-			 * @details This is a correct method of acquiring a valid UTF-8 encoded character.
-			 * @warning \p index must be less than Length().
-			 * @param index Index of the character.
-			 */
+			/// @brief Returns character from the string at a given index.
+			/// @details This is a correct method of acquiring a valid UTF-8 encoded character.
+			/// @warning \p index must be less than Length().
+			/// @param[IN, REQUIRED] index Index of the character.
 			[[nodiscard]] constexpr WideCharType GetChar(SizeType index) const noexcept;
 
-			/**
-			 * @brief Returns the number of characters making up this string.
-			 * @warning For variable-length encodings (such as UTF-8) it might not return a valid character count.
-			 * Instead it the number of 'bytes' (i.e. CharType) will be returned that make up the string. To get the
-			 * accurate character count use Length().
-			 */
+			/// @brief Returns the number of characters making up this string.
+			/// @warning For variable-length encodings (such as UTF-8) it might not return a valid character count.
+			/// Instead it the number of 'bytes' (i.e. CharType) will be returned that make up the string. To get the
+			/// accurate character count use Length().
 			[[nodiscard]] ORION_FORCE_INLINE constexpr SizeType Size() const noexcept;
 
-			/**
-			 * @brief Returns the number of characters making up this string.
-			 * @important This is a correct function to acquire the number of actual encoded characters making up the
-			 * string for variable-length encodings (such as UTF-8).
-			 */
+			/// @brief Returns the number of characters making up this string.
+			/// @important This is a correct function to acquire the number of actual encoded characters making up the
+			/// string for variable-length encodings (such as UTF-8).
 			[[nodiscard]] ORION_FORCE_INLINE constexpr SizeType Length() const noexcept;
 
 			/// @brief Returns the Hash value of the StringView.
@@ -107,7 +103,7 @@ namespace Orion::Engine
 			using BaseType::Reserve;
 
 			// NOLINTBEGIN(readability-identifier-naming)
-			/** Required overload for the C++'s for range loops. */
+			/// @brief Required overload for the C++'s for range loops.
 			///@{
 			using BaseType::begin;
 			using BaseType::end;

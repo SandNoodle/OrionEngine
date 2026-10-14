@@ -58,11 +58,9 @@ namespace Orion::Engine
 		};
 	}  // namespace Detail
 
-	/**
-	 * @brief Represents a type-safe container capable of holding variable amount of elements.
-	 * @tparam T Type to be stored.
-	 * @tparam Allocator Allocator to be used with the Vector that will perform all the allocations.
-	 */
+	/// @brief Represents a type-safe container capable of holding variable amount of elements.
+	/// @tparam T Type to be stored.
+	/// @tparam Allocator Allocator to be used with the Vector that will perform all the allocations.
 	template <typename T, Memory::AllocatorKind Allocator = Memory::PlatformAllocator>
 	class Vector : public Detail::VectorBase<T, Allocator>
 	{
@@ -155,7 +153,7 @@ namespace Orion::Engine
 
 		public:
 		// NOLINTBEGIN(readability-identifier-naming)
-		/** Required overload for the C++'s for range loops. */
+		/// @brief Required overload for the C++'s for range loops.
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType begin() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType begin() const noexcept;

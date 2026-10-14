@@ -1,25 +1,14 @@
 #include "Core/Log/Logger.h"
 
-#include "Core/Assert.h"
-#include "Core/Standard/Containers/Array.h"
-#include "Core/Standard/Containers/StringView.h"
-#include "Core/Standard/TypeTraits.h"
-
 namespace Orion::Engine::Logger
 {
-	ORION_FORCE_INLINE static constexpr StringView SeverityName(Severity level) noexcept
+	Bool8 LoggerSystem::Initialize() noexcept
 	{
-		// NOTE: Must match the order of Severity.
-		static constexpr Array k_severity_name = { "Fatal", "Error", "Warn", "Info", "Debug", "Trace" };
-		return StringView(k_severity_name[ToUnderlyingType(level)]);
-	}
-
-	Bool8 LoggerSystem_Initialize() noexcept
-	{
+		ORION_LOG_DEBUG("[LoggerSystem] Initialized.");
 		return true;
 	}
 
-	Bool8 LoggerSystem_Shutdown() noexcept
+	Bool8 LoggerSystem::Shutdown() noexcept
 	{
 		return true;
 	}

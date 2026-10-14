@@ -3,7 +3,6 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Standard/Concepts.h"
 
 namespace Orion::Engine::Algorithm
 {

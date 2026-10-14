@@ -1,9 +1,22 @@
 #pragma once
 
+#include <source_location>
+
 #include "OrionEngine.h"
+
+#include "Core/Standard/Containers/StringView.h"
+#include "Core/Standard/Containers/Vector.h"
 
 namespace Orion::Engine::Logger
 {
+	/// @brief Represents useful debugging information of the source code.
+	struct SourceLocation
+	{
+		StringView file;
+		StringView function;
+		UInt32 line;
+	};
+
 	/// @brief Represents the categorized 'level' of logging.
 	enum class Severity : UInt8
 	{
@@ -33,15 +46,53 @@ namespace Orion::Engine::Logger
 		Trace,
 	};
 
-	// NOLINTBEGIN(readability-identifier-naming)
 	/// @brief TODO
-	Bool8 LoggerSystem_Initialize() noexcept;
+	class ILogger
+	{
+		public:
+		virtual ~ILogger() = default;
+
+		/// @brief TODO
+		/// @param[IN, REQUIRED] severity
+		/// @param[IN, REQUIRED] formatted_message
+		/// @param[IN, REQUIRED] source_location
+		virtual void LogMessage(Severity severity, StringView formatted_message, SourceLocation source_location) = 0;
+	};
 
 	/// @brief TODO
-	Bool8 LoggerSystem_Shutdown() noexcept;
-	// NOLINTEND(readability-identifier-naming)
+	class LoggerSystem
+	{
+		public:
+		using ThisType = LoggerSystem;
+
+		private:
+		Vector<ILogger*> _loggers;
+
+		public:
+		LoggerSystem()                         = default;
+		LoggerSystem(const ThisType&) noexcept = delete;
+		LoggerSystem(ThisType&&) noexcept      = delete;
+		~LoggerSystem()                        = default;
+
+		LoggerSystem& operator=(const ThisType&) noexcept = delete;
+		LoggerSystem& operator=(ThisType&&) noexcept      = delete;
+
+		/// @brief Initializes the LoggerSystem and prepares it for further use. Initializes LoggerSinks, etc.
+		/// @warning Must be called exactly once!
+		[[nodiscard]] Bool8 Initialize() noexcept;
+
+		/// @brief Shutdowns the LoggerSystem. Deinitializes all StorageProviders. Deinitializes all LoggerSinks, etc.
+		/// @warning Must be called exactly once!
+		[[nodiscard]] Bool8 Shutdown() noexcept;
+	};
 
 	/// @brief TODO
+	/// @param[IN, REQUIRED] severity
+	/// @param[IN, REQUIRED] file
+	/// @param[IN, REQUIRED] function
+	/// @param[IN, REQUIRED] line
+	/// @param[IN, REQUIRED] format_message
+	/// @param[IN, OPTIONAL] ...
 	void LogMessage(Severity severity,
 	                CString file,
 	                CString function,

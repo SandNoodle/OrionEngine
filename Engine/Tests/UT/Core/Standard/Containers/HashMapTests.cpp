@@ -18,14 +18,14 @@ namespace Orion::Engine::UT
 	template <typename KeyT, typename ValueT = KeyT>
 	static constexpr HashMap<KeyT, ValueT>::KeyValueType Value(USize index)
 	{
-		return Detail::HashMapElement(static_cast<KeyT>(index), static_cast<ValueT>(index + 1));
+		return Pair(static_cast<KeyT>(index), static_cast<ValueT>(index + 1));
 	}
 
 	template <>
 	constexpr HashMap<ComplexType, ComplexType>::KeyValueType Value<ComplexType>(USize index)
 	{
-		return Detail::HashMapElement(ComplexType(static_cast<ComplexType::ValueType>(index)),
-		                              ComplexType(static_cast<ComplexType::ValueType>(index + 1)));
+		return Pair(ComplexType(static_cast<ComplexType::ValueType>(index)),
+		            ComplexType(static_cast<ComplexType::ValueType>(index + 1)));
 	}
 
 	TYPED_TEST_P(HashMapTest, Constructor_InitialCapacity)
@@ -219,7 +219,7 @@ namespace Orion::Engine::UT
 		USize processed_element_count = 0UL;
 		for (IteratorType it = begin; it != h.end(); ++it) {
 			typename IteratorType::ReferenceType e = *it;
-			EXPECT_TRUE(h.Contains(it->key));
+			EXPECT_TRUE(h.Contains(it->first));
 			++processed_element_count;
 		}
 		EXPECT_EQ(processed_element_count, h.Size());
@@ -239,7 +239,7 @@ namespace Orion::Engine::UT
 		USize processed_element_count = 0UL;
 		for (ConstIteratorType it = begin; it != h.end(); ++it) {
 			typename ConstIteratorType::ReferenceType e = *it;
-			EXPECT_TRUE(h.Contains(it->key));
+			EXPECT_TRUE(h.Contains(it->first));
 			++processed_element_count;
 		}
 		EXPECT_EQ(processed_element_count, h.Size());

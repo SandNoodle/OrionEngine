@@ -3,7 +3,7 @@
 #include "OrionEngine.h"
 
 #include "Core/Standard/Math/Math.h"
-#include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Traits/TypeProperties.h"
 #include "Platform/Memory.h"
 
 namespace Orion::Engine::Algorithm
@@ -44,12 +44,12 @@ namespace Orion::Engine::Algorithm
 		return lhs != rhs;
 	}
 
-	/// @brief Compares two \p lhs and \p rhs
-	/// @tparam T TODO
-	/// @param[IN, REQUIRED] lhs TODO
-	/// @param[IN, REQUIRED] rhs TODO
-	/// @param[IN, REQUIRED] lhs_count TODO
-	/// @param[IN, REQUIRED] rhs_count TODO
+	/// @brief Compares two ranges of elements pointed to by \p lhs and \rhs.
+	/// @tparam T Type of the element to compare.
+	/// @param[IN, REQUIRED] lhs Pointer pointing at the start of first continuous sequence of elements.
+	/// @param[IN, REQUIRED] rhs Pointer pointing at the start of second continuous sequence of elements.
+	/// @param[IN, REQUIRED] lhs_count Count of elements pointed to by \p lhs.
+	/// @param[IN, REQUIRED] rhs_count Count of elements pointed to by \p rhs.
 	template <typename T, typename SizeType = USize>
 	[[nodiscard]] constexpr Int32 Compare(const T* lhs, const T* rhs, SizeType lhs_count, SizeType rhs_count) noexcept
 	{

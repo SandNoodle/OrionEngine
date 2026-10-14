@@ -8,7 +8,8 @@ namespace Orion::Engine::Memory
 {
 	namespace Detail
 	{
-		/// @brief TODO
+		/// @brief Represents a single memory region block for performing individual allocations and deallocations with
+		/// pointer to the next one (in case of it being full).
 		struct ArenaRegion
 		{
 			public:
@@ -23,13 +24,24 @@ namespace Orion::Engine::Memory
 		};
 	}  // namespace Detail
 
-	/// @brief TODO
+	/// @brief ArenaAllocator (also known as LinearAllocator) is an allocator, which allocates and deallocates memory by
+	/// bumping a single internal pointer.
+	/// @important Individual allocations cannot be deallocated - only freed at once.
 	class ArenaAllocator
 	{
 		public:
+		using ThisType = ArenaAllocator;
 		using SizeType = Detail::ArenaRegion::SizeType;
 
 		public:
+		constexpr ArenaAllocator();
+		constexpr ArenaAllocator(const ThisType&) = delete;
+		constexpr ArenaAllocator(ThisType&&)      = default;
+		constexpr ~ArenaAllocator();
+
+		constexpr ArenaAllocator& operator=(const ThisType&) = delete;
+		constexpr ArenaAllocator& operator=(ThisType&&)      = default;
+
 		[[nodiscard]] ORION_FORCE_INLINE constexpr void* Allocate(SizeType size_in_bytes, SizeType alignment) noexcept;
 		ORION_FORCE_INLINE constexpr void Free(void* ptr) noexcept;
 		ORION_FORCE_INLINE constexpr void FreeAll() noexcept;
@@ -38,6 +50,10 @@ namespace Orion::Engine::Memory
 	              "ArenaAllocator does not meet the requirements of being an Allocator.");
 
 	// -- Implementation.
+	constexpr ArenaAllocator::ArenaAllocator() {}
+
+	constexpr ArenaAllocator::~ArenaAllocator() {}
+
 	ORION_FORCE_INLINE constexpr auto ArenaAllocator::Allocate(SizeType size_in_bytes, SizeType alignment) noexcept
 		-> void*
 	{

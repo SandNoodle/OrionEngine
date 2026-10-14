@@ -3,17 +3,15 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Traits/TypeProperties.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 #include "Platform/Memory.h"
 
 namespace Orion::Engine::Memory
 {
-	/**
-	 * @brief Default constructs \p count into a memory, effectively begins C++' lifetime for these elements.
-	 * @param dst Destination address to where copy the elements.
-	 * @param count Number of elements to construct.
-	 */
+	/// @brief Default constructs \p count into a memory, effectively begins C++' lifetime for these elements.
+	/// @param[IN, REQUIRED] dst Destination address to where copy the elements.
+	/// @param[IN, REQUIRED] count Number of elements to construct.
 	///@{
 	template <typename ItemType, typename SizeType = USize>
 		requires(sizeof(ItemType) > 0 && IsZeroConstructible<ItemType>)
@@ -34,13 +32,10 @@ namespace Orion::Engine::Memory
 	}
 	///@}
 
-	/**
-	 * @brief Constructs \p count elements into a memory, effectively begins C++'s lifetime for these elements.
-	 *
-	 * @param dst Destination address to where copy the elements.
-	 * @param src Source address of the first element to pass.
-	 * @param count Number of elements to copy from \p src.
-	 */
+	/// @brief Constructs \p count elements into a memory, effectively begins C++'s lifetime for these elements.
+	/// @param[IN, REQUIRED] dst Destination address to where copy the elements.
+	/// @param[IN, REQUIRED] src Source address of the first element to pass.
+	/// @param[IN, REQUIRED] count Number of elements to copy from \p src.
 	///@{
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 		requires(sizeof(SourceItemType) > 0 && sizeof(DestinationItemType) > 0
@@ -64,11 +59,9 @@ namespace Orion::Engine::Memory
 	}
 	///@}
 
-	/**
-	 * @brief Constructs a given element into a memory, effectively begins C++'s lifetime for it.
-	 * @param dst Destination address where the element will be constructed.
-	 * @param item Element to construct.
-	 */
+	/// @brief Constructs a given element into a memory, effectively begins C++'s lifetime for it.
+	/// @param[IN, REQUIRED] dst Destination address where the element will be constructed.
+	/// @param[IN, REQUIRED] item Element to construct.
 	///@{
 	template <typename SourceItemType, typename DestinationItemType = SourceItemType, typename SizeType = USize>
 	ORION_FORCE_INLINE void ConstructItem(DestinationItemType* dst, const SourceItemType& item) noexcept
@@ -82,11 +75,9 @@ namespace Orion::Engine::Memory
 	}
 	///@}
 
-	/**
-	 * @brief Constructs a given element from \p args into a memory, effectively begins C++'s lifetime for it.
-	 * @param dst Destination address where the element will be constructed.
-	 * @param args Variadic list of arguments used for constructing the element.
-	 */
+	/// @brief Constructs a given element from \p args into a memory, effectively begins C++'s lifetime for it.
+	/// @param[IN, REQUIRED] dst Destination address where the element will be constructed.
+	/// @param[IN, OPTIONAL] args Variadic list of arguments used for constructing the element.
 	template <typename ItemType, typename... Args>
 	ORION_FORCE_INLINE void ConstructItem(ItemType* dst, Args&&... args)
 	{
@@ -94,11 +85,9 @@ namespace Orion::Engine::Memory
 		::new (static_cast<void*>(dst)) ItemType(Forward<Args>(args)...);
 	}
 
-	/**
-	 * @brief Destructs \p count of elements from a given memory region, effectively ends C++'s lifetime for them.
-	 * @param src Address where to the elements will be destroyed.
-	 * @param count Number of elements to destroy.
-	 */
+	/// @brief Destructs \p count of elements from a given memory region, effectively ends C++'s lifetime for them.
+	/// @param[IN, REQUIRED] src Address where to the elements will be destroyed.
+	/// @param[IN, REQUIRED] count Number of elements to destroy.
 	template <typename ItemType, typename SizeType>
 		requires(sizeof(ItemType) > 0)
 	ORION_FORCE_INLINE void DestructItems(ItemType* src, SizeType count) noexcept

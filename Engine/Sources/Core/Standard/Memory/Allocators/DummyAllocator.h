@@ -6,10 +6,8 @@
 
 namespace Orion::Engine::Memory
 {
-	/**
-	 * @brief DummyAllocator is an allocator, which allocates and deallocates nothing.
-	 * Useful, whenever allocator is required to be passed, but the memory aspect is not needed.
-	 */
+	/// @brief DummyAllocator is an allocator, which allocates and deallocates nothing.
+	/// Useful, whenever allocator is required to be passed, but the memory aspect is not needed.
 	class DummyAllocator
 	{
 		public:

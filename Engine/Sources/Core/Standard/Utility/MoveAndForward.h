@@ -2,7 +2,7 @@
 
 #include "OrionEngine.h"
 
-#include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Traits/TypeQualifiers.h"
 
 namespace Orion::Engine
 {

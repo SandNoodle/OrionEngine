@@ -14,43 +14,60 @@ set(ORION_GRAPHICS_API "Vulkan" CACHE STRING "Graphics API backed to be used; Po
 set(OrionEngine_SOURCES
         Sources/Core/Console/ConsoleSystem.cpp
         Sources/Core/Console/ConsoleSystem.h
+        Sources/Core/Log/Logger.cpp
+        Sources/Core/Log/Logger.h
         Sources/Core/Standard/Algorithms/Compare.h
         Sources/Core/Standard/Algorithms/Hash.h
         Sources/Core/Standard/Algorithms/Sort.h
         Sources/Core/Standard/Containers/Detail/StringFwd.h
         Sources/Core/Standard/Containers/Array.h
         Sources/Core/Standard/Containers/HashMap.h
+        Sources/Core/Standard/Containers/Optional.h
         Sources/Core/Standard/Containers/Pair.h
         Sources/Core/Standard/Containers/Result.h
         Sources/Core/Standard/Containers/Span.h
         Sources/Core/Standard/Containers/String.h
         Sources/Core/Standard/Containers/StringView.h
         Sources/Core/Standard/Containers/Vector.h
+        Sources/Core/Standard/Math/Math.h
+        Sources/Core/Standard/Math/Vector.h
         Sources/Core/Standard/Memory/Allocators/Allocator.h
         Sources/Core/Standard/Memory/Allocators/ArenaAllocator.h
         Sources/Core/Standard/Memory/Allocators/DummyAllocator.h
         Sources/Core/Standard/Memory/Allocators/PlatformAllocator.h
         Sources/Core/Standard/Memory/Lifetime.h
+        Sources/Core/Standard/Threads/Atomic.h
+        Sources/Core/Standard/Threads/Mutex.h
+        Sources/Core/Standard/Threads/Thread.h
+        Sources/Core/Standard/Traits/FundamentalTypes.h
+        Sources/Core/Standard/Traits/TypeComparison.h
+        Sources/Core/Standard/Traits/TypeConstant.h
+        Sources/Core/Standard/Traits/TypeProperties.h
+        Sources/Core/Standard/Traits/TypeQualifiers.h
         Sources/Core/Standard/Utility/MathUtils.h
         Sources/Core/Standard/Utility/MoveAndForward.h
         Sources/Core/Standard/Utility/StringUtils.h
         Sources/Core/Standard/Utility/Swap.h
-        Sources/Core/Standard/Concepts.h
         Sources/Core/Standard/EnumFlag.h
         Sources/Core/Standard/Limits.h
-        Sources/Core/Standard/TypeTraits.h
         Sources/Core/Assert.h
-        Sources/Core/Log/Logger.cpp
-        Sources/Core/Log/Logger.h
+        Sources/Platform/FileSystem/Storage/LocalStorage.cpp
         Sources/Platform/FileSystem/Storage/LocalStorage.h
+        Sources/Platform/FileSystem/Storage/MemoryStorage.cpp
         Sources/Platform/FileSystem/Storage/MemoryStorage.h
         Sources/Platform/FileSystem/FileSystem.cpp
         Sources/Platform/FileSystem/FileSystem.h
         Sources/Platform/FileSystem/StorageProvider.h
+        Sources/Platform/Graphics/None/RenderDeviceNone.cpp
+        Sources/Platform/Graphics/None/RenderDeviceNone.h
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.cpp
         Sources/Platform/Graphics/Vulkan/RenderDeviceVk.h
-        Sources/Platform/Graphics/RenderDevice.cpp
         Sources/Platform/Graphics/RenderDevice.h
+        Sources/Platform/Compiler.Clang.h
+        Sources/Platform/Compiler.Gcc.h
+        Sources/Platform/Compiler.h
+        Sources/Platform/Compiler.Msvc.h
+        Sources/Platform/Compiler.None.h
         Sources/Platform/Memory.h
         Sources/Platform/Platform.Android.cpp
         Sources/Platform/Platform.Linux.cpp

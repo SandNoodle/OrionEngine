@@ -3,8 +3,8 @@
 #include "OrionEngine.h"
 
 #include "Core/Assert.h"
-#include "Core/Standard/Concepts.h"
 #include "Core/Standard/Memory/Lifetime.h"
+#include "Core/Standard/Traits/TypeComparison.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine::Memory

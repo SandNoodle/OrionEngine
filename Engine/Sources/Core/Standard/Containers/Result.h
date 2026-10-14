@@ -6,14 +6,14 @@
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Memory/Lifetime.h"
-#include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Traits/TypeProperties.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine
 {
 	namespace Detail
 	{
-		/// @brief TODO
+		/// @brief Concept that defines types supported by the Result type.
 		template <typename T, typename E>
 		concept ResultKind = !IsLValueReference<T> && !IsLValueReference<E> && !IsSame<T, E>;
 	}  // namespace Detail

@@ -5,10 +5,11 @@
 #include "Core/Assert.h"
 #include "Core/Standard/Algorithms/Compare.h"
 #include "Core/Standard/Algorithms/Hash.h"
+#include "Core/Standard/Containers/Pair.h"
 #include "Core/Standard/Math/Math.h"
 #include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 #include "Core/Standard/Memory/Lifetime.h"
-#include "Core/Standard/TypeTraits.h"
+#include "Core/Standard/Traits/TypeProperties.h"
 #include "Core/Standard/Utility/MathUtils.h"
 #include "Core/Standard/Utility/Swap.h"
 
@@ -16,18 +17,9 @@ namespace Orion::Engine
 {
 	namespace Detail
 	{
-		/// @brief Type which stores HashMap's key-value pair.
-		/// Essentially it's just Pair<T1, T2>, but defined here too so we won't pull yet another header unnecessarily.
-		template <typename T1, typename T2>
-		struct HashMapElement
-		{
-			T1 key;
-			T2 value;
-		};
-
 		/// @brief Actual storage type for a single HashMap's key-value pair.
 		template <typename T1, typename T2>
-		struct HashMapElementStorage : HashMapElement<T1, T2>
+		struct HashMapElementStorage : Pair<T1, T2>
 		{
 			enum class State : UInt8
 			{
@@ -36,7 +28,7 @@ namespace Orion::Engine
 			} state;
 		};
 
-		/// @brief TODO
+		/// @brief Helper structure for representing const and non-const HashMapElement types.
 		template <Bool8 IsConst, typename T>
 		struct HashMapElementTraits
 		{
@@ -56,13 +48,13 @@ namespace Orion::Engine
 			using ReferenceType = T&;
 		};
 
-		/// @brief TODO
+		/// @brief Bi-directional iterator for traversing HashMap's elements.
 		template <Bool8 IsConst, typename Key, typename Value>
 		class HashMapIterator
 		{
 			public:
 			using ThisType      = HashMapIterator;
-			using ValueType     = HashMapElement<Key, Value>;
+			using ValueType     = Pair<Key, Value>;
 			using StorageType   = HashMapElementStorage<Key, Value>;
 			using PointerType   = HashMapElementTraits<IsConst, ValueType>::PointerType;
 			using ReferenceType = HashMapElementTraits<IsConst, ValueType>::ReferenceType;
@@ -70,10 +62,11 @@ namespace Orion::Engine
 
 			private:
 			StorageType* _data;
+			StorageType* _data_begin;
 			StorageType* _data_end;
 
 			public:
-			explicit constexpr HashMapIterator(StorageType* data, StorageType* data_end);
+			explicit constexpr HashMapIterator(StorageType* data, StorageType* data_begin, StorageType* data_end);
 
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator==(const ThisType& other) const noexcept;
 			[[nodiscard]] ORION_FORCE_INLINE constexpr Bool8 operator!=(const ThisType& other) const noexcept;
@@ -91,11 +84,13 @@ namespace Orion::Engine
 	}  // namespace Detail
 
 	/// @brief Represents a type-safe container capable of holding key-value pairs with unique keys.
-	/// @warning TODO
+	/// @warning Implemented as an open-addressing hashmap - insertion and deletion of elements will invalidate existing
+	/// pointers / references.
 	/// @tparam Key Type of the key in the key-value pair.
 	/// @tparam Value Type of the value in the key-value pair.
-	/// @tparam Hash TODO
-	/// @tparam Predicate TODO
+	/// @tparam Hash Hash function object, which will be used for storing key-value pairs. Must produce as unique values
+	/// as possible.
+	/// @tparam Predicate Predicate function, which will be called to compare the elements with each other.
 	/// @tparam Allocator Allocator to be used with the HashMap that will perform all the allocations.
 	template <typename Key,
 	          typename Value,
@@ -111,7 +106,7 @@ namespace Orion::Engine
 		using ThisType           = HashMap;
 		using KeyType            = Key;
 		using ValueType          = Value;
-		using KeyValueType       = Detail::HashMapElement<Key, Value>;
+		using KeyValueType       = Pair<Key, Value>;
 		using SizeType           = USize;
 		using HashType           = Hash;
 		using AllocatorType      = Allocator;
@@ -145,7 +140,9 @@ namespace Orion::Engine
 		constexpr ReferenceType operator[](const KeyType& key) noexcept;
 		constexpr ConstReferenceType operator[](const KeyType& key) const noexcept;
 
-		/** Inserts new element to the hashmap. If the key already exists, it will be overridden.  */
+		/// @brief Inserts new element to the hashmap. If the key already exists, it will be overridden.
+		/// @param[IN, REQUIRED] key Key under which element will be stored.
+		/// @param[IN, REQUIRED] value Value to be associated with a given \p key.
 		///@{
 		ORION_FORCE_INLINE constexpr ReferenceType Insert(const KeyType& key, const ValueType& value) noexcept;
 		ORION_FORCE_INLINE constexpr ReferenceType Insert(const KeyType& key, ValueType&& value) noexcept;
@@ -153,13 +150,13 @@ namespace Orion::Engine
 		ORION_FORCE_INLINE constexpr ReferenceType Insert(KeyType&& key, ValueType&& value) noexcept;
 		///@}
 
-		/** Removes specified element from the container. Calls destructor. */
+		/// @brief Removes specified element from the container. Calls destructor.
 		///@{
 		constexpr void Remove(const KeyType& key) noexcept;
 		constexpr void Remove(KeyType&& key) noexcept;
 		///@}
 
-		/** Finds the value associated with a specific key - returns nullptr if the value was not found. */
+		/// @brief Finds the value associated with a specific key - returns nullptr if the value was not found.
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr PointerType Find(const KeyType& key) noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstPointerType Find(const KeyType& key) const noexcept;
@@ -184,15 +181,15 @@ namespace Orion::Engine
 		/// @brief Returns the maximum amount of elements that can be currently stored in this container.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr SizeType Capacity() const noexcept;
 
-		/// @brief TODO
+		/// @brief Returns the current occupancy of the HashMap compared to its capacity, i.e. load factor.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Float64 LoadFactor() const noexcept;
 
-		/// @brief TODO
+		/// @brief Returns load factor which if exceeded will cause HashMap to grow in capacity.
 		[[nodiscard]] ORION_FORCE_INLINE constexpr Float64 MaxLoadFactor() const noexcept;
 
 		public:
 		// NOLINTBEGIN(readability-identifier-naming)
-		/** Required overload for the C++'s for range loops. */
+		/// @brief Required overload for the C++'s for range loops.
 		///@{
 		[[nodiscard]] ORION_FORCE_INLINE constexpr IteratorType begin() noexcept;
 		[[nodiscard]] ORION_FORCE_INLINE constexpr ConstIteratorType begin() const noexcept;
@@ -215,12 +212,20 @@ namespace Orion::Engine
 	namespace Detail
 	{
 		template <Bool8 IsConst, typename Key, typename Value>
-		constexpr HashMapIterator<IsConst, Key, Value>::HashMapIterator(StorageType* data, StorageType* data_end)
-			: _data(data), _data_end(data_end)
+		constexpr HashMapIterator<IsConst, Key, Value>::HashMapIterator(StorageType* data,
+		                                                                StorageType* data_begin,
+		                                                                StorageType* data_end)
+			: _data(data), _data_begin(data_begin), _data_end(data_end)
 		{
-			ORION_ASSERT_DEBUG_SLOW(_data);
-			ORION_ASSERT_DEBUG_SLOW(_data_end);
-			ORION_ASSERT_DEBUG_SLOW(_data <= _data_end);
+			ORION_ASSERT_DEBUG_SLOW(_data && _data_begin && _data_end);
+			ORION_ASSERT_DEBUG_SLOW(_data_begin <= _data_end);
+			ORION_ASSERT_DEBUG_SLOW(_data >= _data_begin && _data <= _data_end);
+			// TODO(SandNoodle): What about reverse iterators?
+			if (_data < _data_end) {
+				if (_data->state == StorageType::State::Free) {
+					NextElement();
+				}
+			}
 		}
 
 		template <Bool8 IsConst, typename Key, typename Value>
@@ -313,8 +318,8 @@ namespace Orion::Engine
 		: _allocator(AllocatorType{})
 	{
 		DoInitialize(list.size());
-		for (auto& it : list) {
-			DoInsert({ it.key, it.value });
+		for (const KeyValueType& it : list) {
+			DoInsert({ it.first, it.second });
 		}
 	}
 
@@ -391,7 +396,7 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index = DoFindSlot(key);
 		ORION_ASSERT_DEBUG_SLOW(_data[slot_index].state == StorageType::State::Allocated);
-		return _data[slot_index].value;
+		return _data[slot_index].second;
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -401,7 +406,7 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index = DoFindSlot(key);
 		ORION_ASSERT_DEBUG_SLOW(_data[slot_index].state == StorageType::State::Allocated);
-		return _data[slot_index].value;
+		return _data[slot_index].second;
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -454,7 +459,7 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index  = DoFindSlot(key);
 		StorageType* element = &_data[slot_index];
-		return element->state == StorageType::State::Allocated ? &element->value : nullptr;
+		return element->state == StorageType::State::Allocated ? &element->second : nullptr;
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -464,7 +469,7 @@ namespace Orion::Engine
 		ORION_ASSERT_DEBUG_SLOW(_data);
 		SizeType slot_index  = DoFindSlot(key);
 		StorageType* element = &_data[slot_index];
-		return element->state == StorageType::State::Allocated ? &element->value : nullptr;
+		return element->state == StorageType::State::Allocated ? &element->second : nullptr;
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -479,10 +484,10 @@ namespace Orion::Engine
 	{
 		for (SizeType index = 0; index < _capacity; ++index) {
 			if constexpr (!IsTriviallyDestructible<KeyType>) {
-				_data[index].key.~KeyType();
+				_data[index].first.~KeyType();
 			}
 			if constexpr (!IsTriviallyDestructible<ValueType>) {
-				_data[index].value.~ValueType();
+				_data[index].second.~ValueType();
 			}
 			_data[index].state = StorageType::State::Free;
 		}
@@ -533,7 +538,7 @@ namespace Orion::Engine
 	ORION_FORCE_INLINE constexpr auto HashMap<Key, Value, Hash, Predicate, Allocator>::begin() noexcept -> IteratorType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
-		return IteratorType{ _data, _data + _capacity };
+		return IteratorType{ _data, _data, _data + _capacity };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -541,7 +546,7 @@ namespace Orion::Engine
 		-> ConstIteratorType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
-		return ConstIteratorType{ _data, _data + _capacity };
+		return ConstIteratorType{ _data, _data, _data + _capacity };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -549,7 +554,7 @@ namespace Orion::Engine
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
 		StorageType* end = _data + _capacity;
-		return IteratorType{ end, end };
+		return IteratorType{ end, _data, end };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -558,7 +563,7 @@ namespace Orion::Engine
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
 		StorageType* end = _data + _capacity;
-		return ConstIteratorType{ end, end };
+		return ConstIteratorType{ end, _data, end };
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -605,20 +610,19 @@ namespace Orion::Engine
 		-> ReferenceType
 	{
 		ORION_ASSERT_DEBUG_SLOW(_data);
-		const auto& [key, value] = element;
-		SizeType slot_index      = DoFindSlot(key);
+		SizeType slot_index = DoFindSlot(element.first);
 		if (_data[slot_index].state == StorageType::State::Allocated) {
-			_data[slot_index].value = value;
-			return _data[slot_index].value;
+			_data[slot_index].second = element.second;
+			return _data[slot_index].second;
 		}
 
 		DoRebuildHashMapIfNeeded();
-		slot_index              = DoFindSlot(key);
-		_data[slot_index].key   = key;
-		_data[slot_index].value = value;
-		_data[slot_index].state = StorageType::State::Allocated;
+		slot_index               = DoFindSlot(element.first);
+		_data[slot_index].first  = element.first;
+		_data[slot_index].second = element.second;
+		_data[slot_index].state  = StorageType::State::Allocated;
 		++_size;
-		return _data[slot_index].value;
+		return _data[slot_index].second;
 	}
 
 	template <typename Key, typename Value, typename Hash, auto Predicate, Memory::AllocatorKind Allocator>
@@ -647,7 +651,7 @@ namespace Orion::Engine
 				break;
 			}
 
-			typename HashType::SizeType hash = HashType()(_data[index].key) % _capacity;
+			typename HashType::SizeType hash = HashType()(_data[index].first) % _capacity;
 			if (slot_index <= index) {
 				if (slot_index < hash && hash <= index) {
 					continue;
@@ -658,10 +662,10 @@ namespace Orion::Engine
 				}
 			}
 
-			_data[slot_index].state = StorageType::State::Allocated;
-			_data[index].state      = StorageType::State::Free;
-			_data[slot_index].key   = _data[index].key;
-			_data[slot_index].value = _data[index].value;
+			_data[slot_index].state  = StorageType::State::Allocated;
+			_data[index].state       = StorageType::State::Free;
+			_data[slot_index].first  = _data[index].first;
+			_data[slot_index].second = _data[index].second;
 
 			slot_index = index;
 		}
@@ -672,7 +676,7 @@ namespace Orion::Engine
 		-> SizeType
 	{
 		typename HashType::SizeType index = HashType()(key) % _capacity;
-		while (_data[index].state == StorageType::State::Allocated && !Predicate(_data[index].key, key)) {
+		while (_data[index].state == StorageType::State::Allocated && !Predicate(_data[index].first, key)) {
 			index = (index + 1) % _capacity;
 		}
 		return index;

@@ -6,7 +6,7 @@
 
 #include "volk.h"
 
-namespace Orion::Engine::Platform
+namespace Orion::Engine::Platform::Graphics::Vulkan
 {
 	struct QueueVk
 	{
@@ -39,9 +39,13 @@ namespace Orion::Engine::Platform
 		RenderDeviceVk& operator=(const RenderDeviceVk&) noexcept = delete;
 		RenderDeviceVk& operator=(RenderDeviceVk&&) noexcept      = delete;
 
+		/// @brief TODO
 		[[nodiscard]] static RenderDeviceVk* Create();
+
+		/// @brief TODO
+		/// @param[IN, REQUIRED] render_device TODO
 		static void Destroy(RenderDeviceVk* render_device);
 	};
-}  // namespace Orion::Engine::Platform
+}  // namespace Orion::Engine::Platform::Graphics::Vulkan
 
 #endif  // ORION_GRAPHICS_VULKAN
