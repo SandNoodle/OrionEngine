@@ -2,9 +2,9 @@
 
 #include "OrionEngine.h"
 
-#include "Platform/Compiler.h"
 #include "Core/Standard/Traits/TypeComparison.h"
 #include "Core/Standard/Traits/TypeQualifiers.h"
+#include "Platform/Compiler.h"
 
 namespace Orion::Engine
 {

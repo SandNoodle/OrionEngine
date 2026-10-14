@@ -165,7 +165,9 @@ namespace Orion::Engine::Platform
 		};
 	}
 
-	static constexpr void DoListFiles(Vector<PlatformFileStat>& file_stats, StringView path, PlatformListOption list_option) noexcept
+	static constexpr void DoListFiles(Vector<PlatformFileStat>& file_stats,
+	                                  StringView path,
+	                                  PlatformListOption list_option) noexcept
 	{
 		ORION_ASSERT_DEBUG(path.Size() > 0);
 
