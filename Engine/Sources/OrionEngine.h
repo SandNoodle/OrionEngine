@@ -20,7 +20,7 @@
 #error "Mac OS is not supported."
 
 #else
-#error "Unkown platform detected."
+#error "Unknown platform detected."
 #endif
 
 // ---- [ Build Type ] ----

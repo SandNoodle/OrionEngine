@@ -63,7 +63,7 @@ namespace Orion::Engine::Platform::Compiler
 		}
 
 		template <typename T>
-		[[nodiscard]] ORION_FORCE_INLINE T AtomicLoad(volatile T* ptr, UInt8 memory_order) noexcept
+		[[nodiscard]] ORION_FORCE_INLINE T AtomicLoad(const volatile T* ptr, UInt8 memory_order) noexcept
 		{
 			return __atomic_load_n(ptr, memory_order);
 		}
@@ -84,6 +84,18 @@ namespace Orion::Engine::Platform::Compiler
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchSub(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
 			return __atomic_fetch_sub(ptr, desired_value, memory_order);
+		}
+
+		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchMax(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
+		{
+			return __atomic_fetch_max(ptr, desired_value, memory_order);
+		}
+
+		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchMin(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
+		{
+			return __atomic_fetch_min(ptr, desired_value, memory_order);
 		}
 
 		template <typename T>

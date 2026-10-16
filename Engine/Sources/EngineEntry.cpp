@@ -32,10 +32,10 @@ namespace Orion::Engine
 	/// @brief Parses CLI arguments while skipping the first argument (Application's executable).
 	static constexpr CommandLineArguments ParseCommandLineArguments(int argc, char** argv) noexcept
 	{
-		USize argument_count = static_cast<USize>(argc);
-
 		CommandLineArguments arguments;
 		arguments.config_file = String("OrionEngine.ini");
+
+		USize argument_count = static_cast<USize>(argc);
 		if (argument_count < 2) {
 			return arguments;
 		}

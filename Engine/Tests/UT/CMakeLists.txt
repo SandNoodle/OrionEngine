@@ -34,6 +34,7 @@ set(OrionEngine_UT_SOURCES
         Core/Standard/Containers/StringViewTests.cpp
         Core/Standard/Containers/StringTests.cpp
         Core/Standard/Containers/VectorTests.cpp
+        Core/Standard/Threads/AtomicTests.cpp
         Platform/FileSystem/Storage/LocalStorageTests.cpp
         TestCommon.h
 )
