@@ -26,25 +26,21 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		QueueVk _queue_transfer{};
 
 		public:
-		RenderDeviceVk(VkInstance instance,
-		               VkPhysicalDevice physical_device,
-		               VkDevice logical_device,
-		               QueueVk queue_graphics,
-		               QueueVk queue_compute,
-		               QueueVk queue_transfer) noexcept;
+		RenderDeviceVk() noexcept                      = default;
 		RenderDeviceVk(const RenderDeviceVk&) noexcept = delete;
 		RenderDeviceVk(RenderDeviceVk&&) noexcept      = delete;
-		~RenderDeviceVk() noexcept;
+		~RenderDeviceVk() noexcept                     = default;
 
 		RenderDeviceVk& operator=(const RenderDeviceVk&) noexcept = delete;
 		RenderDeviceVk& operator=(RenderDeviceVk&&) noexcept      = delete;
 
-		/// @brief TODO
-		[[nodiscard]] static RenderDeviceVk* Create();
+		/// @brief Initializes the render device and prepares it for further use.
+		/// @warning Must be called exactly once!
+		[[nodiscard]] Bool8 Initialize() noexcept;
 
-		/// @brief TODO
-		/// @param[IN, REQUIRED] render_device TODO
-		static void Destroy(RenderDeviceVk* render_device);
+		/// @brief Shutdowns the render device.
+		/// @warning Must be called exactly once!
+		[[nodiscard]] Bool8 Shutdown() noexcept;
 	};
 }  // namespace Orion::Engine::Platform::Graphics::Vulkan
 

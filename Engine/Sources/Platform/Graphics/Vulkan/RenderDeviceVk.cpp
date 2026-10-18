@@ -20,28 +20,6 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 {
 	static constexpr UInt32 k_vulkan_api_version = VK_API_VERSION_1_3;
 
-	RenderDeviceVk::RenderDeviceVk(VkInstance instance,
-	                               VkPhysicalDevice physical_device,
-	                               VkDevice logical_device,
-	                               QueueVk queue_graphics,
-	                               QueueVk queue_compute,
-	                               QueueVk queue_transfer) noexcept
-		: _instance(instance),
-		  _physical_device(physical_device),
-		  _logical_device(logical_device),
-		  _queue_graphics(queue_graphics),
-		  _queue_compute(queue_compute),
-		  _queue_transfer(queue_transfer)
-	{
-	}
-
-	RenderDeviceVk::~RenderDeviceVk() noexcept
-	{
-		// TODO(SandNoodle): Destroy + Allocation callbacks.
-		vkDestroyDevice(_logical_device, nullptr);
-		vkDestroyInstance(_instance, nullptr);
-	}
-
 	[[nodiscard]] static constexpr VkInstance CreateVulkanInstance() noexcept
 	{
 		if (!glfwInit()) {
@@ -344,7 +322,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		return vma_allocator;
 	}
 
-	RenderDeviceVk* RenderDeviceVk::Create()
+	Bool8 RenderDeviceVk::Initialize() noexcept
 	{
 		VkInstance instance              = CreateVulkanInstance();
 		VkPhysicalDevice physical_device = SelectPhysicalDevice(instance);
@@ -364,16 +342,22 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		queue_compute.queue_family_index  = queue_data.queue_index_compute;
 		queue_transfer.queue_family_index = queue_data.queue_index_transfer;
 
-		return new RenderDeviceVk(
-			instance, physical_device, logical_device, queue_graphics, queue_compute, queue_transfer);
+		_instance        = instance;
+		_physical_device = physical_device;
+		_logical_device  = logical_device;
+		_queue_graphics  = queue_graphics;
+		_queue_compute   = queue_compute;
+		_queue_transfer  = queue_transfer;
+
+		return true;
 	}
 
-	void RenderDeviceVk::Destroy(RenderDeviceVk* render_device)
+	Bool8 RenderDeviceVk::Shutdown() noexcept
 	{
-		if (!render_device) {
-			return;
-		}
-		delete render_device;
+		// TODO(SandNoodle): Destroy + Allocation callbacks.
+		vkDestroyDevice(_logical_device, nullptr);
+		vkDestroyInstance(_instance, nullptr);
+		return true;
 	}
 }  // namespace Orion::Engine::Platform::Graphics::Vulkan
 

@@ -5,16 +5,14 @@
 
 namespace Orion::Engine::Platform::Graphics::None
 {
-	RenderDeviceNone::ThisType* RenderDeviceNone::Create()
+	Bool8 RenderDeviceNone::Initialize() noexcept
 	{
-		ORION_NOT_IMPLEMENTED();
-		return nullptr;
+		return true;
 	}
 
-	void RenderDeviceNone::Destroy(ThisType* render_device)
+	Bool8 RenderDeviceNone::Shutdown() noexcept
 	{
-		ORION_IGNORE_PARAM(render_device);
-		ORION_NOT_IMPLEMENTED();
+		return true;
 	}
 }  // namespace Orion::Engine::Platform::Graphics::None
 

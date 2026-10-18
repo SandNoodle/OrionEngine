@@ -1,12 +1,9 @@
 #include "EngineEntry.h"
 
-#include "Core/Console/ConsoleSystem.h"
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
-#include "Core/Standard/Threads/Atomic.h"
 #include "Platform/FileSystem/FileSystem.h"
-
 #include "Platform/Graphics/RenderDevice.h"
 
 namespace Orion::Engine
@@ -23,7 +20,7 @@ namespace Orion::Engine
 			public:
 			Logger::LoggerSystem logger_system;
 			Platform::FileSystem::FileSystem file_system;
-			Platform::Graphics::RenderDevice* render_device;
+			Platform::Graphics::RenderDevice render_device;
 		};
 	}  // namespace
 
@@ -69,18 +66,19 @@ namespace Orion::Engine
 		// -------------------------------------------------------------------------------- //
 		// Initialization:
 		// -------------------------------------------------------------------------------- //
-		k_engine->render_device = Platform::Graphics::RenderDevice::Create();
-		ORION_ASSERT(k_engine->render_device, "Failed to initialize RenderDevice.");
+		Bool8 is_render_device_initialized = k_engine->render_device.Initialize();
+		ORION_ASSERT(is_render_device_initialized, "Failed to initialize the RenderDevice.");
 	}
 
 	void Shutdown() noexcept
 	{
+		Bool8 is_render_device_deinitialized = k_engine->render_device.Shutdown();
+		ORION_ASSERT(is_render_device_deinitialized, "Failed to shutdown the RenderDevice.");
+
 		Bool8 is_filesystem_deinitialized = k_engine->file_system.Shutdown();
 		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem.");
 
-		Bool8 is_logger_initialized = k_engine->logger_system.Shutdown();
-		ORION_ASSERT(is_logger_initialized, "Failed to shutdown the LoggerSystem.");
-
-		Platform::Graphics::RenderDevice::Destroy(k_engine->render_device);
+		Bool8 is_logger_deinitialized = k_engine->logger_system.Shutdown();
+		ORION_ASSERT(is_logger_deinitialized, "Failed to shutdown the LoggerSystem.");
 	}
 }  // namespace Orion::Engine

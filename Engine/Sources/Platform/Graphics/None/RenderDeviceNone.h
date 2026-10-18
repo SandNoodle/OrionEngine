@@ -10,12 +10,13 @@ namespace Orion::Engine::Platform::Graphics::None
 		using ThisType = RenderDeviceNone;
 
 		public:
-		/// @brief TODO
-		[[nodiscard]] static ThisType* Create();
+		/// @brief Initializes the render device and prepares it for further use.
+		/// @warning Must be called exactly once!
+		[[nodiscard]] Bool8 Initialize() noexcept;
 
-		/// @brief TODO
-		/// @param[IN, REQUIRED] render_device TODO
-		static void Destroy(ThisType* render_device);
+		/// @brief Shutdowns the render device.
+		/// @warning Must be called exactly once!
+		[[nodiscard]] Bool8 Shutdown() noexcept;
 	};
 }  // namespace Orion::Engine::Platform::Graphics::None
 

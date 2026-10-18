@@ -17,8 +17,8 @@ namespace Orion::Engine::Platform::Graphics
 	/// @brief Concept that is satisfied by a types that abstract a graphic API under a Render Hardware Interface (RHI).
 	template <typename RenderDeviceT>
 	concept RenderDeviceKind = requires(RenderDeviceT render_device) {
-		{ RenderDeviceT::Create() } -> SameAs<RenderDeviceT*>;
-		{ RenderDeviceT::Destroy(&render_device) } -> SameAs<void>;
+		{ render_device.Initialize() } -> SameAs<Bool8>;
+		{ render_device.Shutdown() } -> SameAs<Bool8>;
 	};
 
 #if defined(ORION_GRAPHICS_VULKAN)
