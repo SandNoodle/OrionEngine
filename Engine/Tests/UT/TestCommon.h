@@ -41,9 +41,13 @@ namespace Orion::Engine::UT
 		ValueType x{ 0 };
 
 		public:
-		constexpr ComplexType() = default;
+		constexpr ComplexType();
 		constexpr explicit ComplexType(ValueType x);
-		virtual ~ComplexType() = default;
+		constexpr ComplexType(const ComplexType& other) noexcept;
+		constexpr ComplexType(ComplexType&& other) noexcept;
+		constexpr ComplexType& operator=(const ComplexType& other) noexcept;
+		constexpr ComplexType& operator=(ComplexType&& other) noexcept;
+		constexpr ~ComplexType();
 
 #define ORION_COMPLEX_TYPE_ARITHMETIC_OPERATOR_LIST \
 	ORION_OPERATOR(+=)                              \
@@ -61,8 +65,29 @@ namespace Orion::Engine::UT
 #undef ORION_OPERATOR
 #undef ORION_COMPLEX_TYPE_ARITHMETIC_OPERATOR_LIST
 	};  // namespace Orion::Engine::UT
+	static_assert(!IsTriviallyConstructible<ComplexType>, "ComplexType cannot be trivially constructible.");
+	static_assert(!IsTriviallyCopyable<ComplexType>, "ComplexType cannot be trivially copyable.");
+	static_assert(!IsTriviallyDestructible<ComplexType>, "ComplexType cannot be trivially destructible.");
 
-	constexpr ComplexType::ComplexType(ValueType x) : x(x) {}
+	constexpr ComplexType::ComplexType() {}
+	constexpr ComplexType::ComplexType(const ValueType x) : x(x) {}
+	constexpr ComplexType::ComplexType(const ComplexType& other) noexcept : x(other.x) {}
+	constexpr ComplexType::ComplexType(ComplexType&& other) noexcept : x(other.x) {}
+	constexpr ComplexType::~ComplexType() noexcept {}
+	constexpr ComplexType& ComplexType::operator=(const ComplexType& other) noexcept
+	{
+		if (this != &other) {
+			x = other.x;
+		}
+		return *this;
+	}
+	constexpr ComplexType& ComplexType::operator=(ComplexType&& other) noexcept
+	{
+		if (this != &other) {
+			Swap(x, other.x);
+		}
+		return *this;
+	}
 
 #define ORION_COMPLEX_TYPE_COMPARISON_OPERATOR_LIST \
 	ORION_OPERATOR(==)                              \

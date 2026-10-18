@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
 
 # --- [ Options ] ---
+option(ORION_ENGINE_BUILD_TESTS "Build engine tests (ON/OFF)" ON)
 set(ORION_GRAPHICS_API "Vulkan" CACHE STRING "Graphics API backed to be used; Possible values: Vulkan, None")
 
 # --- [ Sources ] ---
@@ -127,7 +128,6 @@ target_link_libraries(OrionEngine
 # --- [ Graphics API ] ---
 set_property(CACHE ORION_GRAPHICS_API PROPERTY STRINGS "Vulkan" "None")
 if (${ORION_GRAPHICS_API} STREQUAL "Vulkan")
-    message(STATUS "--- [ Graphics API: Vulkan ] ---")
     target_compile_definitions(OrionEngine PUBLIC ORION_GRAPHICS_VULKAN)
     add_subdirectory(ThirdParty/VMA)
     add_subdirectory(ThirdParty/Volk)
@@ -143,7 +143,7 @@ elseif (${ORION_GRAPHICS_API} STREQUAL "None")
 endif ()
 
 # --- [ Testing ] ---
-if (ORION_BUILD_TESTS)
+if (ORION_ENGINE_BUILD_TESTS)
     add_subdirectory(Tests)
 endif ()
 
@@ -162,7 +162,7 @@ message(STATUS "----------------------------------------------------------------
 message(STATUS " -> Build Type            : ${CMAKE_BUILD_TYPE}")
 message(STATUS " -> Build Host Platform   : ${CMAKE_HOST_SYSTEM}")
 message(STATUS " -> Build Target Platform : ${CMAKE_SYSTEM}")
-message(STATUS " -> Build Tests           : ${ORION_BUILD_TESTS}")
+message(STATUS " -> Build Tests           : ${ORION_ENGINE_BUILD_TESTS}")
 message(STATUS "--------------------------------------------------------------------------------")
 message(STATUS " -> C Compiler            : ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_VERSION}")
 message(STATUS " -> CXX Compiler          : ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_VERSION}")
