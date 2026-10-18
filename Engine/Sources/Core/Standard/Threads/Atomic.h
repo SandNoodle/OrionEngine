@@ -7,7 +7,7 @@
 #include "Core/Standard/Traits/TypeProperties.h"
 #include "Platform/Compiler.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Thread
 {
 	/// @brief Enumeration describing how memory access is to be ordered around an atomic operation.
 	/// @see https://en.cppreference.com/cpp/atomic/memory_order
@@ -45,7 +45,9 @@ namespace Orion::Engine
 		SequentiallyConsistent = Platform::Compiler::Atomic::k_memory_order_sequentially_consistent,
 	};
 
-	/// @brief TODO
+	/// @brief Represents a synchronization primitive that can be used for reading/writing data between threads without
+	/// use of locks.
+	/// @tparm T Type of the variable.
 	template <typename T>
 	class Atomic
 	{
@@ -663,11 +665,12 @@ namespace Orion::Engine
 	};
 
 	// -- Free functions.
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically replaces the value at \p ptr with \p value. Memory is affected according to \p memory_order.
+	/// @warning \p memory_order must NOT be one of: Consume, Acquire or AcquireRelease.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically replace.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
 	template <typename T>
 	ORION_FORCE_INLINE void AtomicStore(volatile T* ptr, T desired_value, MemoryOrder memory_order) noexcept
 	{
@@ -676,10 +679,11 @@ namespace Orion::Engine
 		Platform::Compiler::Atomic::AtomicStore<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically loads and returns the value at \ptr. Memory is affected according to \p memory_order.
+	/// @warning \p memory_order must NOT be one of: Release or AcquireRelease.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically load.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicLoad(const volatile T* ptr, MemoryOrder memory_order) noexcept
 	{
@@ -687,11 +691,13 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicLoad<T>(ptr, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically replaces the value at \p ptr with \p value (a read-modify-write operation) and returns
+	/// the value of the atomic variable before the call. Memory is affected according to \p memory_order.
+	/// @warning \p memory_order must NOT be one of: Release or AcquireRelease.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically exchange.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicExchange(volatile T* ptr,
 	                                                  T desired_value,
@@ -700,11 +706,11 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicExchange<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically adds \p value to the value pointed to by \p ptr and returns the previously held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch add.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchAdd(volatile T* ptr,
 	                                                  T desired_value,
@@ -713,11 +719,11 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchAdd<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically subtracts \p value to the value pointed to by \p ptr and returns the previously held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch sub.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchSub(volatile T* ptr,
 	                                                  T desired_value,
@@ -726,11 +732,12 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchSub<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically performs max between \p value and the value pointed to by \p ptr and returns the previously
+	/// held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch max.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchMax(volatile T* ptr,
 	                                                  T desired_value,
@@ -739,11 +746,13 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchMax<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically performs min between \p value and the value pointed to by \p ptr and returns the previously
+	/// held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch min.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
+
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchMin(volatile T* ptr,
 	                                                  T desired_value,
@@ -752,11 +761,13 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchMin<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically performs bitwise AND between \p value and the value pointed to by \p ptr and returns the
+	/// previously held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch and.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
+
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchAnd(volatile T* ptr,
 	                                                  T desired_value,
@@ -765,11 +776,13 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchAnd<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically performs bitwise OR between \p value and the value pointed to by \p ptr and returns the
+	/// previously held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch or.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
+
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchOr(volatile T* ptr,
 	                                                 T desired_value,
@@ -778,11 +791,13 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchOr<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
-	/// @param[IN, REQUIRED] desired_value
-	/// @param[IN, REQUIRED] memory_order
+	/// @brief Atomically performs bitwise XOR between \p value and the value pointed to by \p ptr and returns the
+	/// previously held value.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch xor.
+	/// @param[IN, REQUIRED] desired_value Desired value to be stored into this atomic variable.
+	/// @param[IN, REQUIRED] memory_order Memory order constraints to enforce.
+
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchXor(volatile T* ptr,
 	                                                  T desired_value,
@@ -791,9 +806,9 @@ namespace Orion::Engine
 		return Platform::Compiler::Atomic::AtomicFetchXor<T>(ptr, desired_value, EnumAsUnderlyingType(memory_order));
 	}
 
-	/// @brief TODO
-	/// @tparam T
-	/// @param[IN, REQUIRED] ptr
+	/// @brief Checks whether the atomic operations on all objects of this type pointed to by \p ptr are lock-free.
+	/// @tparam T Type of the variable.
+	/// @param[IN, REQUIRED] ptr Pointer to a variable to atomically fetch xor.
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicIsLockFree(const volatile T* ptr) noexcept
 	{
@@ -1534,4 +1549,4 @@ namespace Orion::Engine
 	{
 		return AtomicFetchMin<ValueType>(&_value, value, memory_order);
 	}
-}  // namespace Orion::Engine
+}  // namespace Orion::Engine::Thread
