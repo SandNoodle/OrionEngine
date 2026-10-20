@@ -53,7 +53,7 @@ namespace Orion::Engine
 		CommandLineArguments command_line_arguments = ParseCommandLineArguments(argc, argv);
 
 		// -------------------------------------------------------------------------------- //
-		// Pre-Initialization: Engine Critical Systems
+		// Early Initialization: critical systems & modules.
 		// -------------------------------------------------------------------------------- //
 		k_engine = new Engine();  // TODO(SandNoodle): @nocheckin
 
@@ -68,6 +68,10 @@ namespace Orion::Engine
 		// -------------------------------------------------------------------------------- //
 		Bool8 is_render_device_initialized = k_engine->render_device.Initialize();
 		ORION_ASSERT(is_render_device_initialized, "Failed to initialize the RenderDevice.");
+
+		// -------------------------------------------------------------------------------- //
+		// Late Initialization:
+		// -------------------------------------------------------------------------------- //
 	}
 
 	void Shutdown() noexcept
