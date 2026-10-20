@@ -59,43 +59,119 @@ namespace Orion::Engine::Platform::Compiler
 		template <typename T>
 		ORION_FORCE_INLINE void AtomicStore(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			__atomic_store_n(ptr, desired_value, memory_order);
+			__atomic_store(ptr, &desired_value, memory_order);
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicLoad(const volatile T* ptr, UInt8 memory_order) noexcept
 		{
-			return __atomic_load_n(ptr, memory_order);
+			// NOTE: We can't use __atomic_load_n here, because GCC does not provide float/double overloads for it.
+			alignas(T) Byte buffer[sizeof(T)];
+			T* dst = reinterpret_cast<T*>(buffer);
+			__atomic_load(ptr, dst, memory_order);
+			return *dst;
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicExchange(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			return __atomic_exchange_n(ptr, desired_value, memory_order);
+			// NOTE: We can't use __atomic_exchange_n here, because GCC does not provide float/double overloads for it.
+			alignas(T) Byte buffer[sizeof(T)];
+			T* dst = reinterpret_cast<T*>(buffer);
+			__atomic_exchange(ptr, &desired_value, dst, memory_order);
+			return *dst;
 		}
+
+		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE Bool8 AtomicCompareExchangeWeak(volatile T* ptr,
+		                                                                 T& expected_value,
+		                                                                 T desired_value,
+		                                                                 UInt8 success_order,
+		                                                                 UInt8 failure_order) noexcept
+		{
+			return __atomic_compare_exchange(ptr, &expected_value, &desired_value, true, success_order, failure_order);
+		}
+
+		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE Bool8 AtomicCompareExchangeStrong(T* ptr,
+		                                                                   T& expected_value,
+		                                                                   T desired_value,
+		                                                                   UInt8 success_order,
+		                                                                   UInt8 failure_order) noexcept
+		{
+			return __atomic_compare_exchange(ptr, &expected_value, &desired_value, false, success_order, failure_order);
+		}
+
+		template <typename T>
+		concept HasAtomicFetchAddOverload = requires(T t) { __atomic_fetch_sub(&t, t, 0); };
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchAdd(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			return __atomic_fetch_add(ptr, desired_value, memory_order);
+			if constexpr (HasAtomicFetchAddOverload<T>) {
+				return __atomic_fetch_add(ptr, desired_value, memory_order);
+			} else {
+				T old_value = AtomicLoad(ptr, k_memory_order_relaxed);
+				T new_value = old_value + desired_value;
+				while (!AtomicCompareExchangeWeak(ptr, old_value, new_value, memory_order, k_memory_order_relaxed)) {
+					new_value = old_value + desired_value;
+				}
+				return old_value;
+			}
 		}
+
+		template <typename T>
+		concept HasAtomicFetchSubOverload = requires(T t) { __atomic_fetch_sub(&t, t, 0); };
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchSub(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			return __atomic_fetch_sub(ptr, desired_value, memory_order);
+			if constexpr (HasAtomicFetchSubOverload<T>) {
+				return __atomic_fetch_sub(ptr, desired_value, memory_order);
+			} else {
+				T old_value = AtomicLoad(ptr, k_memory_order_relaxed);
+				T new_value = old_value - desired_value;
+				while (!AtomicCompareExchangeWeak(ptr, old_value, new_value, memory_order, k_memory_order_relaxed)) {
+					new_value = old_value - desired_value;
+				}
+				return old_value;
+			}
 		}
+
+		template <typename T>
+		concept HasAtomicFetchMinMax = requires(T t) {
+			__atomic_fetch_min(&t, t, 0);
+			__atomic_fetch_max(&t, t, 0);
+		};
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchMax(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			return __atomic_fetch_max(ptr, desired_value, memory_order);
+			if constexpr (HasAtomicFetchMinMax<T>) {
+				return __atomic_fetch_max(ptr, desired_value, memory_order);
+			} else {
+				T old_value = AtomicLoad(ptr, k_memory_order_relaxed);
+				T new_value = old_value > desired_value ? old_value : desired_value;
+				while (!AtomicCompareExchangeWeak(ptr, old_value, new_value, memory_order, k_memory_order_relaxed)) {
+					new_value = old_value > desired_value ? old_value : desired_value;
+				}
+				return old_value;
+			}
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchMin(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			return __atomic_fetch_min(ptr, desired_value, memory_order);
+			if constexpr (HasAtomicFetchMinMax<T>) {
+				return __atomic_fetch_min(ptr, desired_value, memory_order);
+			} else {
+				T old_value = AtomicLoad(ptr, k_memory_order_relaxed);
+				T new_value = old_value < desired_value ? old_value : desired_value;
+				while (!AtomicCompareExchangeWeak(ptr, old_value, new_value, memory_order, k_memory_order_relaxed)) {
+					new_value = old_value < desired_value ? old_value : desired_value;
+				}
+				return old_value;
+			}
 		}
 
 		template <typename T>

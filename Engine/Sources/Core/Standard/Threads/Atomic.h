@@ -218,29 +218,37 @@ namespace Orion::Engine::Thread
 		/// @brief Atomically pre-increments the current value.
 		/// Equivalent to FetchAdd(1) + 1.
 		/// @{
-		ORION_FORCE_INLINE constexpr ValueType operator++() noexcept;
-		ORION_FORCE_INLINE constexpr ValueType operator++() volatile noexcept;
+		ORION_FORCE_INLINE constexpr ValueType operator++() noexcept
+			requires(IntegralKind<ValueType>);
+		ORION_FORCE_INLINE constexpr ValueType operator++() volatile noexcept
+			requires(IntegralKind<ValueType>);
 		/// @}
 
 		/// @brief Atomically post-increments the current value.
 		/// Equivalent to FetchAdd(1).
 		/// @{
-		ORION_FORCE_INLINE constexpr ValueType operator++(int) noexcept;
-		ORION_FORCE_INLINE constexpr ValueType operator++(int) volatile noexcept;
+		ORION_FORCE_INLINE constexpr ValueType operator++(int) noexcept
+			requires(IntegralKind<ValueType>);
+		ORION_FORCE_INLINE constexpr ValueType operator++(int) volatile noexcept
+			requires(IntegralKind<ValueType>);
 		/// @}
 
 		/// @brief Atomically pre-decrements the current value.
 		/// Equivalent to FetchSub(1) - 1.
 		/// @{
-		ORION_FORCE_INLINE constexpr ValueType operator--() noexcept;
-		ORION_FORCE_INLINE constexpr ValueType operator--() volatile noexcept;
+		ORION_FORCE_INLINE constexpr ValueType operator--() noexcept
+			requires(IntegralKind<ValueType>);
+		ORION_FORCE_INLINE constexpr ValueType operator--() volatile noexcept
+			requires(IntegralKind<ValueType>);
 		/// @}
 
 		/// @brief Atomically post-decrements the current value.
 		/// Equivalent to FetchSub(1).
 		/// @{
-		ORION_FORCE_INLINE constexpr ValueType operator--(int) noexcept;
-		ORION_FORCE_INLINE constexpr ValueType operator--(int) volatile noexcept;
+		ORION_FORCE_INLINE constexpr ValueType operator--(int) noexcept
+			requires(IntegralKind<ValueType>);
+		ORION_FORCE_INLINE constexpr ValueType operator--(int) volatile noexcept
+			requires(IntegralKind<ValueType>);
 		/// @}
 
 		/// @brief Atomically performs bitwise AND between \p value and the value stored in the atomic.
@@ -812,7 +820,35 @@ namespace Orion::Engine::Thread
 	template <typename T>
 	[[nodiscard]] ORION_FORCE_INLINE T AtomicIsLockFree(const volatile T* ptr) noexcept
 	{
-		return Platform::Compiler::Atomic::AtomicIsLockFree<T>(sizeof(T), ptr);
+		return Platform::Compiler::Atomic::AtomicIsLockFree<T>(ptr);
+	}
+
+	template <typename T>
+	[[nodiscard]] ORION_FORCE_INLINE T AtomicCompareExchangeWeak(volatile T* ptr,
+	                                                             T& expected_value,
+	                                                             T desired_value,
+	                                                             MemoryOrder success_order,
+	                                                             MemoryOrder failure_order) noexcept
+	{
+		return Platform::Compiler::Atomic::AtomicCompareExchangeWeak<T>(ptr,
+		                                                                expected_value,
+		                                                                desired_value,
+		                                                                EnumAsUnderlyingType(success_order),
+		                                                                EnumAsUnderlyingType(failure_order));
+	}
+
+	template <typename T>
+	[[nodiscard]] ORION_FORCE_INLINE T AtomicCompareExchangeStrong(volatile T* ptr,
+	                                                               T& expected_value,
+	                                                               T desired_value,
+	                                                               MemoryOrder success_order,
+	                                                               MemoryOrder failure_order) noexcept
+	{
+		return Platform::Compiler::Atomic::AtomicCompareExchangeStrong<T>(ptr,
+		                                                                  expected_value,
+		                                                                  desired_value,
+		                                                                  EnumAsUnderlyingType(success_order),
+		                                                                  EnumAsUnderlyingType(failure_order));
 	}
 
 	// -- Implementation.
@@ -902,11 +938,7 @@ namespace Orion::Engine::Thread
 	                                    MemoryOrder success_order,
 	                                    MemoryOrder failure_order) noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>
@@ -915,11 +947,7 @@ namespace Orion::Engine::Thread
 	                                    MemoryOrder success_order,
 	                                    MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>
@@ -928,11 +956,7 @@ namespace Orion::Engine::Thread
 	                                      MemoryOrder success_order,
 	                                      MemoryOrder failure_order) noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeStrong<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>
@@ -941,11 +965,7 @@ namespace Orion::Engine::Thread
 	                                      MemoryOrder success_order,
 	                                      MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeStrong<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <ArithmeticKind T>
@@ -1005,48 +1025,56 @@ namespace Orion::Engine::Thread
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator++() noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchAdd(1) + 1;
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator++() volatile noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchAdd(1) + 1;
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator++(int) noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchAdd(1);
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator++(int) volatile noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchAdd(1);
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator--() noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchSub(1) - 1;
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator--() volatile noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchSub(1) - 1;
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator--(int) noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchSub(1);
 	}
 
 	template <ArithmeticKind T>
 	ORION_FORCE_INLINE constexpr auto Atomic<T>::operator--(int) volatile noexcept -> ValueType
+		requires(IntegralKind<ValueType>)
 	{
 		return FetchSub(1);
 	}
@@ -1148,11 +1176,7 @@ namespace Orion::Engine::Thread
 	                                    MemoryOrder success_order,
 	                                    MemoryOrder failure_order) noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <ArithmeticKind T>
@@ -1161,11 +1185,7 @@ namespace Orion::Engine::Thread
 	                                    MemoryOrder success_order,
 	                                    MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <ArithmeticKind T>
@@ -1174,11 +1194,7 @@ namespace Orion::Engine::Thread
 	                                      MemoryOrder success_order,
 	                                      MemoryOrder failure_order) noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeStrong<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <ArithmeticKind T>
@@ -1187,11 +1203,7 @@ namespace Orion::Engine::Thread
 	                                      MemoryOrder success_order,
 	                                      MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeStrong<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <ArithmeticKind T>
@@ -1452,11 +1464,7 @@ namespace Orion::Engine::Thread
 	                                     MemoryOrder success_order,
 	                                     MemoryOrder failure_order) noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>
@@ -1465,11 +1473,7 @@ namespace Orion::Engine::Thread
 	                                     MemoryOrder success_order,
 	                                     MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>
@@ -1478,11 +1482,7 @@ namespace Orion::Engine::Thread
 	                                       MemoryOrder success_order,
 	                                       MemoryOrder failure_order) noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeStrong<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>
@@ -1491,11 +1491,7 @@ namespace Orion::Engine::Thread
 	                                       MemoryOrder success_order,
 	                                       MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		ORION_IGNORE_PARAM(expected_value);
-		ORION_IGNORE_PARAM(desired_value);
-		ORION_IGNORE_PARAM(success_order);
-		ORION_IGNORE_PARAM(failure_order);
-		ORION_NOT_IMPLEMENTED();
+		return AtomicCompareExchangeStrong<T>(&_value, expected_value, desired_value, success_order, failure_order);
 	}
 
 	template <typename T>

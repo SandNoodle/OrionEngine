@@ -59,6 +59,26 @@ namespace Orion::Engine::Platform::Compiler
 		}
 
 		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE Bool8 AtomicCompareExchangeWeak(volatile T* ptr,
+		                                                                 T& expected_value,
+		                                                                 T desired_value,
+		                                                                 UInt8 success_order,
+		                                                                 UInt8 failure_order) noexcept
+		{
+			return __atomic_compare_exchange(ptr, &expected_value, &desired_value, true, success_order, failure_order);
+		}
+
+		template <typename T>
+		[[nodiscard]] ORION_FORCE_INLINE Bool8 AtomicCompareExchangeStrong(T* ptr,
+		                                                                   T& expected_value,
+		                                                                   T desired_value,
+		                                                                   UInt8 success_order,
+		                                                                   UInt8 failure_order) noexcept
+		{
+			return __atomic_compare_exchange(ptr, &expected_value, &desired_value, false, success_order, failure_order);
+		}
+
+		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicFetchAdd(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
 			return __atomic_fetch_add(ptr, desired_value, memory_order);
