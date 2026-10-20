@@ -90,6 +90,12 @@ target_compile_options(OrionEngine PRIVATE
 )
 target_precompile_headers(OrionEngine PUBLIC Sources/StdAfx.h Sources/OrionEngine.h)
 
+# --- [ Build Type ] ---
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug")
+    message(WARNING "Build type was not specified - defaulting to ${CMAKE_BUILD_TYPE}.")
+endif ()
+
 # --- [ GIT ] ---
 find_package(Git)
 if (Git_FOUND)
@@ -100,7 +106,8 @@ if (Git_FOUND)
             OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else ()
-    set(ORION_ENGINE_GIT_HASH "<GIT REPOSITORY NOT FOUND>")
+    message(WARNING "Git executable was not found - git commit hash WON'T be embedded.")
+    set(ORION_ENGINE_GIT_HASH "<GIT HASH NOT FOUND>")
 endif ()
 
 # --- [ Defines ] ---
@@ -140,6 +147,9 @@ if (${ORION_GRAPHICS_API} STREQUAL "Vulkan")
     )
 elseif (${ORION_GRAPHICS_API} STREQUAL "None")
     target_compile_definitions(OrionEngine PUBLIC ORION_GRAPHICS_NONE)
+else ()
+    message(WARNING "Invalid Graphics API selected: '${ORION_GRAPHICS_API}', defaulting to 'None'.")
+    set(ORION_GRAPHICS_API "None")
 endif ()
 
 # --- [ Testing ] ---
