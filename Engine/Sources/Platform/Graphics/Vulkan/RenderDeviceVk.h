@@ -4,7 +4,11 @@
 
 #include "OrionEngine.h"
 
+// NOTE: Theses includes are order-dependent - do NOT touch carelessly!
+// clang-format off
 #include "volk.h"
+#include "vk_mem_alloc.h"
+// clang-format on
 
 namespace Orion::Engine::Platform::Graphics::Vulkan
 {
@@ -21,6 +25,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		VkInstance _instance{ VK_NULL_HANDLE };
 		VkPhysicalDevice _physical_device{ VK_NULL_HANDLE };
 		VkDevice _logical_device{ VK_NULL_HANDLE };
+		VmaAllocator _vma_allocator{ VK_NULL_HANDLE };
 		QueueVk _queue_graphics{};
 		QueueVk _queue_compute{};
 		QueueVk _queue_transfer{};

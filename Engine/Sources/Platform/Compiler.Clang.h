@@ -43,19 +43,28 @@ namespace Orion::Engine::Platform::Compiler
 		template <typename T>
 		ORION_FORCE_INLINE void AtomicStore(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			__atomic_store_n(ptr, desired_value, memory_order);
+			__atomic_store(ptr, &desired_value, memory_order);
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicLoad(const volatile T* ptr, UInt8 memory_order) noexcept
 		{
-			return __atomic_load_n(ptr, memory_order);
+			// NOTE: We can't use __atomic_load_n here, because Clang does not provide float/double overloads for it.
+			alignas(T) Byte buffer[sizeof(T)];
+			T* dst = reinterpret_cast<T*>(buffer);
+			__atomic_load(ptr, dst, memory_order);
+			return *dst;
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE T AtomicExchange(volatile T* ptr, T desired_value, UInt8 memory_order) noexcept
 		{
-			return __atomic_exchange_n(ptr, desired_value, memory_order);
+			// NOTE: We can't use __atomic_exchange_n here, because Clang does not provide float/double overloads for
+			// it.
+			alignas(T) Byte buffer[sizeof(T)];
+			T* dst = reinterpret_cast<T*>(buffer);
+			__atomic_exchange(ptr, &desired_value, dst, memory_order);
+			return *dst;
 		}
 
 		template <typename T>

@@ -71,6 +71,39 @@ static constexpr bool k_orion_build_distribution = true;
 #error "Unknown compiler detected."
 #endif
 
+// ---- [ Compiler Warnings ] ----
+#if defined(ORION_COMPILER_CLANG)
+#define ORION_COMPILER_PRAGMA(x) _Pragma(#x)
+#define ORION_IGNORE_ALL_WARNINGS_BEGIN                                            \
+	ORION_COMPILER_PRAGMA(clang diagnostic push)                                   \
+	ORION_COMPILER_PRAGMA(clang diagnostic ignored "-Wmissing-field-initializers") \
+	ORION_COMPILER_PRAGMA(clang diagnostic ignored "-Wnullability-completeness")   \
+	ORION_COMPILER_PRAGMA(clang diagnostic ignored "-Wsign-conversion")            \
+	ORION_COMPILER_PRAGMA(clang diagnostic ignored "-Wunused-parameter")           \
+	ORION_COMPILER_PRAGMA(clang diagnostic ignored "-Wunused-private-field")       \
+	ORION_COMPILER_PRAGMA(clang diagnostic ignored "-Wunused-variable")
+#define ORION_IGNORE_ALL_WARNINGS_END ORION_COMPILER_PRAGMA(clang diagnostic pop)
+
+#elif defined(ORION_COMPILER_GCC)
+#define ORION_COMPILER_PRAGMA(x) _Pragma(#x)
+#define ORION_IGNORE_ALL_WARNINGS_BEGIN                                          \
+	ORION_COMPILER_PRAGMA(GCC diagnostic push)                                   \
+	ORION_COMPILER_PRAGMA(GCC diagnostic ignored "-Wmissing-field-initializers") \
+	ORION_COMPILER_PRAGMA(GCC diagnostic ignored "-Wunused-parameter")           \
+	ORION_COMPILER_PRAGMA(GCC diagnostic ignored "-Wunused-variable")
+#define ORION_IGNORE_ALL_WARNINGS_END ORION_COMPILER_PRAGMA(GCC diagnostic pop)
+
+#elif defined(ORION_COMPILER_MSVC)
+#define ORION_COMPILER_PRAGMA(x) _Pragma(#x)
+#define ORION_IGNORE_ALL_WARNINGS_BEGIN
+#define ORION_IGNORE_ALL_WARNINGS_END
+
+#else
+#define ORION_COMPILER_PRAGMA(x)
+#define ORION_IGNORE_ALL_WARNINGS_BEGIN
+#define ORION_IGNORE_ALL_WARNINGS_END
+#endif
+
 // ---- [ Dynamic Linking ]  ----
 // Export
 #ifdef ORION_EXPORT

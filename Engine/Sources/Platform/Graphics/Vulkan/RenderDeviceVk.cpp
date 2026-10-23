@@ -7,6 +7,8 @@
 #include "Core/Standard/Containers/Vector.h"
 #include "Core/Standard/Limits.h"
 
+ORION_IGNORE_ALL_WARNINGS_BEGIN
+
 #define VOLK_IMPLEMENTATION
 #include "volk.h"
 
@@ -14,7 +16,9 @@
 #include "vk_mem_alloc.h"
 
 #define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
+
+ORION_IGNORE_ALL_WARNINGS_END
 
 namespace Orion::Engine::Platform::Graphics::Vulkan
 {
@@ -345,6 +349,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		_instance        = instance;
 		_physical_device = physical_device;
 		_logical_device  = logical_device;
+		_vma_allocator   = vma_allocator;
 		_queue_graphics  = queue_graphics;
 		_queue_compute   = queue_compute;
 		_queue_transfer  = queue_transfer;

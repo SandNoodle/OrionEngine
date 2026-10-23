@@ -47,7 +47,7 @@ namespace Orion::Engine::UT
 		constexpr ComplexType(ComplexType&& other) noexcept;
 		constexpr ComplexType& operator=(const ComplexType& other) noexcept;
 		constexpr ComplexType& operator=(ComplexType&& other) noexcept;
-		constexpr ~ComplexType();
+		constexpr ~ComplexType() noexcept;
 
 #define ORION_COMPLEX_TYPE_ARITHMETIC_OPERATOR_LIST \
 	ORION_OPERATOR(+=)                              \
