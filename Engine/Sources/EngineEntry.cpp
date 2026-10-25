@@ -1,5 +1,6 @@
 #include "EngineEntry.h"
 
+#include "Core/Job/JobSystem.h"
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
@@ -19,6 +20,7 @@ namespace Orion::Engine
 		{
 			public:
 			Logger::LoggerSystem logger_system;
+			Job::JobSystem job_system;
 			Platform::FileSystem::FileSystem file_system;
 			Platform::Graphics::RenderDevice render_device;
 		};
@@ -63,6 +65,9 @@ namespace Orion::Engine
 		Bool8 is_filesystem_initialized = k_engine->file_system.Initialize();
 		ORION_ASSERT(is_filesystem_initialized, "Failed to initialize the FileSystem.");
 
+		Bool8 is_job_system_initialized = k_engine->job_system.Initialize();
+		ORION_ASSERT(is_job_system_initialized, "Failed to initialize the JobSystem.");
+
 		// -------------------------------------------------------------------------------- //
 		// Initialization:
 		// -------------------------------------------------------------------------------- //
@@ -78,6 +83,9 @@ namespace Orion::Engine
 	{
 		Bool8 is_render_device_deinitialized = k_engine->render_device.Shutdown();
 		ORION_ASSERT(is_render_device_deinitialized, "Failed to shutdown the RenderDevice.");
+
+		Bool8 is_job_system_deinitialized = k_engine->job_system.Shutdown();
+		ORION_ASSERT(is_job_system_deinitialized, "Failed to shutdown the JobSystem.");
 
 		Bool8 is_filesystem_deinitialized = k_engine->file_system.Shutdown();
 		ORION_ASSERT(is_filesystem_deinitialized, "Failed to shutdown the FileSystem.");

@@ -15,6 +15,8 @@ set(ORION_GRAPHICS_API "Vulkan" CACHE STRING "Graphics API backed to be used; Po
 set(OrionEngine_SOURCES
         Sources/Core/Console/ConsoleSystem.cpp
         Sources/Core/Console/ConsoleSystem.h
+        Sources/Core/Job/JobSystem.cpp
+        Sources/Core/Job/JobSystem.h
         Sources/Core/Log/Logger.cpp
         Sources/Core/Log/Logger.h
         Sources/Core/Standard/Algorithms/Compare.h
