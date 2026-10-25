@@ -52,6 +52,7 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Utility/StringUtils.h
         Sources/Core/Standard/Utility/Swap.h
         Sources/Core/Standard/EnumFlag.h
+        Sources/Core/Standard/Handle.h
         Sources/Core/Standard/Limits.h
         Sources/Core/Assert.h
         Sources/Platform/FileSystem/Storage/LocalStorage.cpp
@@ -98,7 +99,11 @@ if (NOT CMAKE_BUILD_TYPE)
     message(WARNING "Build type was not specified - defaulting to ${CMAKE_BUILD_TYPE}.")
 endif ()
 
-# --- [ GIT ] ---
+# --- [ Threading ] ---
+find_package(Threads REQUIRED)
+target_link_libraries(OrionEngine PUBLIC Threads::Threads)
+
+# --- [ Git ] ---
 find_package(Git)
 if (Git_FOUND)
     execute_process(
@@ -138,9 +143,16 @@ target_link_libraries(OrionEngine
 set_property(CACHE ORION_GRAPHICS_API PROPERTY STRINGS "Vulkan" "None")
 if (${ORION_GRAPHICS_API} STREQUAL "Vulkan")
     target_compile_definitions(OrionEngine PUBLIC ORION_GRAPHICS_VULKAN)
+
+    message(STATUS "--- [ Library: VMA ] ---")
     add_subdirectory(ThirdParty/VMA)
+
+    message(STATUS "--- [ Library: Volk ] ---")
     add_subdirectory(ThirdParty/Volk)
+
+    message(STATUS "--- [ Library: Vulkan SDK ] ---")
     find_package(Vulkan REQUIRED)
+
     target_link_libraries(OrionEngine
             PUBLIC
             GPUOpen::VulkanMemoryAllocator

@@ -2,16 +2,27 @@
 #include "Platform/Platform.h"
 
 #include "Core/Assert.h"
+#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
 
 #include <dirent.h>
 #include <fcntl.h>
-#include <linux/limits.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
 
 namespace Orion::Engine::Platform
 {
+	// TODO(SandNoodle): Switch to an ArenaAllocator here.
+	static Memory::PlatformAllocator k_platform_thread_allocator;
+
+	struct PlatformThread
+	{
+		PlatformThreadFn function;
+		void* function_user_data;
+		pthread_t handle;
+	};
+
 	[[nodiscard]] static constexpr CString SanitizePath(StringView path) noexcept
 	{
 		ORION_ASSERT_DEBUG(path.Size() > 0);
@@ -184,6 +195,48 @@ namespace Orion::Engine::Platform
 		ORION_ASSERT_DEBUG(path.Size() > 0);
 		struct stat file_stat{};
 		return stat(native_path, &file_stat) == 0 && (file_stat.st_mode & S_IFMT) == S_IFDIR;
+	}
+
+	static void* ThreadFunctionWrapper(void* user_data) noexcept
+	{
+		PlatformThreadHandle thread = static_cast<PlatformThreadHandle>(user_data);
+		thread->function(user_data);
+		return nullptr;
+	}
+
+	PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept
+	{
+		PlatformThreadHandle thread = Memory::AllocateConstruct<PlatformThread>(k_platform_thread_allocator);
+		thread->function            = thread_function;
+		thread->function_user_data  = user_data;
+
+		if (pthread_create(&thread->handle, nullptr, ThreadFunctionWrapper, thread) != 0) {
+			Memory::FreeDestruct<PlatformThread>(k_platform_thread_allocator, thread);
+			return nullptr;
+		}
+		return thread;
+	}
+
+	void ThreadDestroy(PlatformThreadHandle thread) noexcept
+	{
+		ORION_ASSERT_DEBUG(thread);
+
+		// NOTE: pthread_cancel returns an error code, which we can't handle anyway - perform the cleanup as normal.
+		pthread_cancel(thread->handle);
+		thread->function           = nullptr;
+		thread->function_user_data = nullptr;
+		thread->handle             = 0UL;
+		Memory::FreeDestruct<PlatformThread>(k_platform_thread_allocator, thread);
+	}
+
+	void ThreadJoin(PlatformThreadHandle thread) noexcept
+	{
+		ORION_ASSERT_DEBUG(thread);
+	}
+
+	void ThreadDetach(PlatformThreadHandle thread) noexcept
+	{
+		ORION_ASSERT_DEBUG(thread);
 	}
 }  // namespace Orion::Engine::Platform
 

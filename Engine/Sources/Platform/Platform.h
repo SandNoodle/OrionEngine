@@ -6,6 +6,7 @@
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Containers/Vector.h"
 #include "Core/Standard/EnumFlag.h"
+#include "Core/Standard/Handle.h"
 
 namespace Orion::Engine::Platform
 {
@@ -45,6 +46,18 @@ namespace Orion::Engine::Platform
 		UInt64 unix_time_last_modified;
 		UInt64 unix_time_last_accessed;
 		PlatformFileAccessFlags access_flags;
+	};
+
+	/// @brief Represents a handle to a single thread of execution.
+	/// @see https://en.wikipedia.org/wiki/Thread_(computing)
+	ORION_DEFINE_OPAQUE_HANDLE(PlatformThread);
+
+	/// @brief Pointer to a function to be executed by the PlatformThread.
+	using PlatformThreadFn = void (*)(void*);
+
+	/// @brief TODO
+	enum class PlatformThreadState : UInt8
+	{
 	};
 
 	/// @brief Queries and returns capabilities of the underlying platform.
@@ -95,4 +108,21 @@ namespace Orion::Engine::Platform
 	/// @param[IN, REQUIRED] path Path to the directory.
 	/// @warning DO NOT USE DIRECTLY! All filesystem calls should be handled through the Platform::FileSystem module.
 	[[nodiscard]] Bool8 DirectoryExists(StringView path) noexcept;
+
+	/// @brief Queries the underling platform and creates new Thread that runs \p thread_function.
+	/// @param[IN, REQUIRED] thread_function
+	/// @param[IN, OPTIONAL] user_data
+	[[nodiscard]] PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept;
+
+	/// @brief TODO
+	/// @param[IN, REQUIRED] thread
+	void ThreadDestroy(PlatformThreadHandle thread) noexcept;
+
+	/// @brief TODO
+	/// @param[IN, REQUIRED] thread
+	void ThreadJoin(PlatformThreadHandle thread) noexcept;
+
+	/// @brief TODO
+	/// @param[IN, REQUIRED] thread
+	void ThreadDetach(PlatformThreadHandle thread) noexcept;
 }  // namespace Orion::Engine::Platform

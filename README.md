@@ -41,7 +41,7 @@ You can find build instructions for this project [here](/Docs/Building_Engine.md
 ## Documentation
 
 All documentation for this project lives in [Docs](/Docs) directory. For generating Doxygen documentation
-see [here](/Docs/Doxygen/Doxygen_Documentation.md)
+see [here](/Docs/Doxygen/Doxygen_Documentation.md).
 
 ## Contributing
 
