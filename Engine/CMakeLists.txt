@@ -35,6 +35,7 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Math/Math.h
         Sources/Core/Standard/Math/Vector.h
         Sources/Core/Standard/Memory/Allocators/Allocator.h
+        Sources/Core/Standard/Memory/Allocators/ArenaAllocator.cpp
         Sources/Core/Standard/Memory/Allocators/ArenaAllocator.h
         Sources/Core/Standard/Memory/Allocators/DummyAllocator.h
         Sources/Core/Standard/Memory/Allocators/PlatformAllocator.h

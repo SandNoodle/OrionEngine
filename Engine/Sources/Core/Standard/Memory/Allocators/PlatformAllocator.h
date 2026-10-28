@@ -3,6 +3,7 @@
 #include "OrionEngine.h"
 
 #include "Core/Standard/Memory/Allocators/Allocator.h"
+#include "Core/Standard/Utility/MathUtils.h"
 #include "Platform/Memory.h"
 
 namespace Orion::Engine::Memory
@@ -29,7 +30,7 @@ namespace Orion::Engine::Memory
 	constexpr auto PlatformAllocator::Allocate(SizeType size_in_bytes, SizeType alignment) noexcept -> void*
 	{
 		// TODO(SandNoodle): Alignment based allocation.
-		ORION_IGNORE_PARAM(alignment);
+		ORION_ASSERT_DEBUG(IsPowerOfTwo(alignment), "Alignment must be a power of two.");
 		return Platform::MemoryAllocate(size_in_bytes);
 	}
 
