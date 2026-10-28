@@ -275,7 +275,7 @@ namespace Orion::Engine::Console
 		}
 
 		ConsoleVariable<T>* variable = Memory::AllocateConstruct<ConsoleVariable<T>>(
-			_console_objects_allocator, name, description, usage, Move(default_value), flags);
+			_console_objects_allocator, name, Move(default_value), description, usage, flags);
 		if (!variable) {
 			ORION_LOG_WARN("Cannot create ConsoleVariable, because its allocation failed (nullptr).");
 			return nullptr;
@@ -292,9 +292,9 @@ namespace Orion::Engine::Console
 	                                                                         CString usage,
 	                                                                         ConsoleVariableFlags flags) noexcept
 		: _console_variable(ConsoleSystem::Get().RegisterConsoleVariable(StringView(name),
+	                                                                     Move(default_value),
 	                                                                     StringView(description),
 	                                                                     StringView(usage),
-	                                                                     default_value,
 	                                                                     flags))
 	{
 	}
