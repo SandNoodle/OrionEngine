@@ -1,13 +1,27 @@
 #if defined(ORION_PLATFORM_WINDOWS)
 #include "Platform/Platform.h"
 
+#include "Core/Assert.h"
+#include "Core/Standard/Memory/Allocators/ArenaAllocator.h"
+
 #include <fileapi.h>
 #include <handleapi.h>
 #include <memoryapi.h>
+#include <processthreadsapi.h>
 #include <sysinfoapi.h>
 
 namespace Orion::Engine::Platform
 {
+	static Memory::ArenaAllocator k_platform_thread_allocator;
+
+	struct PlatformThread
+	{
+		PlatformThreadFn function;
+		void* function_user_data;
+		HANDLE handle;
+		DWORD index;
+	};
+
 	[[nodiscard]] static constexpr CString SanitizePath(StringView path, StringView suffix = StringView()) noexcept
 	{
 		ORION_ASSERT_DEBUG(path.Size() > 0);
@@ -255,6 +269,58 @@ namespace Orion::Engine::Platform
 		CString native_path = SanitizePath(path);
 		DWORD attributes    = GetFileAttributes(native_path);
 		return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+
+	static DWORD ThreadFunctionWrapper(void* user_data) noexcept
+	{
+		PlatformThreadHandle thread = static_cast<PlatformThreadHandle>(user_data);
+		thread->function(user_data);
+		return 0;
+	}
+
+	PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept
+	{
+		ORION_ASSERT_DEBUG(thread_function);
+
+		PlatformThreadHandle thread = Memory::AllocateConstruct<PlatformThread>(k_platform_thread_allocator);
+		thread->function            = thread_function;
+		thread->function_user_data  = user_data;
+		thread->handle              = CreateThread(nullptr, 0UL, ThreadFunctionWrapper, thread, 0UL, &thread->index);
+		if (!thread->handle) {
+			Memory::FreeDestruct<PlatformThread>(k_platform_thread_allocator, thread);
+			return nullptr;
+		}
+		return thread;
+	}
+
+	void ThreadDestroy(PlatformThreadHandle thread) noexcept
+	{
+		if (thread && thread->handle) {
+			// NOTE: TerminateThread returns an error code, which we don't handle anyway; perform the cleanup as normal.
+			TerminateThread(thread->handle, ORION_EXIT_SUCCESS);
+			CloseHandle(thread->handle);
+			thread->function           = nullptr;
+			thread->function_user_data = nullptr;
+			thread->handle             = nullptr;
+			Memory::FreeDestruct<PlatformThread>(k_platform_thread_allocator, thread);
+		}
+	}
+
+	void ThreadJoin(PlatformThreadHandle thread) noexcept
+	{
+		if (thread && thread->handle) {
+			TerminateThread(thread->handle, ORION_EXIT_SUCCESS);
+			CloseHandle(thread->handle);
+			thread->handle = nullptr;
+		}
+	}
+
+	void ThreadDetach(PlatformThreadHandle thread) noexcept
+	{
+		if (thread && thread->handle) {
+			CloseHandle(thread->handle);
+			thread->handle = nullptr;
+		}
 	}
 }  // namespace Orion::Engine::Platform
 

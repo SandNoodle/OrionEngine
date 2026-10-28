@@ -57,6 +57,30 @@ namespace Orion::Engine::Platform
 		ORION_IGNORE_PARAM(path);
 		ORION_NOT_IMPLEMENTED();
 	}
+	PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept
+	{
+		ORION_IGNORE_PARAM(thread_function);
+		ORION_IGNORE_PARAM(user_data);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	void ThreadDestroy(PlatformThreadHandle thread) noexcept
+	{
+		ORION_IGNORE_PARAM(thread);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	void ThreadJoin(PlatformThreadHandle thread) noexcept
+	{
+		ORION_IGNORE_PARAM(thread);
+		ORION_NOT_IMPLEMENTED();
+	}
+
+	void ThreadDetach(PlatformThreadHandle thread) noexcept
+	{
+		ORION_IGNORE_PARAM(thread);
+		ORION_NOT_IMPLEMENTED();
+	}
 }  // namespace Orion::Engine::Platform
 
 #endif

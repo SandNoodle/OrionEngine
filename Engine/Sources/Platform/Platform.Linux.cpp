@@ -2,7 +2,7 @@
 #include "Platform/Platform.h"
 
 #include "Core/Assert.h"
-#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
+#include "Core/Standard/Memory/Allocators/ArenaAllocator.h"
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -13,8 +13,7 @@
 
 namespace Orion::Engine::Platform
 {
-	// TODO(SandNoodle): Switch to an ArenaAllocator here.
-	static Memory::PlatformAllocator k_platform_thread_allocator;
+	static Memory::ArenaAllocator k_platform_thread_allocator;
 
 	struct PlatformThread
 	{
@@ -206,6 +205,8 @@ namespace Orion::Engine::Platform
 
 	PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept
 	{
+		ORION_ASSERT_DEBUG(thread_function);
+
 		PlatformThreadHandle thread = Memory::AllocateConstruct<PlatformThread>(k_platform_thread_allocator);
 		thread->function            = thread_function;
 		thread->function_user_data  = user_data;
@@ -219,24 +220,28 @@ namespace Orion::Engine::Platform
 
 	void ThreadDestroy(PlatformThreadHandle thread) noexcept
 	{
-		ORION_ASSERT_DEBUG(thread);
-
-		// NOTE: pthread_cancel returns an error code, which we can't handle anyway - perform the cleanup as normal.
-		pthread_cancel(thread->handle);
-		thread->function           = nullptr;
-		thread->function_user_data = nullptr;
-		thread->handle             = 0UL;
-		Memory::FreeDestruct<PlatformThread>(k_platform_thread_allocator, thread);
+		if (thread && thread->handle) {
+			// NOTE: pthread_cancel returns an error code, which we can't handle anyway - perform the cleanup as normal.
+			pthread_cancel(thread->handle);
+			thread->function           = nullptr;
+			thread->function_user_data = nullptr;
+			thread->handle             = 0UL;
+			Memory::FreeDestruct<PlatformThread>(k_platform_thread_allocator, thread);
+		}
 	}
 
 	void ThreadJoin(PlatformThreadHandle thread) noexcept
 	{
-		ORION_ASSERT_DEBUG(thread);
+		if (thread && thread->handle) {
+			ORION_NOT_IMPLEMENTED();
+		}
 	}
 
 	void ThreadDetach(PlatformThreadHandle thread) noexcept
 	{
-		ORION_ASSERT_DEBUG(thread);
+		if (thread && thread->handle) {
+			ORION_NOT_IMPLEMENTED();
+		}
 	}
 }  // namespace Orion::Engine::Platform
 

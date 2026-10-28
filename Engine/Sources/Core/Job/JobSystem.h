@@ -2,6 +2,9 @@
 
 #include "OrionEngine.h"
 
+#include "Core/Standard/Containers/Vector.h"
+#include "Platform/Platform.h"
+
 namespace Orion::Engine::Job
 {
 	/// @brief TODO
@@ -37,6 +40,9 @@ namespace Orion::Engine::Job
 	{
 		public:
 		using ThisType = JobSystem;
+
+		private:
+		Vector<Platform::PlatformThreadHandle> _worker_threads;
 
 		public:
 		JobSystem()                         = default;
