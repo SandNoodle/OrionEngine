@@ -1,13 +1,27 @@
 #include "Platform/FileSystem/FileSystem.h"
 
+#include "Core/Console/ConsoleSystem.h"
 #include "Core/Log/Logger.h"
 #include "Platform/FileSystem/Storage/LocalStorage.h"
 #include "Platform/FileSystem/Storage/MemoryStorage.h"
 
 namespace Orion::Engine::Platform::FileSystem
 {
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	static Console::AutoConsoleVariable<Bool8> CVAR_FileSystemInitialized(
+		"Engine.File.Initialized",
+		false,
+		"Returns true/false depending on if the FileSystem is initialized (or not).",
+		"Engine.File.Initialized <Bool8>",
+		Console::ConsoleVariableFlags::Debug | Console::ConsoleVariableFlags::Read);
+
 	Bool8 FileSystem::Initialize() noexcept
 	{
+		if (CVAR_FileSystemInitialized.Value()) {
+			ORION_LOG_ERROR("[FileSystem] Already initialized.");
+			return false;
+		}
+
 		ORION_LOG_DEBUG("[FileSystem] Initializing...");
 		Bool8 is_initialized = true;
 
@@ -17,17 +31,27 @@ namespace Orion::Engine::Platform::FileSystem
 		is_initialized &= RegisterStorageProvider(LocalStorageProvider::Protocol(), local_storage_provider);
 		is_initialized &= RegisterStorageProvider(MemoryStorageProvider::Protocol(), memory_storage_provider);
 
+		CVAR_FileSystemInitialized.SetValue(is_initialized);
+
 		ORION_LOG_DEBUG("[FileSystem] Initialized.");
 		return is_initialized;
 	}
 
 	Bool8 FileSystem::Shutdown() noexcept
 	{
+		if (!CVAR_FileSystemInitialized.Value()) {
+			ORION_LOG_ERROR("[FileSystem] Already shut down.");
+			return false;
+		}
+
 		ORION_LOG_DEBUG("[FileSystem] Shutting down.");
 		for (Pair<StringView, IStorageProvider*>& provider_mapping : _storage_providers) {
 			DestroyProvider(provider_mapping.second);
 		}
 		_storage_providers.Clear();
+
+		CVAR_FileSystemInitialized.SetValue(false);
+
 		ORION_LOG_DEBUG("[FileSystem] Shut down.");
 		return true;
 	}

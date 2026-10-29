@@ -8,7 +8,7 @@
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/EnumFlag.h"
-#include "Core/Standard/Memory/Allocators/PlatformAllocator.h"
+#include "Core/Standard/Memory/Allocators/ArenaAllocator.h"
 #include "Core/Standard/Utility/MoveAndForward.h"
 
 namespace Orion::Engine::Console
@@ -126,7 +126,7 @@ namespace Orion::Engine::Console
 
 		private:
 		HashMap<StringView, IConsoleObject*> _console_objects_mapping;
-		Memory::PlatformAllocator _console_objects_allocator;
+		Memory::ArenaAllocator _console_objects_allocator;
 
 		public:
 		/// @brief Returns singleton for the ConsoleSystem.
@@ -147,7 +147,7 @@ namespace Orion::Engine::Console
 		                                                      = ConsoleVariableFlags::None) noexcept;
 
 		private:
-		constexpr ConsoleSystem() noexcept = default;
+		ConsoleSystem() noexcept = default;
 	};
 
 	/// @brief Represents a variable parameter accessible and/or modifiable from the console by a user, and which
@@ -268,8 +268,7 @@ namespace Orion::Engine::Console
 		ORION_ASSERT_DEBUG(!usage.IsEmpty(),
 		                   "Cannot create ConsoleVariable, because usage was not provided (size == 0).");
 
-		StringView console_variable_name = StringView(name);
-		if (_console_objects_mapping.Contains(console_variable_name)) {
+		if (_console_objects_mapping.Contains(name)) {
 			ORION_LOG_WARN("Cannot create ConsoleVariable, because it already exists (name == '{}').", name);
 			return nullptr;
 		}
@@ -281,7 +280,7 @@ namespace Orion::Engine::Console
 			return nullptr;
 		}
 
-		_console_objects_mapping.Insert(console_variable_name, variable);
+		_console_objects_mapping.Insert(name, variable);
 		return variable;
 	}
 

@@ -4,6 +4,8 @@
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
+#include "Core/Standard/Memory/Allocators/Allocator.h"
+#include "Core/Standard/Memory/Allocators/ArenaAllocator.h"
 #include "Platform/FileSystem/FileSystem.h"
 #include "Platform/Graphics/RenderDevice.h"
 
@@ -26,6 +28,7 @@ namespace Orion::Engine
 		};
 	}  // namespace
 
+	static Memory::ArenaAllocator k_persistent_allocator;
 	static Engine* k_engine = nullptr;
 
 	/// @brief Parses CLI arguments while skipping the first argument (Application's executable).
@@ -57,7 +60,8 @@ namespace Orion::Engine
 		// -------------------------------------------------------------------------------- //
 		// Early Initialization: critical systems & modules.
 		// -------------------------------------------------------------------------------- //
-		k_engine = new Engine();  // TODO(SandNoodle): @nocheckin
+		k_engine = Memory::AllocateConstruct<Engine>(k_persistent_allocator);
+		ORION_ASSERT(k_engine, "Failed to initialize the base Engine module.");
 
 		Bool8 is_logger_initialized = k_engine->logger_system.Initialize();
 		ORION_ASSERT(is_logger_initialized, "Failed to initialize the LoggerSystem.");
@@ -92,5 +96,9 @@ namespace Orion::Engine
 
 		Bool8 is_logger_deinitialized = k_engine->logger_system.Shutdown();
 		ORION_ASSERT(is_logger_deinitialized, "Failed to shutdown the LoggerSystem.");
+
+		Memory::Free(k_persistent_allocator, k_engine);
+		k_persistent_allocator.FreeAll();
+		k_engine = nullptr;
 	}
 }  // namespace Orion::Engine
