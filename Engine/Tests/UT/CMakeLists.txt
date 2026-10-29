@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.17.0
+        GIT_TAG v1.18.0
 )
 FetchContent_GetProperties(googletest)
 if (NOT googletest_POPULATED)
@@ -35,6 +35,7 @@ set(OrionEngine_UT_SOURCES
         Core/Standard/Containers/StringTests.cpp
         Core/Standard/Containers/VectorTests.cpp
         Core/Standard/Threads/AtomicTests.cpp
+        Core/Standard/Memory/Allocators/ArenaAllocatorTests.cpp
         Platform/FileSystem/Storage/LocalStorageTests.cpp
         TestCommon.h
 )

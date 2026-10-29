@@ -19,7 +19,9 @@ namespace Orion::Engine::Memory
 		using SizeType = USize;
 
 		public:
-		[[nodiscard]] ORION_FORCE_INLINE constexpr void* Allocate(SizeType size_in_bytes, SizeType alignment) noexcept;
+		[[nodiscard]] ORION_FORCE_INLINE constexpr void* Allocate(SizeType size_in_bytes,
+		                                                          SizeType alignment
+		                                                          = ORION_MEMORY_DEFAULT_ALIGNMENT) noexcept;
 		ORION_FORCE_INLINE constexpr void Free(void* ptr) noexcept;
 		ORION_FORCE_INLINE constexpr void FreeAll() noexcept;
 	};

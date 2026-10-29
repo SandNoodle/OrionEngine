@@ -46,11 +46,12 @@ namespace Orion::Engine::Memory
 		return aligned_value;
 	}
 
-	static void* ArenaRegionAllocate(ArenaRegionHandle region, USize size_in_bytes)
+	static void* ArenaRegionAllocateUnsafe(ArenaRegionHandle region, USize size_in_bytes)
 	{
 		ORION_ASSERT_DEBUG(region);
+		Byte* ptr = region->data + region->size;
 		region->size += size_in_bytes;
-		return region->data + size_in_bytes;
+		return ptr;
 	}
 
 	ArenaAllocator::ArenaAllocator() : _regions_begin(nullptr), _regions_current(nullptr) {}
@@ -89,7 +90,7 @@ namespace Orion::Engine::Memory
 			ArenaRegionHandle potential_region = _regions_current;
 			while (potential_region) {
 				if (potential_region->size + aligned_size_in_bytes <= potential_region->capacity) {
-					return ArenaRegionAllocate(potential_region, aligned_size_in_bytes);
+					return ArenaRegionAllocateUnsafe(potential_region, aligned_size_in_bytes);
 				}
 				potential_region = potential_region->previous;
 			}
@@ -103,7 +104,7 @@ namespace Orion::Engine::Memory
 			}
 		}
 
-		return ArenaRegionAllocate(_regions_current, aligned_size_in_bytes);
+		return ArenaRegionAllocateUnsafe(_regions_current, aligned_size_in_bytes);
 	}
 
 	void ArenaAllocator::Free(void* ptr) noexcept
@@ -119,5 +120,27 @@ namespace Orion::Engine::Memory
 			region->size = 0UL;
 			region       = region->previous;
 		}
+	}
+
+	ArenaAllocator::SizeType ArenaAllocator::Size() const noexcept
+	{
+		SizeType size            = 0UL;
+		ArenaRegionHandle region = _regions_current;
+		while (region) {
+			size += region->size;
+			region = region->previous;
+		}
+		return size;
+	}
+
+	ArenaAllocator::SizeType ArenaAllocator::Capacity() const noexcept
+	{
+		SizeType capacity        = 0UL;
+		ArenaRegionHandle region = _regions_current;
+		while (region) {
+			capacity += region->capacity;
+			region = region->previous;
+		}
+		return capacity;
 	}
 }  // namespace Orion::Engine::Memory

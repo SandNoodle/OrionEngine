@@ -44,6 +44,7 @@ static constexpr bool k_orion_build_distribution = true;
 
 #define ORION_FORCE_INLINE __attribute__((always_inline)) inline
 #define ORION_NEVER_INLINE __attribute__((noinline))
+#define ORION_RESTRICT_PTR __restrict
 
 #define ORION_BUILTIN_TRAP() __builtin_trap()
 
@@ -52,6 +53,7 @@ static constexpr bool k_orion_build_distribution = true;
 
 #define ORION_FORCE_INLINE __attribute__((always_inline)) inline
 #define ORION_NEVER_INLINE __attribute__((noinline))
+#define ORION_RESTRICT_PTR __restrict
 
 #define ORION_BUILTIN_TRAP() __builtin_trap()
 
@@ -62,6 +64,7 @@ static constexpr bool k_orion_build_distribution = true;
 
 #define ORION_FORCE_INLINE __forceinline
 #define ORION_NEVER_INLINE __declspec(noinline)
+#define ORION_RESTRICT_PTR __declspec(restrict)
 
 #define ORION_BUILTIN_TRAP() __debugbreak()
 
