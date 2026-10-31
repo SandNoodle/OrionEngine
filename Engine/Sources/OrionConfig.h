@@ -2,21 +2,26 @@
 
 // --- Engine ---
 #define ORION_ENGINE_NAME "Orion Engine"
-#define ORION_ENGINE_VERSION
 
-// --- Memory System ---
+// --- Platform ---
+/// @brief Size (in bytes) of a single cache line.
+#ifndef ORION_PLATFORM_CACHE_SIZE
+#define ORION_PLATFORM_CACHE_SIZE ORION_BYTES(64)
+#endif  // ORION_MEMORY_CACHE_SIZE
+
+// --- Memory ---
 /// @brief Minimal alignment size of a single allocation.
 #ifndef ORION_MEMORY_DEFAULT_ALIGNMENT
-#define ORION_MEMORY_DEFAULT_ALIGNMENT (2 * sizeof(void*))
+#define ORION_MEMORY_DEFAULT_ALIGNMENT (2UL * sizeof(void*))
 #endif  // ORION_MEMORY_DEFAULT_ALIGNMENT
 
+// --- Core/Standard/Memory ---
 /// @brief Default allocation size for an ArenaAllocator's block.
 #ifndef ORION_MEMORY_ALLOCATORS_ARENA_ALLOCATOR_DEFAULT_BLOCK_SIZE
 #define ORION_MEMORY_ALLOCATORS_ARENA_ALLOCATOR_DEFAULT_BLOCK_SIZE ORION_KILOBYTES(16)
 #endif  // ORION_MEMORY_ALLOCATORS_ARENA_ALLOCATOR_DEFAULT_BLOCK_SIZE
 
-// --- Logging System ---
-/// @brief Maximum amount of log files -
-#ifndef ORION_LOGGING_MAX_LOG_FILES
-#define ORION_LOGGING_MAX_LOG_FILES 5
-#endif  // ORION_LOGGING_MAX_LOG_FILES
+// --- Core/Standard/Containers ---
+#ifndef ORION_CONTAINERS_FUNCTION_DEFAULT_STORAGE_SIZE
+#define ORION_CONTAINERS_FUNCTION_DEFAULT_STORAGE_SIZE (ORION_PLATFORM_CACHE_SIZE * 2UL)
+#endif  // ORION_CONTAINERS_FUNCTION_DEFAULT_STORAGE_SIZE

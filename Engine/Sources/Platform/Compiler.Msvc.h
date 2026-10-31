@@ -10,6 +10,7 @@ namespace Orion::Engine::Platform::Compiler
 #error "IsConstructible is not implemented for the MSVC compiler."
 #error "IsEnum is not implemented for the MSVC compiler."
 #error "IsScopedEnum is not implemented for the MSVC compiler."
+#error "IsFunction is not implemented for the MSVC compiler."
 #error "UnderlyingType is not implemented for the MSVC compiler."
 
 #error "Atomic::k_memory_order_* constexpr constants are not defined for the MSVC compiler."

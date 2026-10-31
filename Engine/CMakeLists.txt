@@ -24,6 +24,7 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Algorithms/Sort.h
         Sources/Core/Standard/Containers/Detail/StringFwd.h
         Sources/Core/Standard/Containers/Array.h
+        Sources/Core/Standard/Containers/Function.h
         Sources/Core/Standard/Containers/HashMap.h
         Sources/Core/Standard/Containers/Optional.h
         Sources/Core/Standard/Containers/Pair.h

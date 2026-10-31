@@ -26,6 +26,7 @@ set(OrionEngine_UT_SOURCES
         Core/Standard/Algorithms/HashTests.cpp
         Core/Standard/Algorithms/SortTests.cpp
         Core/Standard/Containers/ArrayTests.cpp
+        Core/Standard/Containers/FunctionTests.cpp
         Core/Standard/Containers/HashMapTests.cpp
         Core/Standard/Containers/OptionalTests.cpp
         Core/Standard/Containers/PairTests.cpp

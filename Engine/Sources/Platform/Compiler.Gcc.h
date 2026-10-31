@@ -33,6 +33,9 @@ namespace Orion::Engine::Platform::Compiler
 	template <typename T>
 	inline constexpr bool IsScopedEnum = __is_scoped_enum(T);
 
+	template <typename T>
+	inline constexpr bool IsFunction = __is_function(T);
+
 	namespace Detail
 	{
 		template <typename T>

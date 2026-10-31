@@ -10,6 +10,7 @@ namespace Orion::Engine::Platform::Compiler
 #error "IsConstructible is not implemented for this compiler."
 #error "IsEnum is not implemented for this compiler."
 #error "IsScopedEnum is not implemented for this compiler."
+#error "IsFunction is not implemented for this compiler."
 #error "UnderlyingType is not implemented for this compiler."
 
 #error "Atomic::k_memory_order_* constexpr constants are not defined for this compiler."

@@ -27,6 +27,9 @@ namespace Orion::Engine::Platform::Compiler
 	inline constexpr bool IsScopedEnum = __is_scoped_enum(T);
 
 	template <typename T>
+	inline constexpr bool IsFunction = __is_function(T);
+
+	template <typename T>
 		requires(IsEnum<T>)
 	using UnderlyingType = __underlying_type(T);
 	// NOLINTEND(readability-identifier-naming)

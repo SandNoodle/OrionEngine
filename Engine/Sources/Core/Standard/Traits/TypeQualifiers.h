@@ -84,6 +84,14 @@ namespace Orion::Engine
 		template <typename T> inline constexpr bool IsPointer<const volatile T*> = true;
 		// clang-format on
 		// NOLINTEND(readability-identifier-naming)
+
+		// clang-format off
+		template <typename T> struct Decay : RemoveConstVolatile<T> {};
+		template <typename T> struct Decay<T[]> { using Type = T*; };
+		template <typename T, USize N> struct Decay<T[N]> { using Type = T*; };
+		template <typename R, typename... Args> struct Decay<R(Args...)> { using Type = R (*)(Args...); };
+		template <typename R, typename... Args> struct Decay<R(Args..., ...)> { using Type = R (*)(Args..., ...); };
+		// clang-format on
 	}  // namespace Detail
 
 	/// @brief Attempts to remove a reference qualifier from a given type (if present).
@@ -151,4 +159,8 @@ namespace Orion::Engine
 	template <typename T>
 	inline constexpr bool IsPointer = Detail::IsPointer<T>;
 	// NOLINTEND(readability-identifier-naming)
+
+	/// @brief Attempts to perform type conversions to the ones performed when passing function arguments by value.
+	template <typename T>
+	using Decay = Detail::Decay<T>::Type;
 }  // namespace Orion::Engine
