@@ -7,6 +7,7 @@
 namespace Orion::Engine::Platform
 {
 	/// @brief Allocates \p size_in_bytes sized block of contiguous memory.
+	/// @param[IN, REQUIRED] size_in_bytes Amount of bytes to allocate.
 	/// @return Returns pointer to the allocated block of memory on success, nullptr otherwise.
 	[[nodiscard]] ORION_FORCE_INLINE constexpr void* MemoryAllocate(USize size_in_bytes) noexcept
 	{
@@ -15,6 +16,7 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Frees previously allocated block of memory.
+	/// @param[IN, REQUIRED] ptr Pointer to the previously allocated memory block.
 	/// @warning \p ptr must NOT be null!
 	ORION_FORCE_INLINE constexpr void MemoryFree(void* ptr) noexcept
 	{
@@ -23,6 +25,8 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Reallocates previously allocated block of memory with new \p size_in_bytes size.
+	/// @param[IN, REQUIRED] ptr Pointer to the previously allocated memory block.
+	/// @param[IN, REQUIRED] size_in_bytes Amount of bytes to reallocate.
 	/// @return Returns pointer to \p size_in_bytes sized reallocated block of memory on success, nullptr otherwise.
 	[[nodiscard]] ORION_FORCE_INLINE constexpr void* MemoryReallocate(void* ptr, USize size_in_bytes) noexcept
 	{
@@ -32,6 +36,9 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Copies \p size_in_bytes sized region of memory from \p src to \p dst.
+	/// @param[IN, REQUIRED] dst Pointer to a memory block to copy to.
+	/// @param[IN, REQUIRED] src Pointer to a memory block to copy from.
+	/// @param[IN, REQUIRED] size_in_bytes Amount of bytes to reallocate.
 	ORION_FORCE_INLINE constexpr void MemoryCopy(void* dst, const void* src, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryCopy, because dst is null.");
@@ -41,6 +48,9 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Moves \p size_in_bytes sized region of memory from \p src to \p dst.
+	/// @param[IN, REQUIRED] dst Pointer to a memory block to move to.
+	/// @param[IN, REQUIRED] src Pointer to a memory block to move from.
+	/// @param[IN, REQUIRED] size_in_bytes Amount of bytes to move.
 	ORION_FORCE_INLINE constexpr void MemoryMove(void* dst, const void* src, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryMove, because dst is null.");
@@ -50,6 +60,9 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a given \p value.
+	/// @param[IN, REQUIRED] dst Pointer to a memory block to set.
+	/// @param[IN, REQUIRED] value Value to set.
+	/// @param[IN, REQUIRED] size_in_bytes Amount of bytes to set.
 	ORION_FORCE_INLINE constexpr void MemorySet(void* dst, Int32 value, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemorySet, because dst is null.");
@@ -58,6 +71,8 @@ namespace Orion::Engine::Platform
 	}
 
 	/// @brief Sets \p size_in_bytes sized region of memory (at \p dst) to a 0.
+	/// @param[IN, REQUIRED] dst Pointer to a memory block to zero out.
+	/// @param[IN, REQUIRED] size_in_bytes Amount of bytes to zero out.
 	ORION_FORCE_INLINE constexpr void MemoryZero(void* dst, USize size_in_bytes) noexcept
 	{
 		ORION_ASSERT_DEBUG(dst, "Cannot perform MemoryZero, because dst is null.");

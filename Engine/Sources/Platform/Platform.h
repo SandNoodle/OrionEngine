@@ -55,11 +55,6 @@ namespace Orion::Engine::Platform
 	/// @brief Pointer to a function to be executed by the PlatformThread.
 	using PlatformThreadFn = void (*)(void*);
 
-	/// @brief TODO
-	enum class PlatformThreadState : UInt8
-	{
-	};
-
 	/// @brief Queries and returns capabilities of the underlying platform.
 	[[nodiscard]] PlatformInfo GetPlatformInfo() noexcept;
 
@@ -109,20 +104,20 @@ namespace Orion::Engine::Platform
 	/// @warning DO NOT USE DIRECTLY! All filesystem calls should be handled through the Platform::FileSystem module.
 	[[nodiscard]] Bool8 DirectoryExists(StringView path) noexcept;
 
-	/// @brief Queries the underling platform and creates new Thread that runs \p thread_function.
+	/// @brief Queries the underling platform and creates new thread that runs \p thread_function.
 	/// @param[IN, REQUIRED] thread_function
 	/// @param[IN, OPTIONAL] user_data
 	[[nodiscard]] PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept;
 
-	/// @brief TODO
-	/// @param[IN, REQUIRED] thread
+	/// @brief Queries the underlying platform and destroys a given \p thread.
+	/// @param[IN, REQUIRED] thread Thread to destroy.
 	void ThreadDestroy(PlatformThreadHandle thread) noexcept;
 
-	/// @brief TODO
-	/// @param[IN, REQUIRED] thread
+	/// @brief Queries the underlying platform and joins a given \p thread.
+	/// @param[IN, REQUIRED] thread Thread to join.
 	void ThreadJoin(PlatformThreadHandle thread) noexcept;
 
-	/// @brief TODO
-	/// @param[IN, REQUIRED] thread
+	/// @brief Queries the underlying platform and detaches a given \p thread.
+	/// @param[IN, REQUIRED] thread Thread to detach.
 	void ThreadDetach(PlatformThreadHandle thread) noexcept;
 }  // namespace Orion::Engine::Platform

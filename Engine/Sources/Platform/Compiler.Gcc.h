@@ -246,49 +246,49 @@ namespace Orion::Engine::Platform::Compiler
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T Abs(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "Abs is not implemented for type.");
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T Sin(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "Sin is not implemented for type.");
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T Cos(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "Cos is not implemented for type.");
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T Tan(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "Tan is not implemented for type.");
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T ACos(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "ACos is not implemented for type.");
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T ASin(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "ASin is not implemented for type.");
 		}
 
 		template <typename T>
 		[[nodiscard]] ORION_FORCE_INLINE constexpr T ATan(T v) noexcept
 		{
 			ORION_IGNORE_PARAM(v);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "ATan is not implemented for type.");
 		}
 
 		template <typename T>
@@ -296,7 +296,7 @@ namespace Orion::Engine::Platform::Compiler
 		{
 			ORION_IGNORE_PARAM(y);
 			ORION_IGNORE_PARAM(x);
-			ORION_NOT_IMPLEMENTED();
+			static_assert(false && "ATan2 is not implemented for type.");
 		}
 
 		// -- Implementation.
