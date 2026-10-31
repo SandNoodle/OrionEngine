@@ -272,7 +272,9 @@ namespace Orion::Engine
 	constexpr Vector<T, Allocator>::Vector(std::initializer_list<ValueType> list) noexcept
 		: BaseType(list.size(), AllocatorType{})
 	{
-		Memory::ConstructItems(Data(), list.begin(), list.size());
+		if (list.size() > 0UL) {
+			Memory::ConstructItems(Data(), list.begin(), list.size());
+		}
 		this->_size = list.size();
 	}
 
@@ -292,7 +294,9 @@ namespace Orion::Engine
 	template <typename T, Memory::AllocatorKind Allocator>
 	constexpr Vector<T, Allocator>::~Vector()
 	{
-		Memory::DestructItems(Data(), Size());
+		if (Data()) {
+			Memory::DestructItems(Data(), Size());
+		}
 	}
 
 	template <typename T, Memory::AllocatorKind Allocator>

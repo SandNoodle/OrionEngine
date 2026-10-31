@@ -17,6 +17,7 @@ namespace Orion::Engine::Memory
 		requires(sizeof(ItemType) > 0 && IsZeroConstructible<ItemType>)
 	ORION_FORCE_INLINE void DefaultConstructItems(ItemType* dst, SizeType count) noexcept
 	{
+		ORION_ASSERT_DEBUG_SLOW(dst);
 		if (count) {
 			Platform::MemorySet(dst, 0, sizeof(ItemType) * count);
 		}
@@ -25,6 +26,7 @@ namespace Orion::Engine::Memory
 		requires(sizeof(ItemType) > 0 && !IsZeroConstructible<ItemType>)
 	ORION_FORCE_INLINE void DefaultConstructItems(ItemType* dst, SizeType count) noexcept
 	{
+		ORION_ASSERT_DEBUG_SLOW(dst);
 		while (count--) {
 			::new (static_cast<void*>(dst)) ItemType();
 			++dst;
@@ -42,6 +44,8 @@ namespace Orion::Engine::Memory
 	             && !IsTriviallyConstructible<DestinationItemType>)
 	ORION_FORCE_INLINE void ConstructItems(DestinationItemType* dst, const SourceItemType* src, SizeType count) noexcept
 	{
+		ORION_ASSERT_DEBUG_SLOW(src);
+		ORION_ASSERT_DEBUG_SLOW(dst);
 		while (count--) {
 			::new (static_cast<void*>(dst)) DestinationItemType(*src);
 			++src;
@@ -53,6 +57,8 @@ namespace Orion::Engine::Memory
 	             && IsTriviallyConstructible<DestinationItemType>)
 	ORION_FORCE_INLINE void ConstructItems(DestinationItemType* dst, const SourceItemType* src, SizeType count) noexcept
 	{
+		ORION_ASSERT_DEBUG_SLOW(src);
+		ORION_ASSERT_DEBUG_SLOW(dst);
 		if (count) {
 			Platform::MemoryCopy(dst, src, sizeof(SourceItemType) * count);
 		}
@@ -81,7 +87,7 @@ namespace Orion::Engine::Memory
 	template <typename ItemType, typename... Args>
 	ORION_FORCE_INLINE void ConstructItem(ItemType* dst, Args&&... args)
 	{
-		ORION_ASSERT_DEBUG(dst);
+		ORION_ASSERT_DEBUG_SLOW(dst);
 		::new (static_cast<void*>(dst)) ItemType(Forward<Args>(args)...);
 	}
 
@@ -92,9 +98,9 @@ namespace Orion::Engine::Memory
 		requires(sizeof(ItemType) > 0)
 	ORION_FORCE_INLINE void DestructItems(ItemType* src, SizeType count) noexcept
 	{
+		ORION_ASSERT_DEBUG_SLOW(src);
 		if (!IsTriviallyDestructible<ItemType>) {
 			while (count--) {
-				ORION_ASSERT_DEBUG_SLOW(src);
 				src->ItemType::~ItemType();
 				++src;
 			}
