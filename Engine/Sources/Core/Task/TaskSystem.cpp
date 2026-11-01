@@ -1,10 +1,10 @@
-#include "Core/Job/JobSystem.h"
+#include "Core/Task/TaskSystem.h"
 
 #include "Core/Console/ConsoleSystem.h"
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Math/Math.h"
 
-namespace Orion::Engine::Job
+namespace Orion::Engine::Task
 {
 	// NOLINTNEXTLINE(readability-identifier-naming)
 	static Console::AutoConsoleVariable<Bool8> CVAR_JobSystemInitialized(
@@ -30,15 +30,14 @@ namespace Orion::Engine::Job
 		"Engine.Job.WorkerThreadCountMax <UInt32>",
 		Console::ConsoleVariableFlags::Debug | Console::ConsoleVariableFlags::Read);
 
-	static void JobSystemWorkerThreadFunction(void* argument)
+	static void WorkerThreadFunction(void*)
 	{
-		ORION_IGNORE_PARAM(argument);
-		while (true) {
-			// TODO(SandNoodle): Function
+		Thread::Atomic<Bool8> is_running = true;
+		while (is_running.Load(Thread::MemoryOrder::Acquire)) {
 		}
 	}
 
-	Bool8 JobSystem::Initialize() noexcept
+	Bool8 TaskSystem::Initialize() noexcept
 	{
 		if (CVAR_JobSystemInitialized.Value()) {
 			ORION_LOG_ERROR("[JobSystem] Already initialized.");
@@ -52,7 +51,7 @@ namespace Orion::Engine::Job
 		ORION_LOG_DEBUG("[JobSystem] Requesting initialization of '{}' worker threads.", requested_worker_thread_count);
 		_worker_threads.Reserve(requested_worker_thread_count);
 		for (USize index = 0; index < requested_worker_thread_count; ++index) {
-			Platform::PlatformThreadHandle thread = Platform::ThreadCreate(JobSystemWorkerThreadFunction, nullptr);
+			Platform::PlatformThreadHandle thread = Platform::ThreadCreate(WorkerThreadFunction, nullptr);
 			if (!thread) {
 				ORION_LOG_WARN("[JobSystem] Failed to initialize a worker thread (index={}).", index);
 				continue;
@@ -69,7 +68,7 @@ namespace Orion::Engine::Job
 		return true;
 	}
 
-	Bool8 JobSystem::Shutdown() noexcept
+	Bool8 TaskSystem::Shutdown() noexcept
 	{
 		if (!CVAR_JobSystemInitialized.Value()) {
 			ORION_LOG_ERROR("[JobSystem] Already shut down.");
@@ -89,4 +88,4 @@ namespace Orion::Engine::Job
 		ORION_LOG_DEBUG("[JobSystem] Shut down.");
 		return true;
 	}
-}  // namespace Orion::Engine::Job
+}  // namespace Orion::Engine::Task

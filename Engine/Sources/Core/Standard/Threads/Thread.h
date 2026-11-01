@@ -5,7 +5,7 @@
 #include "Core/Standard/Containers/Result.h"
 #include "Platform/Platform.h"
 
-namespace Orion::Engine
+namespace Orion::Engine::Thread
 {
 	/// @brief Enumeration describing type of an error encountered when performing Thread operations.
 	enum class ThreadError : UInt8
@@ -39,4 +39,4 @@ namespace Orion::Engine
 		Thread& operator=(const Thread&) noexcept = delete;
 		Thread& operator=(Thread&& other) noexcept;
 	};
-}  // namespace Orion::Engine
+}  // namespace Orion::Engine::Thread

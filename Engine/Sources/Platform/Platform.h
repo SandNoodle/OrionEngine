@@ -105,19 +105,23 @@ namespace Orion::Engine::Platform
 	[[nodiscard]] Bool8 DirectoryExists(StringView path) noexcept;
 
 	/// @brief Queries the underling platform and creates new thread that runs \p thread_function.
-	/// @param[IN, REQUIRED] thread_function
-	/// @param[IN, OPTIONAL] user_data
+	/// @param[IN, REQUIRED] thread_function Function to be called on the thread.
+	/// @param[IN, OPTIONAL] user_data User data that will be passed as an argument to the \p thread_function.
+	/// @warning DO NOT USE DIRECTLY! All thread calls should be handled through the Thread::Thread class.
 	[[nodiscard]] PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept;
 
 	/// @brief Queries the underlying platform and destroys a given \p thread.
 	/// @param[IN, REQUIRED] thread Thread to destroy.
+	/// @warning DO NOT USE DIRECTLY! All thread calls should be handled through the Thread::Thread class.
 	void ThreadDestroy(PlatformThreadHandle thread) noexcept;
 
 	/// @brief Queries the underlying platform and joins a given \p thread.
 	/// @param[IN, REQUIRED] thread Thread to join.
+	/// @warning DO NOT USE DIRECTLY! All thread calls should be handled through the Thread::Thread class.
 	void ThreadJoin(PlatformThreadHandle thread) noexcept;
 
 	/// @brief Queries the underlying platform and detaches a given \p thread.
 	/// @param[IN, REQUIRED] thread Thread to detach.
+	/// @warning DO NOT USE DIRECTLY! All thread calls should be handled through the Thread::Thread class.
 	void ThreadDetach(PlatformThreadHandle thread) noexcept;
 }  // namespace Orion::Engine::Platform

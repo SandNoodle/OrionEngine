@@ -44,10 +44,10 @@ namespace Orion::Engine
 
 	/// @brief Verifies if a given type is cope assignable (see C++ standard).
 	template <typename T>
-	inline constexpr bool IsCopyAssignable = IsAssignable<T, AddLValueReference<AddConst<T>>>;
+	inline constexpr bool IsCopyAssignable = IsAssignable<AddLValueReference<T>, AddLValueReference<AddConst<T>>>;
 
 	/// @brief Verifies if a given type is move assignable (see C++ standard).
 	template <typename T>
-	inline constexpr bool IsMoveAssignable = IsAssignable<T, AddRValueReference<AddConst<T>>>;
+	inline constexpr bool IsMoveAssignable = IsAssignable<AddLValueReference<T>, AddRValueReference<AddConst<T>>>;
 	// NOLINTEND(readability-identifier-naming)
 }  // namespace Orion::Engine

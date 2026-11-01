@@ -1,11 +1,11 @@
 #include "EngineEntry.h"
 
-#include "Core/Job/JobSystem.h"
 #include "Core/Log/Logger.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Memory/Allocators/Allocator.h"
 #include "Core/Standard/Memory/Allocators/ArenaAllocator.h"
+#include "Core/Task/TaskSystem.h"
 #include "Platform/FileSystem/FileSystem.h"
 #include "Platform/Graphics/RenderDevice.h"
 
@@ -22,7 +22,7 @@ namespace Orion::Engine
 		{
 			public:
 			Logger::LoggerSystem logger_system;
-			Job::JobSystem job_system;
+			Task::TaskSystem job_system;
 			Platform::FileSystem::FileSystem file_system;
 			Platform::Graphics::RenderDevice render_device;
 		};

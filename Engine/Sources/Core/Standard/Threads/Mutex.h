@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Orion::Engine
+namespace Orion::Engine::Thread
 {
 	/// @brief TODO
 	class Mutex
