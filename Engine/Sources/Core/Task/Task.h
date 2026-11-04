@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Standard/Containers/Function.h"
+#include "Core/Standard/Containers/Vector.h"
 
 namespace Orion::Engine::Task
 {
@@ -13,10 +14,10 @@ namespace Orion::Engine::Task
 		/// @brief Job is still being executed by the worker.
 		Running,
 
-		/// @brief Job has finished executing.
-		Finished,
+		/// @brief Job has finished executing successfully.
+		Success,
 
-		/// @brief Job failed to execute.
+		/// @brief Job has finished executing with error.
 		Error,
 	};
 
@@ -35,10 +36,14 @@ namespace Orion::Engine::Task
 	};
 
 	/// @brief TODO
+	using TaskFunction = Function<Bool8()>;
+
+	/// @brief TODO
 	struct Task
 	{
-		Function<void()> fn{};
-		TaskState state{ TaskState::Pending };
+		TaskFunction function{};
+		Vector<Task*> dependents;
 		TaskPriority priority{ TaskPriority::Normal };
+		TaskState state{ TaskState::Pending };
 	};
 }  // namespace Orion::Engine::Task

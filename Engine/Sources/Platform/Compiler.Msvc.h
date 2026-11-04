@@ -19,6 +19,7 @@ namespace Orion::Engine::Platform::Compiler
 #error "Atomic::AtomicExchange<T> is not implemented for the MSVC compiler."
 #error "Atomic::AtomicCompareExchangeWeak<T> is not implemented for the MSVC compiler."
 #error "Atomic::AtomicCompareExchangeStrong<T> is not implemented for the MSVC compiler."
+#error "Atomic::AtomicThreadFence is not implemented for the MSVC compiler."
 #error "Atomic::AtomicFetchAdd<T> is not implemented for the MSVC compiler."
 #error "Atomic::AtomicFetchSub<T> is not implemented for the MSVC compiler."
 #error "Atomic::AtomicFetchMax<T> is not implemented for the MSVC compiler."

@@ -4,17 +4,24 @@
 
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Threads/Atomic.h"
+#include "Core/Standard/Utility/MathUtils.h"
 
 namespace Orion::Engine::Task
 {
 	struct Task;
 
-	/// @brief TODO
+	/// @brief TaskQueue is a lock-free non-owning work-stealing deque for processing Tasks; owning (worker) thread push
+	/// their tasks at the bottom, while thieving (worker) threads steal from the top (if possible).
+	///
+	/// Implementation is based on `Dynamic Circular Work-Stealing Deque` (Chase-Lev) and further improved with `Correct
+	/// and Efficient Work-Stealing for Weak Memory Models` (Lê et al).
 	/// @see https://www.dre.vanderbilt.edu/~schmidt/PDF/work-stealing-dequeue.pdf
+	/// @see https://fzn.fr/readings/ppopp13.pdf
 	class TaskQueue
 	{
 		public:
-		using SizeType = USize;
+		using SizeType  = Int64;
+		using USizeType = UInt64;
 
 		static constexpr SizeType k_queue_capacity = 1024;
 
@@ -22,11 +29,19 @@ namespace Orion::Engine::Task
 		using TaskBuffer = Array<Thread::Atomic<Task*>, k_queue_capacity>;
 
 		private:
-		alignas(ORION_PLATFORM_CACHE_SIZE) Thread::Atomic<SizeType> _top{ 0L };
-		alignas(ORION_PLATFORM_CACHE_SIZE) Thread::Atomic<SizeType> _bottom{ 0L };
-		alignas(ORION_PLATFORM_CACHE_SIZE) TaskBuffer _tasks;
+		alignas(ORION_PLATFORM_CACHE_SIZE) Thread::Atomic<SizeType> _top{ 0 };
+		alignas(ORION_PLATFORM_CACHE_SIZE) Thread::Atomic<SizeType> _bottom{ 0 };
+		alignas(ORION_PLATFORM_CACHE_SIZE) TaskBuffer _tasks{ nullptr };
 
 		public:
+		TaskQueue()                          = default;
+		TaskQueue(const TaskQueue&) noexcept = delete;
+		TaskQueue(TaskQueue&&) noexcept      = delete;
+		~TaskQueue()                         = default;
+
+		TaskQueue& operator=(const TaskQueue&) noexcept = delete;
+		TaskQueue& operator=(TaskQueue&&) noexcept      = delete;
+
 		/// @brief Attempts to push a given \p task into the queue.
 		/// @warning \p task must NOT be nullptr;
 		/// @param[IN, REQUIRED] task Task to enqueue.
@@ -43,9 +58,10 @@ namespace Orion::Engine::Task
 		[[nodiscard]] Task* Steal() noexcept;
 
 		/// @brief Returns the amount of tasks that this container currently stores.
-		[[nodiscard]] SizeType Size() const noexcept;
+		[[nodiscard]] USizeType Size() const noexcept;
 
 		/// @brief Returns the maximum amount of tasks that this container can store.
-		[[nodiscard]] SizeType Capacity() const noexcept;
+		[[nodiscard]] USizeType Capacity() const noexcept;
 	};
+	static_assert(IsPowerOfTwo(TaskQueue::k_queue_capacity), "TaskQueue's capacity MUST be a power of 2.");
 }  // namespace Orion::Engine::Task

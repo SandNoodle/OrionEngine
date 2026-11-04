@@ -37,6 +37,7 @@ set(OrionEngine_UT_SOURCES
         Core/Standard/Containers/VectorTests.cpp
         Core/Standard/Threads/AtomicTests.cpp
         Core/Standard/Memory/Allocators/ArenaAllocatorTests.cpp
+        Core/Task/TaskQueueTests.cpp
         Platform/FileSystem/Storage/LocalStorageTests.cpp
         TestCommon.h
 )

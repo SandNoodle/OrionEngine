@@ -823,8 +823,9 @@ namespace Orion::Engine::Thread
 		return Platform::Compiler::Atomic::AtomicIsLockFree<T>(ptr);
 	}
 
+	/// @brief TODO
 	template <typename T>
-	[[nodiscard]] ORION_FORCE_INLINE T AtomicCompareExchangeWeak(volatile T* ptr,
+	[[nodiscard]] ORION_FORCE_INLINE Bool8 AtomicCompareExchangeWeak(volatile T* ptr,
 	                                                             T& expected_value,
 	                                                             T desired_value,
 	                                                             MemoryOrder success_order,
@@ -837,8 +838,9 @@ namespace Orion::Engine::Thread
 		                                                                EnumAsUnderlyingType(failure_order));
 	}
 
+	/// @brief TODO
 	template <typename T>
-	[[nodiscard]] ORION_FORCE_INLINE T AtomicCompareExchangeStrong(volatile T* ptr,
+	[[nodiscard]] ORION_FORCE_INLINE Bool8 AtomicCompareExchangeStrong(volatile T* ptr,
 	                                                               T& expected_value,
 	                                                               T desired_value,
 	                                                               MemoryOrder success_order,
@@ -849,6 +851,12 @@ namespace Orion::Engine::Thread
 		                                                                  desired_value,
 		                                                                  EnumAsUnderlyingType(success_order),
 		                                                                  EnumAsUnderlyingType(failure_order));
+	}
+
+	/// @brief TODO
+	ORION_FORCE_INLINE void AtomicThreadFence(MemoryOrder order) noexcept
+	{
+		Platform::Compiler::Atomic::AtomicThreadFence(EnumAsUnderlyingType(order));
 	}
 
 	// -- Implementation.
@@ -1464,7 +1472,11 @@ namespace Orion::Engine::Thread
 	                                     MemoryOrder success_order,
 	                                     MemoryOrder failure_order) noexcept -> Bool8
 	{
-		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
+		return AtomicCompareExchangeWeak<T>(&_value,
+		                                    expected_value,
+		                                    desired_value,
+		                                    EnumAsUnderlyingType(success_order),
+		                                    EnumAsUnderlyingType(failure_order));
 	}
 
 	template <typename T>
@@ -1473,7 +1485,11 @@ namespace Orion::Engine::Thread
 	                                     MemoryOrder success_order,
 	                                     MemoryOrder failure_order) volatile noexcept -> Bool8
 	{
-		return AtomicCompareExchangeWeak<T>(&_value, expected_value, desired_value, success_order, failure_order);
+		return AtomicCompareExchangeWeak<T>(&_value,
+		                                    expected_value,
+		                                    desired_value,
+		                                    EnumAsUnderlyingType(success_order),
+		                                    EnumAsUnderlyingType(failure_order));
 	}
 
 	template <typename T>
