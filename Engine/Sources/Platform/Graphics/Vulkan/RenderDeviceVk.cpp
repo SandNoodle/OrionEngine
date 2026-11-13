@@ -43,7 +43,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 			.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0),
 			.pEngineName        = ORION_ENGINE_NAME,
 			.engineVersion      = VK_MAKE_API_VERSION(
-                0, ORION_ENGINE_VERSION_MAJOR, ORION_ENGINE_VERSION_MINOR, ORION_ENGINE_VERSION_PATCH),
+				0, ORION_ENGINE_VERSION_MAJOR, ORION_ENGINE_VERSION_MINOR, ORION_ENGINE_VERSION_PATCH),
 			.apiVersion = k_vulkan_api_version,
 		};
 
@@ -236,7 +236,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 			queue_create_info.pQueuePriorities         = current_queue_priority;
 
 			UInt32 queue_count
-				= queue_family_properties[queue_create_info.queueFamilyIndex].queueFamilyProperties.queueCount;
+			    = queue_family_properties[queue_create_info.queueFamilyIndex].queueFamilyProperties.queueCount;
 			for (USize queue_index = 0; queue_index < queue_count; ++queue_index) {
 				*current_queue_priority++ = 1.0f;
 			}
@@ -287,7 +287,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		};
 		VkDevice logical_device = VK_NULL_HANDLE;
 		VkResult logical_device_result
-			= vkCreateDevice(physical_device, &logical_device_create_info, nullptr, &logical_device);
+		    = vkCreateDevice(physical_device, &logical_device_create_info, nullptr, &logical_device);
 		if (logical_device_result != VK_SUCCESS) {
 			ORION_LOG_FATAL("[Vulkan] Failed to create logical device (vkCreateDevice != VK_SUCCESS).");
 			return VK_NULL_HANDLE;
@@ -326,6 +326,17 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		return vma_allocator;
 	}
 
+	[[nodiscard]] static constexpr QueueVk GetLogicalQueue(VkDevice logical_device, UInt32 queue_index) noexcept
+	{
+		VkQueue queue = VK_NULL_HANDLE;
+		vkGetDeviceQueue(logical_device, queue_index, 0, &queue);
+		return (QueueVk){
+			.queue              = queue,
+			.queue_index        = 0,
+			.queue_family_index = queue_index,
+		};
+	}
+
 	Bool8 RenderDeviceVk::Initialize() noexcept
 	{
 		VkInstance instance              = CreateVulkanInstance();
@@ -333,18 +344,9 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		VkQueueData queue_data           = SelectLogicalDeviceQueues(physical_device);
 		VkDevice logical_device    = CreateLogicalDevice(physical_device, ReadonlySpan(queue_data.queue_create_infos));
 		VmaAllocator vma_allocator = CreateVmaAllocator(instance, physical_device, logical_device);
-
-		QueueVk queue_graphics{};
-		QueueVk queue_compute{};
-		QueueVk queue_transfer{};
-
-		vkGetDeviceQueue(logical_device, queue_data.queue_index_graphics, 0, &queue_graphics.queue);
-		vkGetDeviceQueue(logical_device, queue_data.queue_index_compute, 0, &queue_compute.queue);
-		vkGetDeviceQueue(logical_device, queue_data.queue_index_transfer, 0, &queue_transfer.queue);
-
-		queue_graphics.queue_family_index = queue_data.queue_index_graphics;
-		queue_compute.queue_family_index  = queue_data.queue_index_compute;
-		queue_transfer.queue_family_index = queue_data.queue_index_transfer;
+		QueueVk queue_graphics     = GetLogicalQueue(logical_device, queue_data.queue_index_graphics);
+		QueueVk queue_compute      = GetLogicalQueue(logical_device, queue_data.queue_index_compute);
+		QueueVk queue_transfer     = GetLogicalQueue(logical_device, queue_data.queue_index_transfer);
 
 		_instance        = instance;
 		_physical_device = physical_device;
@@ -362,6 +364,7 @@ namespace Orion::Engine::Platform::Graphics::Vulkan
 		// TODO(SandNoodle): Destroy + Allocation callbacks.
 		vkDestroyDevice(_logical_device, nullptr);
 		vkDestroyInstance(_instance, nullptr);
+		vmaDestroyAllocator(_vma_allocator);
 		return true;
 	}
 }  // namespace Orion::Engine::Platform::Graphics::Vulkan
