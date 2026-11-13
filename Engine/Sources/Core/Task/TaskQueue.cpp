@@ -4,7 +4,7 @@
 
 namespace Orion::Engine::Task
 {
-	Bool8 TaskQueue::Push(Task* task) noexcept
+	Bool8 TaskQueue::Push(TaskHandle task) noexcept
 	{
 		ORION_ASSERT_DEBUG(task);
 		SizeType bottom_index = _bottom.Load(Thread::MemoryOrder::Relaxed);
@@ -20,7 +20,7 @@ namespace Orion::Engine::Task
 		return true;
 	}
 
-	Task* TaskQueue::Next() noexcept
+	TaskHandle TaskQueue::Next() noexcept
 	{
 		// NOTE: Thieves must be notified of the (bottom) slot reservation - this prevents owner and thief from both
 		//       taking the last task - thus the AtomicThreadFence there.
@@ -36,7 +36,7 @@ namespace Orion::Engine::Task
 		}
 
 		USizeType slot_index = static_cast<USizeType>(bottom_index % k_queue_capacity);
-		Task* task           = _tasks[slot_index].Load(Thread::MemoryOrder::Relaxed);
+		TaskHandle task      = _tasks[slot_index].Load(Thread::MemoryOrder::Relaxed);
 
 		if (top_index != bottom_index) {
 			// NOTE: There are 2+ tasks left - no thief can touch this one.
@@ -51,7 +51,7 @@ namespace Orion::Engine::Task
 		return is_steal_prevented ? task : nullptr;
 	}
 
-	Task* TaskQueue::Steal() noexcept
+	TaskHandle TaskQueue::Steal() noexcept
 	{
 		// NOTE: this AtomicThreadFence is paired up with the TaskQueue::Next's one. Thief must be notified that the
 		// owner will take the task, thus loading the top slot before bottom one.
@@ -67,7 +67,7 @@ namespace Orion::Engine::Task
 		// NOTE: Other thieves (worker threads) may attempt stealing a task we are eyeballing, we must race them for it.
 		//       If it was successfully prevented from being stolen, then move top one slot over, otherwise do nothing.
 		USizeType slot_index      = static_cast<USizeType>(top_index % k_queue_capacity);
-		Task* task                = _tasks[slot_index].Load(Thread::MemoryOrder::Relaxed);
+		TaskHandle task           = _tasks[slot_index].Load(Thread::MemoryOrder::Relaxed);
 		Bool8 is_steal_successful = _top.CompareExchangeStrong(
 			top_index, top_index + 1L, Thread::MemoryOrder::SequentiallyConsistent, Thread::MemoryOrder::Relaxed);
 		return is_steal_successful ? task : nullptr;

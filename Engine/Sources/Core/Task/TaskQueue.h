@@ -4,17 +4,15 @@
 
 #include "Core/Standard/Containers/Array.h"
 #include "Core/Standard/Threads/Atomic.h"
-#include "Core/Standard/Utility/MathUtils.h"
+#include "Core/Task/Task.h"
 
 namespace Orion::Engine::Task
 {
-	struct Task;
-
 	/// @brief TaskQueue is a lock-free non-owning work-stealing deque for processing Tasks; owning (worker) thread push
 	/// their tasks at the bottom, while thieving (worker) threads steal from the top (if possible).
 	///
 	/// Implementation is based on `Dynamic Circular Work-Stealing Deque` (Chase-Lev) and further improved with `Correct
-	/// and Efficient Work-Stealing for Weak Memory Models` (Lê et al).
+	/// and Efficient Work-Stealing for Weak Memory Models` (Lê et al.).
 	/// @see https://www.dre.vanderbilt.edu/~schmidt/PDF/work-stealing-dequeue.pdf
 	/// @see https://fzn.fr/readings/ppopp13.pdf
 	class TaskQueue
@@ -23,10 +21,10 @@ namespace Orion::Engine::Task
 		using SizeType  = Int64;
 		using USizeType = UInt64;
 
-		static constexpr SizeType k_queue_capacity = 1024;
+		static constexpr SizeType k_queue_capacity = 1024L;
 
 		private:
-		using TaskBuffer = Array<Thread::Atomic<Task*>, k_queue_capacity>;
+		using TaskBuffer = Array<Thread::Atomic<TaskHandle>, k_queue_capacity>;
 
 		private:
 		alignas(ORION_PLATFORM_CACHE_SIZE) Thread::Atomic<SizeType> _top{ 0 };
@@ -46,16 +44,16 @@ namespace Orion::Engine::Task
 		/// @warning \p task must NOT be nullptr;
 		/// @param[IN, REQUIRED] task Task to enqueue.
 		/// @returns Returns true if task was successfully pushed on top of the queue, false otherwise.
-		[[nodiscard]] Bool8 Push(Task* task) noexcept;
+		[[nodiscard]] Bool8 Push(TaskHandle task) noexcept;
 
 		/// @brief Attempts to acquire the task from the bottom of the queue (in a FIFO manner).
 		/// @returns Pointer to a valid task if successful, nullptr otherwise.
-		[[nodiscard]] Task* Next() noexcept;
+		[[nodiscard]] TaskHandle Next() noexcept;
 
-		/// @brief Attempts to steal the task from top of the the queue (in a LIFO manner).
+		/// @brief Attempts to steal the task from top of the queue (in a LIFO manner).
 		/// @warning Should be called by the thread attempting to acquire a task, not the one this queue belongs to.
 		/// @returns Pointer to a valid task if successful, nullptr otherwise.
-		[[nodiscard]] Task* Steal() noexcept;
+		[[nodiscard]] TaskHandle Steal() noexcept;
 
 		/// @brief Returns the amount of tasks that this container currently stores.
 		[[nodiscard]] USizeType Size() const noexcept;
@@ -63,5 +61,4 @@ namespace Orion::Engine::Task
 		/// @brief Returns the maximum amount of tasks that this container can store.
 		[[nodiscard]] USizeType Capacity() const noexcept;
 	};
-	static_assert(IsPowerOfTwo(TaskQueue::k_queue_capacity), "TaskQueue's capacity MUST be a power of 2.");
 }  // namespace Orion::Engine::Task

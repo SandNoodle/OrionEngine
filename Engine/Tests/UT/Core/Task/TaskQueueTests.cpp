@@ -15,7 +15,7 @@ namespace Orion::Engine::Task::UT
 		};
 	}  // namespace
 
-	static Vector<Task> GenerateTasks(USize count, const Function<Bool8()>& function)
+	static Vector<Task> GenerateTasks(USize count, const Function<void()>& function)
 	{
 		Vector<Task> tasks{};
 		tasks.AddZeroed(count);
@@ -28,10 +28,7 @@ namespace Orion::Engine::Task::UT
 	TEST_F(TaskQueueTest, SingleThread_OwnerPushingAndPulling)
 	{
 		USize result_value = 0UL;
-		Vector<Task> tasks = GenerateTasks(5UL, [&result_value]() -> Bool8 {
-			++result_value;
-			return true;
-		});
+		Vector<Task> tasks = GenerateTasks(5UL, [&result_value]() -> void { ++result_value; });
 
 		ASSERT_EQ(_queue.Size(), 0UL);
 		EXPECT_EQ(_queue.Capacity(), TaskQueue::k_queue_capacity);
@@ -50,8 +47,7 @@ namespace Orion::Engine::Task::UT
 			ASSERT_TRUE(task) << "Failed to pull a task from the TaskQueue.";
 			ASSERT_EQ(_queue.Size(), tasks.Size() - index - 1) << "Task was not removed from the TaskQueue.";
 
-			Bool8 execute_result = task->function();
-			ASSERT_TRUE(execute_result);
+			task->function();
 			EXPECT_EQ(result_value, index + 1);
 		}
 
@@ -62,10 +58,7 @@ namespace Orion::Engine::Task::UT
 	TEST_F(TaskQueueTest, SingleThread_OwnerPushingAndThiefPulling)
 	{
 		USize result_value = 0UL;
-		Vector<Task> tasks = GenerateTasks(5UL, [&result_value]() -> Bool8 {
-			++result_value;
-			return true;
-		});
+		Vector<Task> tasks = GenerateTasks(5UL, [&result_value]() -> void { ++result_value; });
 
 		for (USize index = 0; index < tasks.Size(); ++index) {
 			Bool8 result = _queue.Push(&tasks[index]);
@@ -82,8 +75,7 @@ namespace Orion::Engine::Task::UT
 			ASSERT_TRUE(task) << "Failed to pull (steal) a task from the TaskQueue.";
 			ASSERT_EQ(_queue.Size(), tasks.Size() - index - 1) << "Task was not removed from the TaskQueue.";
 
-			Bool8 execute_result = task->function();
-			ASSERT_TRUE(execute_result);
+			task->function();
 			EXPECT_EQ(result_value, index + 1);
 		}
 

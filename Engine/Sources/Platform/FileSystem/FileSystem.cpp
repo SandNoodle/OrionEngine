@@ -22,7 +22,7 @@ namespace Orion::Engine::Platform::FileSystem
 			return false;
 		}
 
-		ORION_LOG_DEBUG("[FileSystem] Initializing...");
+		ORION_LOG_INFO("[FileSystem] Initializing...");
 		Bool8 is_initialized = true;
 
 		IStorageProvider* local_storage_provider  = Memory::AllocateConstruct<LocalStorageProvider>(_allocator);
@@ -33,7 +33,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		CVAR_FileSystemInitialized.SetValue(is_initialized);
 
-		ORION_LOG_DEBUG("[FileSystem] Initialized.");
+		ORION_LOG_INFO("[FileSystem] Initialized.");
 		return is_initialized;
 	}
 
@@ -44,7 +44,7 @@ namespace Orion::Engine::Platform::FileSystem
 			return false;
 		}
 
-		ORION_LOG_DEBUG("[FileSystem] Shutting down.");
+		ORION_LOG_INFO("[FileSystem] Shutting down.");
 		for (Pair<StringView, IStorageProvider*>& provider_mapping : _storage_providers) {
 			DestroyProvider(provider_mapping.second);
 		}
@@ -52,7 +52,7 @@ namespace Orion::Engine::Platform::FileSystem
 
 		CVAR_FileSystemInitialized.SetValue(false);
 
-		ORION_LOG_DEBUG("[FileSystem] Shut down.");
+		ORION_LOG_INFO("[FileSystem] Shut down.");
 		return true;
 	}
 

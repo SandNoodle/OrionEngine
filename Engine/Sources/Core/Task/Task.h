@@ -1,49 +1,35 @@
 #pragma once
 
+#include "OrionEngine.h"
+
 #include "Core/Standard/Containers/Function.h"
-#include "Core/Standard/Containers/Vector.h"
+#include "Core/Standard/Handle.h"
 
 namespace Orion::Engine::Task
 {
-	/// @brief Represents a execution status of a given Job.
+	/// @brief Represents an execution status of a given Task.
 	enum class TaskState : UInt8
 	{
-		/// @brief Job is waiting for worker to pick it up.
+		/// @brief Task is waiting for worker to pick it up.
 		Pending,
 
-		/// @brief Job is still being executed by the worker.
+		/// @brief Task is still being executed by the worker.
 		Running,
 
-		/// @brief Job has finished executing successfully.
-		Success,
-
-		/// @brief Job has finished executing with error.
-		Error,
+		/// @brief Task has finished executing.
+		Finished,
 	};
 
-	/// @brief Represents a execution priority of a given Job.
-	enum class TaskPriority : UInt8
-	{
-		/// @brief Used for jobs that should only be run occasionally. Example(s):
-		Low,
+	/// @brief Represents a function to be executed when a Task is being processed.
+	using TaskFunction = Function<void()>;
 
-		/// @brief Used for typical jobs. Example(s): gameplay logic, loading assets.
-		Normal,
+	/// @brief Represents a single `unit` of work.
+	ORION_DEFINE_OPAQUE_HANDLE(Task);
 
-		/// @brief Used for jobs that are critical for engine to run, i.e. ones that should be run ASAP.
-		/// Example(s): render, audio, physics, etc.
-		High,
-	};
-
-	/// @brief TODO
-	using TaskFunction = Function<Bool8()>;
-
-	/// @brief TODO
+	/// @brief Represents a single `unit` of work.
 	struct Task
 	{
-		TaskFunction function{};
-		Vector<Task*> dependents;
-		TaskPriority priority{ TaskPriority::Normal };
+		TaskFunction function{ nullptr };
 		TaskState state{ TaskState::Pending };
 	};
 }  // namespace Orion::Engine::Task
