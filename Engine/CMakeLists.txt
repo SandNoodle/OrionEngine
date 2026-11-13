@@ -42,7 +42,6 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Memory/Lifetime.h
         Sources/Core/Standard/Threads/Atomic.h
         Sources/Core/Standard/Threads/Mutex.h
-        Sources/Core/Standard/Threads/Thread.h
         Sources/Core/Standard/Traits/FundamentalTypes.h
         Sources/Core/Standard/Traits/TypeComparison.h
         Sources/Core/Standard/Traits/TypeConstant.h
