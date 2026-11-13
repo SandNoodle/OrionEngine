@@ -4,11 +4,14 @@
 #include "Core/Assert.h"
 #include "Core/Standard/Memory/Allocators/ArenaAllocator.h"
 
+#include <windef.h>
+
 #include <fileapi.h>
 #include <handleapi.h>
 #include <memoryapi.h>
 #include <processthreadsapi.h>
 #include <sysinfoapi.h>
+#include <winbase.h>
 
 namespace Orion::Engine::Platform
 {
@@ -170,7 +173,7 @@ namespace Orion::Engine::Platform
 			.file_name               = String(native_path),
 			.size_in_bytes           = size_in_bytes.QuadPart,
 			.unix_time_created       = WindowsToUnixTime(file_data.ftCreationTime.dwLowDateTime,  //
-                                                   file_data.ftCreationTime.dwHighDateTime),
+			                                             file_data.ftCreationTime.dwHighDateTime),
 			.unix_time_last_modified = WindowsToUnixTime(file_data.ftLastWriteTime.dwLowDateTime,  //
 			                                             file_data.ftLastWriteTime.dwHighDateTime),
 			.unix_time_last_accessed = WindowsToUnixTime(file_data.ftLastAccessTime.dwLowDateTime,  //
@@ -211,7 +214,7 @@ namespace Orion::Engine::Platform
 			}
 
 			static constexpr DWORD k_possible_file_flags
-				= FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_REPARSE_POINT;
+			    = FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_REPARSE_POINT;
 			if (BitFlagHasAnyFlags(fd.dwFileAttributes, k_possible_file_flags)) {
 				PlatformFileAccessFlags access_flags = !(fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 				                                         ? PlatformFileAccessFlags::All
@@ -228,11 +231,11 @@ namespace Orion::Engine::Platform
 					.file_name               = String(file_path.begin(), file_path.Size()),
 					.size_in_bytes           = size_in_bytes.QuadPart,
 					.unix_time_created       = WindowsToUnixTime(fd.ftCreationTime.dwLowDateTime,  //
-                                                           fd.ftCreationTime.dwHighDateTime),
+					                                             fd.ftCreationTime.dwHighDateTime),
 					.unix_time_last_modified = WindowsToUnixTime(fd.ftLastWriteTime.dwLowDateTime,  //
-				                                                 fd.ftLastWriteTime.dwHighDateTime),
+					                                             fd.ftLastWriteTime.dwHighDateTime),
 					.unix_time_last_accessed = WindowsToUnixTime(fd.ftLastAccessTime.dwLowDateTime,  //
-				                                                 fd.ftLastAccessTime.dwHighDateTime),
+					                                             fd.ftLastAccessTime.dwHighDateTime),
 					.access_flags            = access_flags,
 				});
 			}
@@ -280,10 +283,10 @@ namespace Orion::Engine::Platform
 
 	PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept
 	{
-		ORION_ASSERT_DEBUG(thread_function);
+		ORION_ASSERT_DEBUG(thread_function.IsValid());
 
 		PlatformThreadHandle thread = Memory::AllocateConstruct<PlatformThread>(k_platform_thread_allocator);
-		thread->function            = thread_function;
+		thread->function            = Move(thread_function);
 		thread->function_user_data  = user_data;
 		thread->handle              = CreateThread(nullptr, 0UL, ThreadFunctionWrapper, thread, 0UL, &thread->index);
 		if (!thread->handle) {
@@ -321,6 +324,19 @@ namespace Orion::Engine::Platform
 			CloseHandle(thread->handle);
 			thread->handle = nullptr;
 		}
+	}
+
+	Bool8 ThreadSetAffinity(PlatformThreadHandle thread, USize affinity) noexcept
+	{
+		if (thread && thread->handle) {
+			// TODO(SandNoodle): As stated by WINAPI documentation:
+			//                   On a system with more than 64 processors, the affinity mask must specify processors in
+			//                   the thread's current processor group.
+			DWORD_PTR affinity_mask = affinity;
+			DWORD_PTR result        = SetThreadAffinityMask(thread->handle, affinity_mask);
+			return result > 0;
+		}
+		return false;
 	}
 }  // namespace Orion::Engine::Platform
 

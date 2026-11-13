@@ -205,10 +205,10 @@ namespace Orion::Engine::Platform
 
 	PlatformThreadHandle ThreadCreate(PlatformThreadFn thread_function, void* user_data) noexcept
 	{
-		ORION_ASSERT_DEBUG(thread_function);
+		ORION_ASSERT_DEBUG(thread_function.IsValid());
 
 		PlatformThreadHandle thread = Memory::AllocateConstruct<PlatformThread>(k_platform_thread_allocator);
-		thread->function            = thread_function;
+		thread->function            = Move(thread_function);
 		thread->function_user_data  = user_data;
 
 		if (pthread_create(&thread->handle, nullptr, ThreadFunctionWrapper, thread) != 0) {
@@ -242,6 +242,14 @@ namespace Orion::Engine::Platform
 		if (thread && thread->handle) {
 			ORION_NOT_IMPLEMENTED();
 		}
+	}
+
+	Bool8 ThreadSetAffinity(PlatformThreadHandle thread, USize affinity) noexcept
+	{
+		if (thread && thread->handle) {
+			ORION_NOT_IMPLEMENTED();
+		}
+		return false;
 	}
 }  // namespace Orion::Engine::Platform
 

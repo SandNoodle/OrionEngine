@@ -81,6 +81,13 @@ namespace Orion::Engine::Platform
 		ORION_IGNORE_PARAM(thread);
 		ORION_NOT_IMPLEMENTED();
 	}
+
+	Bool8 ThreadSetAffinity(PlatformThreadHandle thread, USize affinity) noexcept
+	{
+		ORION_IGNORE_PARAM(thread);
+		ORION_IGNORE_PARAM(affinity);
+		ORION_NOT_IMPLEMENTED();
+	}
 }  // namespace Orion::Engine::Platform
 
 #endif

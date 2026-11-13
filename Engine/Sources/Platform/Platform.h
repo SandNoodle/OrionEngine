@@ -2,6 +2,7 @@
 
 #include "OrionEngine.h"
 
+#include "Core/Standard/Containers/Function.h"
 #include "Core/Standard/Containers/String.h"
 #include "Core/Standard/Containers/StringView.h"
 #include "Core/Standard/Containers/Vector.h"
@@ -53,7 +54,7 @@ namespace Orion::Engine::Platform
 	ORION_DEFINE_OPAQUE_HANDLE(PlatformThread);
 
 	/// @brief Pointer to a function to be executed by the PlatformThread.
-	using PlatformThreadFn = void (*)(void*);
+	using PlatformThreadFn = Function<void(void*)>;
 
 	/// @brief Queries and returns capabilities of the underlying platform.
 	[[nodiscard]] PlatformInfo GetPlatformInfo() noexcept;
@@ -124,4 +125,11 @@ namespace Orion::Engine::Platform
 	/// @param[IN, REQUIRED] thread Thread to detach.
 	/// @warning DO NOT USE DIRECTLY! All thread calls should be handled through the Thread::Thread class.
 	void ThreadDetach(PlatformThreadHandle thread) noexcept;
+
+	/// @brief Queries the underlying platform and sets affinity of a given \p thread.
+	/// @param[IN, REQUIRED] thread Thread of which to set the affinity.
+	/// @param[IN, REQUIRED] affinity Affinity to set.
+	/// @return Returns true if the operation succeeded, false otherwise.
+	/// @warning DO NOT USE DIRECTLY! All thread calls should be handled through the Thread::Thread class.
+	[[nodiscard]] Bool8 ThreadSetAffinity(PlatformThreadHandle thread, USize affinity) noexcept;
 }  // namespace Orion::Engine::Platform
