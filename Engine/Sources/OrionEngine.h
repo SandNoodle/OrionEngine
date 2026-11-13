@@ -173,6 +173,7 @@ namespace Orion
 
 	using IntPtr  = ISize;
 	using UIntPtr = USize;
+	using NullPtr = decltype(nullptr);
 
 	using CString = const char*;
 

@@ -111,6 +111,7 @@ namespace Orion::Engine
 
 		public:
 		Function() = default;
+		Function(NullPtr) noexcept;
 		template <typename Fn>
 			requires(FunctionCallableKind<Fn, StorageSize, R, Args...>)
 		Function(Fn&& fn) noexcept;
@@ -145,6 +146,11 @@ namespace Orion::Engine
 			return fn(Forward<Args>(args)...);
 		}
 	}  // namespace Detail
+
+	template <typename R, typename... Args, USize StorageSize>
+	Function<R(Args...), StorageSize>::Function(NullPtr null_ptr) noexcept : _callable(null_ptr)
+	{
+	}
 
 	template <typename R, typename... Args, USize StorageSize>
 	template <typename Fn>

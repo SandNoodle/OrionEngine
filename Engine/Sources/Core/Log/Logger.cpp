@@ -21,7 +21,7 @@ namespace Orion::Engine::Logger
 
 		CVAR_LoggerSystemInitialized.SetValue(true);
 
-		ORION_LOG_DEBUG("[LoggerSystem] Initialized.");
+		ORION_LOG_INFO("[LoggerSystem] Initialized.");
 		return true;
 	}
 
@@ -32,8 +32,11 @@ namespace Orion::Engine::Logger
 			return false;
 		}
 
+		ORION_LOG_INFO("[LoggerSystem] Shutting down.");
+
 		CVAR_LoggerSystemInitialized.SetValue(false);
 
+		ORION_LOG_INFO("[LoggerSystem] Shut down.");
 		return true;
 	}
 
