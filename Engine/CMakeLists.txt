@@ -21,6 +21,7 @@ set(OrionEngine_SOURCES
         Sources/Core/Standard/Algorithms/Hash.h
         Sources/Core/Standard/Algorithms/Sort.h
         Sources/Core/Standard/Containers/Detail/StringFwd.h
+        Sources/Core/Standard/Containers/Detail/VectorBase.h
         Sources/Core/Standard/Containers/Array.h
         Sources/Core/Standard/Containers/Function.h
         Sources/Core/Standard/Containers/HashMap.h
